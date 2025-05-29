@@ -1,0 +1,121 @@
+name: .NET Workflow
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore: ['**.md', '.github/ISSUE_TEMPLATE/**', '.github/pull_request_template.md']
+  pull_request:
+    paths-ignore: ['**.md', '.github/ISSUE_TEMPLATE/**', '.github/pull_request_template.md']
+  schedule:
+    - cron: "0 23 * * *"  # Daily at 11 PM UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Default permissions
+permissions: read-all
+
+env:
+  DOTNET_VERSION: '9.0'  # Only needed for actions/setup-dotnet
+
+jobs:
+  build:
+    name: Build, Test & Release
+    runs-on: windows-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write  # For creating releases and committing metadata
+      packages: write  # For publishing packages
+
+    outputs:
+      version: ${{ steps.pipeline.outputs.version }}
+      release_hash: ${{ steps.pipeline.outputs.release_hash }}
+      should_release: ${{ steps.pipeline.outputs.should_release }}
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for versioning
+        fetch-tags: true
+        lfs: true
+        submodules: recursive
+        persist-credentials: true
+
+    - name: Setup .NET SDK ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}.x
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+
+    - name: Run PSBuild Pipeline
+      id: pipeline
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        # Import the PSBuild module
+        Import-Module ${{ github.workspace }}/scripts/PSBuild.psm1
+
+        # Get build configuration
+        $buildConfig = Get-BuildConfiguration `
+          -ServerUrl "${{ github.server_url }}" `
+          -GitRef "${{ github.ref }}" `
+          -GitSha "${{ github.sha }}" `
+          -GitHubOwner "${{ github.repository_owner }}" `
+          -GitHubRepo "${{ github.repository }}" `
+          -GithubToken "${{ github.token }}" `
+          -NuGetApiKey "${{ secrets.NUGET_KEY }}" `
+          -WorkspacePath "${{ github.workspace }}" `
+          -ExpectedOwner "ktsu-dev" `
+          -ChangelogFile "CHANGELOG.md" `
+          -AssetPatterns @("staging/*.nupkg", "staging/*.zip")
+
+        if (-not $buildConfig.Success) {
+            throw $buildConfig.Error
+        }
+
+        # Run the complete CI/CD pipeline
+        $result = Invoke-CIPipeline `
+          -BuildConfiguration $buildConfig.Data
+
+        if (-not $result.Success) {
+            Write-Information "CI/CD pipeline failed: $($result.Error)" -Tags "Invoke-CIPipeline"
+            Write-Information "Stack Trace: $($result.StackTrace)" -Tags "Invoke-CIPipeline"
+            Write-Information "Build Configuration: $($buildConfig.Data | ConvertTo-Json -Depth 10)" -Tags "Invoke-CIPipeline"
+            throw $result.Error
+        }
+
+        # Set outputs for GitHub Actions from build configuration
+        "version=$($buildConfig.Data.Version)" >> $env:GITHUB_OUTPUT
+        "release_hash=$($buildConfig.Data.ReleaseHash)" >> $env:GITHUB_OUTPUT
+        "should_release=$($buildConfig.Data.ShouldRelease)" >> $env:GITHUB_OUTPUT
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: ./coverage
+        retention-days: 7
+
+  security:
+    name: Security Scanning
+    needs: build
+    if: needs.build.outputs.should_release == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      id-token: write # For dependency submission
+      contents: write # For dependency submission
+
+    steps:
+    - name: Checkout Release Commit
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ needs.build.outputs.release_hash }}
+
+    - name: Detect Dependencies
+      uses: advanced-security/component-detection-dependency-submission-action@v0.0.2
