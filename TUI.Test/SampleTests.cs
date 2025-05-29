@@ -5,6 +5,7 @@
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace ktsu.TUI.Test;
@@ -224,7 +225,7 @@ public class UIElementTests
 	{
 		// Arrange
 		var textElement = new TextElement();
-		var input = new InputResult { Key = "Enter", Modifiers = InputModifiers.None };
+		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		var result = textElement.HandleInput(input);

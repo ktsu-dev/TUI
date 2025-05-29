@@ -42,6 +42,33 @@ public readonly record struct TextStyle
 	public bool IsStrikethrough { get; init; }
 
 	/// <summary>
+	/// Gets or sets the foreground color as a string (convenience property)
+	/// </summary>
+	public string? Foreground
+	{
+		get => ForegroundColor?.Name;
+		init => ForegroundColor = string.IsNullOrEmpty(value) ? null : Color.FromName(value);
+	}
+
+	/// <summary>
+	/// Gets or sets the background color as a string (convenience property)
+	/// </summary>
+	public string? Background
+	{
+		get => BackgroundColor?.Name;
+		init => BackgroundColor = string.IsNullOrEmpty(value) ? null : Color.FromName(value);
+	}
+
+	/// <summary>
+	/// Gets or sets whether the text is underlined (alias for IsUnderlined)
+	/// </summary>
+	public bool IsUnderline
+	{
+		get => IsUnderlined;
+		init => IsUnderlined = value;
+	}
+
+	/// <summary>
 	/// Gets the default text style
 	/// </summary>
 	public static TextStyle Default => new();

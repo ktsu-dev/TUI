@@ -15,6 +15,7 @@ public class BorderElement : UIContainerBase
 	private BorderStyle _borderStyle = BorderStyle.Single;
 	private TextStyle _style = TextStyle.Default;
 	private string _title = string.Empty;
+	private HorizontalAlignment _titleAlignment = HorizontalAlignment.Left;
 
 	/// <summary>
 	/// Gets or sets the border style
@@ -67,7 +68,34 @@ public class BorderElement : UIContainerBase
 	/// <summary>
 	/// Gets or sets the title alignment
 	/// </summary>
-	public HorizontalAlignment TitleAlignment { get; set; } = HorizontalAlignment.Left;
+	public HorizontalAlignment TitleAlignment
+	{
+		get => _titleAlignment;
+		set
+		{
+			if (_titleAlignment != value)
+			{
+				_titleAlignment = value;
+				Invalidate();
+			}
+		}
+	}
+
+	/// <summary>
+	/// Gets or sets the child element (convenience property for single child)
+	/// </summary>
+	public IUIElement? Child
+	{
+		get => Children.FirstOrDefault();
+		set
+		{
+			ClearChildren();
+			if (value != null)
+			{
+				AddChild(value);
+			}
+		}
+	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="BorderElement"/> class

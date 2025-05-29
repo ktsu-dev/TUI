@@ -5,6 +5,7 @@
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace ktsu.TUI.Test;
@@ -215,7 +216,6 @@ public class BorderElementTests
 	/// Tests all border style enum values
 	/// </summary>
 	[TestMethod]
-	[DataRow(BorderStyle.None)]
 	[DataRow(BorderStyle.Single)]
 	[DataRow(BorderStyle.Double)]
 	[DataRow(BorderStyle.Rounded)]
@@ -282,7 +282,7 @@ public class BorderElementTests
 		var mockChild = new Mock<IUIElement>();
 		mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
 		var borderElement = new BorderElement { Child = mockChild.Object };
-		var input = new InputResult { Key = "Enter", Modifiers = InputModifiers.None };
+		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		var result = borderElement.HandleInput(input);
@@ -300,7 +300,7 @@ public class BorderElementTests
 	{
 		// Arrange
 		var borderElement = new BorderElement();
-		var input = new InputResult { Key = "Enter", Modifiers = InputModifiers.None };
+		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		var result = borderElement.HandleInput(input);

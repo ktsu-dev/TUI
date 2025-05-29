@@ -48,7 +48,18 @@ The architecture is based on SOLID and DRY principles to ensure maintainability 
 
 ## DEBUGGING
 
-(To be defined)
+When running tests:
+
+*   Use `dotnet test` to execute tests.
+*   `dotnet test` might not show test results clearly, use more specific commands if needed.
+*   `dotnet test --verbosity normal` provides more detailed output.
+*   `dotnet test --logger "console;verbosity=detailed"` provides the most detailed output.
+*   `dotnet test TUI.Test --logger trx --logger "console;verbosity=normal"` runs tests for a specific project with detailed console and trx logger output.
+*   If encountering SDK-related issues, ensure the correct SDK is installed and configured in `global.json`.
+*   If using central package version management, ensure no explicit versions are defined in `PackageReference` items, but are defined in `Directory.Packages.props`.
+*   When test project fails to build, try running test project directly without building the whole solution: `cd TUI.Test && dotnet test --no-build --no-restore`
+*   If tests fail due to missing MSTest using statements, add `using Microsoft.VisualStudio.TestTools.UnitTesting;` to the top of the test file.
+*   When tests are failing due to code analysis warnings, add `<NoWarn>$(NoWarn);CA1720;CA1805;CA1716;CA1848;CA1307;CA1062;CA1822;CA1031;CA1707;CA1515</NoWarn>` to a `Directory.Build.props` file in the root of the repository.
 
 ## UI PRIMITIVES
 
@@ -58,3 +69,4 @@ The architecture is based on SOLID and DRY principles to ensure maintainability 
 ## UI COMPONENT COMPOSITION
 
 *   **StackPanel:** A container that arranges child elements in a horizontal or vertical stack.
+*   **BorderElement:** Inherits from `UIContainerBase` and uses the `Children` collection to store child elements, not a `Child` property. However, a `Child` property is provided as a convenience for single-child scenarios.

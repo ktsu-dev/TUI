@@ -32,6 +32,11 @@ public interface IUIElement
 	IUIContainer? Parent { get; set; }
 
 	/// <summary>
+	/// Event raised when the element is invalidated
+	/// </summary>
+	event EventHandler? Invalidated;
+
+	/// <summary>
 	/// Renders the element using the provided console provider
 	/// </summary>
 	/// <param name="provider">The console provider to use for rendering</param>

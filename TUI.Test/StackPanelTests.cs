@@ -6,6 +6,7 @@ using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace ktsu.TUI.Test;
@@ -118,7 +119,7 @@ public class StackPanelTests
 
 		// Assert
 		Assert.AreEqual(1, stackPanel.Children.Count);
-		Assert.AreEqual(child, stackPanel.Children[0]);
+		Assert.AreEqual(child, stackPanel.Children.First());
 		Assert.AreEqual(stackPanel, child.Parent);
 	}
 
@@ -268,7 +269,7 @@ public class StackPanelTests
 		stackPanel.AddChild(mockChild1.Object);
 		stackPanel.AddChild(mockChild2.Object);
 
-		var input = new InputResult { Key = "Enter", Modifiers = InputModifiers.None };
+		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		var result = stackPanel.HandleInput(input);
@@ -291,7 +292,7 @@ public class StackPanelTests
 		mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(false);
 		stackPanel.AddChild(mockChild.Object);
 
-		var input = new InputResult { Key = "Enter", Modifiers = InputModifiers.None };
+		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		var result = stackPanel.HandleInput(input);
@@ -308,7 +309,7 @@ public class StackPanelTests
 	{
 		// Arrange
 		var stackPanel = new StackPanel();
-		var input = new InputResult { Key = "Enter", Modifiers = InputModifiers.None };
+		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		var result = stackPanel.HandleInput(input);
