@@ -30,14 +30,14 @@ public readonly record struct Padding(int Left, int Top, int Right, int Bottom)
 	/// </summary>
 	/// <param name="horizontal">The horizontal padding value</param>
 	/// <returns>The horizontal padding</returns>
-	public static Padding Horizontal(int horizontal) => new(horizontal, 0, horizontal, 0);
+	public static Padding CreateHorizontal(int horizontal) => new(horizontal, 0, horizontal, 0);
 
 	/// <summary>
 	/// Creates vertical padding (top and bottom only)
 	/// </summary>
 	/// <param name="vertical">The vertical padding value</param>
 	/// <returns>The vertical padding</returns>
-	public static Padding Vertical(int vertical) => new(0, vertical, 0, vertical);
+	public static Padding CreateVertical(int vertical) => new(0, vertical, 0, vertical);
 
 	/// <summary>
 	/// Gets the total horizontal padding (left + right)

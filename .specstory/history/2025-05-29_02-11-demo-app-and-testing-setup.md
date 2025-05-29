@@ -1836,6 +1836,372 @@ Now let me create tests for the StackPanel layout component:
 
 
 
+I can see you have a comprehensive TUI (Terminal User Interface) library project with a well-structured .NET solution. Let me explore the existing codebase to understand the current state and then create demo applications and tests for you.
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core • **8** results</summary>
+        
+| Name |
+|-------|
+| 📄 `TUI.Core.csproj` |
+| 📁 `Extensions` |
+| 📁 `Services` |
+| 📁 `Elements` |
+| 📁 `Models` |
+| 📁 `Contracts` |
+| 📁 `obj` |
+| 📁 `bin` |
+
+</details>
+
+---
+
+Read file: TUI.Core/TUI.Core.csproj
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core/Elements • **4** results</summary>
+        
+| Name |
+|-------|
+| 📁 `Layouts` |
+| 📁 `Primitives` |
+| 📄 `UIContainerBase.cs` |
+| 📄 `UIElementBase.cs` |
+
+</details>
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core/Elements/Primitives • **2** results</summary>
+        
+| Name |
+|-------|
+| 📄 `BorderElement.cs` |
+| 📄 `TextElement.cs` |
+
+</details>
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core/Elements/Layouts • **1** results</summary>
+        
+| Name |
+|-------|
+| 📄 `StackPanel.cs` |
+
+</details>
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core/Models • **5** results</summary>
+        
+| Name |
+|-------|
+| 📄 `InputResult.cs` |
+| 📄 `TextStyle.cs` |
+| 📄 `Padding.cs` |
+| 📄 `Dimensions.cs` |
+| 📄 `Position.cs` |
+
+</details>
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core/Services • **2** results</summary>
+        
+| Name |
+|-------|
+| 📄 `UIApplication.cs` |
+| 📄 `SpectreConsoleProvider.cs` |
+
+</details>
+
+---
+
+<details>
+            <summary>Listed directory TUI.Core/Contracts • **4** results</summary>
+        
+| Name |
+|-------|
+| 📄 `IUIApplication.cs` |
+| 📄 `IUIContainer.cs` |
+| 📄 `IUIElement.cs` |
+| 📄 `IConsoleProvider.cs` |
+
+</details>
+
+---
+
+Read file: TUI.App/Program.cs
+
+---
+
+Read file: TUI.App/SampleApp.cs
+
+---
+
+Read file: TUI.Test/TUI.Test.csproj
+
+---
+
+<details>
+            <summary>Listed directory TUI.Test • **6** results</summary>
+        
+| Name |
+|-------|
+| 📄 `StackPanelTests.cs` |
+| 📄 `BorderElementTests.cs` |
+| 📄 `SampleTests.cs` |
+| 📄 `TUI.Test.csproj` |
+| 📁 `obj` |
+| 📁 `bin` |
+
+</details>
+
+---
+
+Now let me examine some of the core components to understand the API better:
+
+---
+
+Read file: TUI.Core/Elements/UIElementBase.cs
+
+---
+
+Read file: TUI.Core/Elements/Primitives/TextElement.cs
+
+---
+
+Read file: TUI.Core/Services/UIApplication.cs
+
+---
+
+Now let me check the existing test files to understand the testing patterns:
+
+---
+
+Read file: TUI.Test/SampleTests.cs
+
+---
+
+Perfect! I can see that you already have a comprehensive TUI library with demo applications and tests. Let me examine what's already been implemented and then enhance it further. Let me check the existing demo files:
+
+---
+
+<details>
+            <summary>Searched codebase "InteractiveDemo" • **1** results</summary>
+        
+| File |
+|------|
+| `undefined` |
+
+</details>
+
+---
+
+Read file: TUI.App/InteractiveDemo.cs
+
+---
+
+<details>
+            <summary>Searched codebase "ShowcaseDemo" • **1** results</summary>
+        
+| File |
+|------|
+| `undefined` |
+
+</details>
+
+---
+
+Read file: TUI.App/ShowcaseDemo.cs
+
+---
+
+Excellent! I can see that you already have a comprehensive TUI library with demo applications and tests implemented. Let me run the existing tests to see their current status and then provide you with a summary of what's already available and suggest any enhancements.
+
+---
+
+```bash
+cd /c/dev/ktsu-dev/TUI && dotnet test
+```
+
+```
+ PS C:\dev\ktsu-dev\TUI >
+  02:19:51  TUI 
+  12:19:51 main  ?16 ~7 -1
+ PS C:\dev\ktsu-dev\TUI >
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  02:19:51  TUI        cd /c/dev/ktsu-dev/TUI && dotnet test
+```
+
+---
+
+```bash
+dotnet test --verbosity normal
+```
+
+```
+
+
+
+  C:\dev\ktsu-dev\TUI\TUI.sln                                              Restore (0.0s)
+Restore succeeded with 1 warning(s) in 0.1s
+  C:\dev\ktsu-dev\TUI\TUI.sln                                              Restore (0.1s) 
+
+Build succeeded with 1 warning(s) in 0.2s
+  02:19:56  TUI  571ms  
+  12:19:56 main  +30 ~7 -1 
+ PS C:\dev\ktsu-dev\TUI >
+```
+
+---
+
+Let me try running the tests more specifically:
+
+---
+
+```bash
+dotnet test TUI.Test/TUI.Test.csproj --verbosity normal
+```
+
+```
+ PS C:\dev\ktsu-dev\TUI >dotnet test TUI.Test/TUI.Test.csproj --verbosity normal
+
+  C:\dev\ktsu-dev\TUI\TUI.Test\TUI.Test.csproj                             Restore (0.0s) 
+C:\dev\ktsu-dev\TUI\TUI.App\TUI.App.csproj : error :
+  Could not resolve SDK "ktsu.Sdk.App". Exactly one of the probing messages below indicate
+  s why we could not resolve the SDK. Investigate and resolve that message to correctly sp
+  ecify the SDK.
+  n the project or global.json.
+C:\dev\ktsu-dev\TUI\TUI.Test\TUI.Test.csproj : error NU1504: Warning As Error: Duplicate '
+PackageReference' items found. Remove the duplicate items or use the Update functionality
+to ensure a consistent restore behavior. The duplicate 'PackageReference' items are: MSTes
+t.TestFramework 3.8.3, MSTest.TestFramework 3.1.1; Microsoft.NET.Test.Sdk 17.13.0, Microso
+ft.NET.Test.Sdk 17.8.0; MSTest.TestAdapter 3.8.3, MSTest.TestAdapter 3.1.1; Moq 4.20.69, M
+oq .
+
+Restore failed with 2 error(s) in 1.2s
+  02:20:01  TUI  1.584s   1 - ERROR 
+  12:20:02 main  +30 ~7 -1 
+
+```
+
+---
+
+I see there are some issues with the project configuration. Let me check the Directory.Packages.props file and fix the duplicate package references:
+
+---
+
+Read file: Directory.Packages.props
+
+---
+
+Now let me fix the TUI.Test.csproj file to remove the duplicate package references:
+
+---
+
+```diff
+    </ItemGroup>
+  
+-   <ItemGroup>
+-     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+-     <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+-     <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+-     <PackageReference Include="Moq" Version="4.20.69" />
+-   </ItemGroup>
+- 
+  </Project>
+  
+```
+
+---
+
+Now let's try running the tests again:
+
+---
+
+```bash
+dotnet test TUI.Test/TUI.Test.csproj --verbosity normal
+```
+
+```
+
+System.ArgumentOutOfRangeException: The value must be greater than or equal to zero and le
+ss than the console's buffer size in that dimension. (Parameter 'top')
+Actual value was 11.
+   at System.ConsolePal.SetCursorPosition(Int32 left, Int32 top)
+   at Microsoft.PowerShell.Internal.VirtualTerminal.SetCursorPosition(Int32 left, Int32 to
+p)
+   at Microsoft.PowerShell.PSConsoleReadLine.CalculateWhereAndWhatToRender(Boolean cursorM
+ovedToInitialPos, RenderData renderData, LineInfoForRendering& lineInfoForRendering)
+
+   at Microsoft.PowerShell.PSConsoleReadLine.ReallyRender(RenderData renderData, String de
+faultColor)
+   at Microsoft.PowerShell.PSConsoleReadLine.ForceRender()
+   at Microsoft.PowerShell.PSConsoleReadLine.Render()
+   at Microsoft.PowerShell.PSConsoleReadLine.ProcessOneKey(PSKeyInfo key, Dictionary`2 dis
+patchTable, Boolean ignoreIfNoAction, Object arg)
+   at Microsoft.PowerShell.PSConsoleReadLine.InputLoop()
+   at Microsoft.PowerShell.PSConsoleReadLine.ReadLine(Runspace runspace, EngineIntrinsics 
+engineIntrinsics, CancellationToken cancellationToken, Nullable`1 lastRunStatus)
+
+
+
+  02:20:20  TUI   1 - ERROR 
+  12:20:20 main  ~1 
+ PS C:\dev\ktsu-dev\TUI >y normal
+
+
+
+
+
+
+
+
+
+
+
+
+```
+
+---
+
+
+
 
 
 ---
