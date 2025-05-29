@@ -1,0 +1,60 @@
+---
+description: AI rules derived by SpecStory from the project AI interaction history
+globs: *
+---
+
+## PROJECT OVERVIEW
+
+This project is a .NET library designed for building text-based user interfaces (TUIs). It supports console providers like Spectre.Console and focuses on rendering UI primitives and composing complex UI components. The architecture follows a Contracts, Models, Services pattern, adhering to SOLID and DRY principles.
+
+## TECH STACK
+
+*   .NET (Specify version when available)
+*   Spectre.Console (for console provider support), version 0.49.1 was used during initial development.
+*   Microsoft.Extensions.DependencyInjection.Abstractions (Version 8.0.1)
+*   Microsoft.Extensions.Logging.Abstractions (Version 8.0.1)
+
+## PROJECT ARCHITECTURE
+
+*   **Contracts:** Defines interfaces for services and data structures.
+*   **Models:** Represents the data used within the application.
+*   **Services:** Implements the business logic and interacts with the console.
+*   **Elements:** Base classes and primitives for UI elements.
+*   **Layouts:** Classes for composing complex UI components
+
+The architecture is based on SOLID and DRY principles to ensure maintainability and testability.
+
+## CODING STANDARDS
+
+*   Follow established .NET coding conventions.
+*   Adhere to SOLID principles (Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion).
+*   Follow DRY principle (Don't Repeat Yourself) to avoid code duplication.
+*   Use meaningful and descriptive names for variables, methods, and classes.
+*   Write clear and concise comments to explain complex logic.
+*   Copyright headers must be included in all files:
+    ```csharp
+    // Copyright (c) ktsu.dev
+    // All rights reserved.
+    // Licensed under the MIT license.
+    ```
+
+## WORKFLOW & RELEASE RULES
+
+(To be defined)
+
+## PROJECT DOCUMENTATION & CONTEXT SYSTEM
+
+(To be defined)
+
+## DEBUGGING
+
+(To be defined)
+
+## UI PRIMITIVES
+
+*   **TextElement:** A UI element that displays text with styling options (font, color, alignment, word wrap).
+*   **BorderElement:** A UI element that draws a border around content, supporting different border styles and titles.
+
+## UI COMPONENT COMPOSITION
+
+*   **StackPanel:** A container that arranges child elements in a horizontal or vertical stack.

@@ -1,2 +1,14 @@
-<Project Sdk="ktsu.Sdk.Test/1.11.0">
+<Project Sdk="ktsu.Sdk.Test">
+
+  <ItemGroup>
+    <ProjectReference Include="../TUI.Core/TUI.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+  </ItemGroup>
+
 </Project>

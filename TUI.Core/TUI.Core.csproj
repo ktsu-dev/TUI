@@ -1,2 +1,9 @@
-<Project Sdk="ktsu.Sdk.Lib/1.11.0">
+<Project Sdk="ktsu.Sdk.Lib">
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+  </ItemGroup>
+
 </Project>

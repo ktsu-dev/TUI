@@ -1,2 +1,7 @@
-<Project Sdk="ktsu.Sdk.App/1.11.0">
+<Project Sdk="ktsu.Sdk.App">
+
+  <ItemGroup>
+    <ProjectReference Include="../TUI.Core/TUI.Core.csproj" />
+  </ItemGroup>
+
 </Project>
