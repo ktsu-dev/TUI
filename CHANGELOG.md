@@ -2,38 +2,16 @@
 
 Changes since v1.0.1:
 
+- Enhance documentation and tags for TUI library ([@matt-edmondson](https://github.com/matt-edmondson))
+- Implement Directory.Build.props and update test class access modifiers ([@matt-edmondson](https://github.com/matt-edmondson))
 - Update .editorconfig settings, .gitignore entries, and various project files ([@matt-edmondson](https://github.com/matt-edmondson))
+- Refactor TUI application classes to use target-typed new expressions and change access modifiers ([@matt-edmondson](https://github.com/matt-edmondson))
+- Enhance TUI library with new features and documentation ([@matt-edmondson](https://github.com/matt-edmondson))
 ## v1.0.2-pre.3 (prerelease)
 
-### Added
-- Complete TUI library infrastructure with clean architecture
-- Core UI elements: TextElement, BorderElement, StackPanel
-- Rich text styling with colors, bold, italic, underline
-- Multiple border styles: Single, Double, Rounded, Thick, ASCII, None
-- Horizontal and vertical layout containers with spacing
-- Event-driven rendering system
-- Keyboard input handling with ESC exit support
-- Console provider abstraction (Spectre.Console implementation)
-- Dependency injection ready architecture
-- Comprehensive demo applications
+Changes since v1.0.2-pre.2:
 
-### Features
-- Modular design following SOLID principles
-- Extensible UI element system
-- Responsive layout system
-- Text alignment support (left, center, right)
-- Padding and positioning system
-- Collection initializer support for containers
-
-### Demo Applications
-- SampleApp: Advanced architecture demonstration
-- InteractiveDemo: Real-time interactive controls
-- ShowcaseDemo: Visual styling demonstration
-
-### Documentation
-- Complete README with usage examples
-- Architecture documentation
-- API documentation for all components
+- Bump the ktsu group with 4 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
 ## v1.0.2-pre.2 (prerelease)
 
 Changes since v1.0.2-pre.1:
