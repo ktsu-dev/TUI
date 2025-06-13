@@ -17,12 +17,12 @@ public enum BorderStyle
 	/// <summary>
 	/// Single line border
 	/// </summary>
-	Single,
+	SingleLine,
 
 	/// <summary>
 	/// Double line border
 	/// </summary>
-	Double,
+	DoubleLine,
 
 	/// <summary>
 	/// Rounded corner border

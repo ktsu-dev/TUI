@@ -69,7 +69,7 @@ internal static class SampleApp
 		{
 			Title = "TUI Library",
 			TitleAlignment = HorizontalAlignment.Center,
-			BorderStyle = BorderStyle.Double,
+			BorderStyle = BorderStyle.DoubleLine,
 			Child = new TextElement
 			{
 				Text = "Advanced Demo",
@@ -86,7 +86,7 @@ internal static class SampleApp
 		BorderElement features = new()
 		{
 			Title = "Features",
-			BorderStyle = BorderStyle.Single,
+			BorderStyle = BorderStyle.SingleLine,
 			Child = new TextElement
 			{
 				Text = "✓ Modular Architecture\n" +
@@ -175,13 +175,13 @@ internal static class SampleApp
 		borderDemo.AddChild(new BorderElement
 		{
 			Title = "Single",
-			BorderStyle = BorderStyle.Single,
+			BorderStyle = BorderStyle.SingleLine,
 			Child = new TextElement { Text = "Content" }
 		});
 		borderDemo.AddChild(new BorderElement
 		{
 			Title = "Double",
-			BorderStyle = BorderStyle.Double,
+			BorderStyle = BorderStyle.DoubleLine,
 			Child = new TextElement { Text = "Content" }
 		});
 

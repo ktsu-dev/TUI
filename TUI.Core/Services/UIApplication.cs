@@ -19,6 +19,55 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private readonly ILogger<UIApplication>? _logger = logger;
 	private CancellationTokenSource? _cancellationTokenSource;
 
+	// Logger message delegates for improved performance
+	private static readonly Action<ILogger, Exception?> LogApplicationAlreadyRunning =
+		LoggerMessage.Define(LogLevel.Warning, new EventId(1, nameof(LogApplicationAlreadyRunning)), "Application is already running");
+
+	private static readonly Action<ILogger, Exception?> LogStartingApplication =
+		LoggerMessage.Define(LogLevel.Information, new EventId(2, nameof(LogStartingApplication)), "Starting UI application");
+
+	private static readonly Action<ILogger, Exception?> LogApplicationCancelled =
+		LoggerMessage.Define(LogLevel.Information, new EventId(3, nameof(LogApplicationCancelled)), "UI application was cancelled");
+
+	private static readonly Action<ILogger, Exception?> LogApplicationError =
+		LoggerMessage.Define(LogLevel.Error, new EventId(4, nameof(LogApplicationError)), "An error occurred while running the UI application");
+
+	private static readonly Action<ILogger, Exception?> LogApplicationStopped =
+		LoggerMessage.Define(LogLevel.Information, new EventId(5, nameof(LogApplicationStopped)), "UI application stopped");
+
+	private static readonly Action<ILogger, Exception?> LogStoppingApplication =
+		LoggerMessage.Define(LogLevel.Information, new EventId(6, nameof(LogStoppingApplication)), "Stopping UI application");
+
+	private static readonly Action<ILogger, Exception?> LogNoRootElement =
+		LoggerMessage.Define(LogLevel.Debug, new EventId(7, nameof(LogNoRootElement)), "No root element to render");
+
+	private static readonly Action<ILogger, Exception?> LogRenderingUI =
+		LoggerMessage.Define(LogLevel.Debug, new EventId(8, nameof(LogRenderingUI)), "Rendering UI");
+
+	private static readonly Action<ILogger, Exception?> LogRenderError =
+		LoggerMessage.Define(LogLevel.Error, new EventId(9, nameof(LogRenderError)), "An error occurred while rendering the UI");
+
+	private static readonly Action<ILogger, Exception?> LogStartingInputProcessing =
+		LoggerMessage.Define(LogLevel.Debug, new EventId(10, nameof(LogStartingInputProcessing)), "Starting input processing");
+
+	private static readonly Action<ILogger, string, Exception?> LogReceivedInput =
+		LoggerMessage.Define<string>(LogLevel.Debug, new EventId(11, nameof(LogReceivedInput)), "Received input: {InputType}");
+
+	private static readonly Action<ILogger, Exception?> LogExitInputReceived =
+		LoggerMessage.Define(LogLevel.Information, new EventId(12, nameof(LogExitInputReceived)), "Exit input received");
+
+	private static readonly Action<ILogger, Exception?> LogInputNotHandled =
+		LoggerMessage.Define(LogLevel.Debug, new EventId(13, nameof(LogInputNotHandled)), "Input was not handled by any element");
+
+	private static readonly Action<ILogger, Exception?> LogInputProcessingError =
+		LoggerMessage.Define(LogLevel.Error, new EventId(14, nameof(LogInputProcessingError)), "An error occurred while processing input");
+
+	private static readonly Action<ILogger, Exception?> LogInputProcessingStopped =
+		LoggerMessage.Define(LogLevel.Debug, new EventId(15, nameof(LogInputProcessingStopped)), "Input processing stopped");
+
+	private static readonly Action<ILogger, string, Exception?> LogUIApplicationSetup =
+		LoggerMessage.Define<string>(LogLevel.Information, new EventId(16, nameof(LogUIApplicationSetup)), "UI application setup with root element of type {ElementType}");
+
 	/// <inheritdoc />
 	public IUIElement? RootElement { get; set; }
 
@@ -33,7 +82,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	{
 		if (IsRunning)
 		{
-			_logger?.LogWarning("Application is already running");
+			if (_logger != null)
+			{
+				LogApplicationAlreadyRunning(_logger, null);
+			}
 			return;
 		}
 
@@ -42,7 +94,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 		try
 		{
-			_logger?.LogInformation("Starting UI application");
+			if (_logger != null)
+			{
+				LogStartingApplication(_logger, null);
+			}
 
 			// Initialize console
 			ConsoleProvider.Clear();
@@ -56,25 +111,37 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		}
 		catch (OperationCanceledException)
 		{
-			_logger?.LogInformation("UI application was cancelled");
+			if (_logger != null)
+			{
+				LogApplicationCancelled(_logger, null);
+			}
 		}
 		catch (Exception ex)
 		{
-			_logger?.LogError(ex, "An error occurred while running the UI application");
+			if (_logger != null)
+			{
+				LogApplicationError(_logger, ex);
+			}
 			throw;
 		}
 		finally
 		{
 			IsRunning = false;
 			ConsoleProvider.SetCursorVisibility(true);
-			_logger?.LogInformation("UI application stopped");
+			if (_logger != null)
+			{
+				LogApplicationStopped(_logger, null);
+			}
 		}
 	}
 
 	/// <inheritdoc />
-	public void Stop()
+	public void Shutdown()
 	{
-		_logger?.LogInformation("Stopping UI application");
+		if (_logger != null)
+		{
+			LogStoppingApplication(_logger, null);
+		}
 		_cancellationTokenSource?.Cancel();
 	}
 
@@ -83,13 +150,19 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	{
 		if (RootElement == null)
 		{
-			_logger?.LogDebug("No root element to render");
+			if (_logger != null)
+			{
+				LogNoRootElement(_logger, null);
+			}
 			return;
 		}
 
 		try
 		{
-			_logger?.LogDebug("Rendering UI");
+			if (_logger != null)
+			{
+				LogRenderingUI(_logger, null);
+			}
 
 			// Clear the console
 			ConsoleProvider.Clear();
@@ -103,16 +176,36 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			// Render the root element
 			RootElement.Render(ConsoleProvider);
 		}
-		catch (Exception ex)
+		catch (InvalidOperationException ex)
 		{
-			_logger?.LogError(ex, "An error occurred while rendering the UI");
+			if (_logger != null)
+			{
+				LogRenderError(_logger, ex);
+			}
+		}
+		catch (ArgumentException ex)
+		{
+			if (_logger != null)
+			{
+				LogRenderError(_logger, ex);
+			}
+		}
+		catch (NotSupportedException ex)
+		{
+			if (_logger != null)
+			{
+				LogRenderError(_logger, ex);
+			}
 		}
 	}
 
 	/// <inheritdoc />
 	public async Task ProcessInputAsync(CancellationToken cancellationToken = default)
 	{
-		_logger?.LogDebug("Starting input processing");
+		if (_logger != null)
+		{
+			LogStartingInputProcessing(_logger, null);
+		}
 
 		while (!cancellationToken.IsCancellationRequested && IsRunning)
 		{
@@ -120,13 +213,19 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			{
 				Models.InputResult input = await ConsoleProvider.ReadInputAsync();
 
-				_logger?.LogDebug("Received input: {InputType}", input.Type);
+				if (_logger != null)
+				{
+					LogReceivedInput(_logger, input.Type.ToString(), null);
+				}
 
 				// Handle global exit conditions
 				if (input.IsExit)
 				{
-					_logger?.LogInformation("Exit input received");
-					Stop();
+					if (_logger != null)
+					{
+						LogExitInputReceived(_logger, null);
+					}
+					Shutdown();
 					break;
 				}
 
@@ -135,7 +234,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 				if (!handled)
 				{
-					_logger?.LogDebug("Input was not handled by any element");
+					if (_logger != null)
+					{
+						LogInputNotHandled(_logger, null);
+					}
 				}
 
 				// Re-render if needed (elements invalidate themselves when they change)
@@ -145,19 +247,40 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			{
 				break;
 			}
-			catch (Exception ex)
+			catch (InvalidOperationException ex)
 			{
-				_logger?.LogError(ex, "An error occurred while processing input");
-
-				// Continue processing unless it's a critical error
-				if (ex is OutOfMemoryException or StackOverflowException)
+				if (_logger != null)
 				{
-					throw;
+					LogInputProcessingError(_logger, ex);
 				}
+
+				// Continue processing for recoverable errors
+			}
+			catch (ArgumentException ex)
+			{
+				if (_logger != null)
+				{
+					LogInputProcessingError(_logger, ex);
+				}
+
+				// Continue processing for recoverable errors
+			}
+			catch (OutOfMemoryException)
+			{
+				// Critical error - rethrow
+				throw;
+			}
+			catch (StackOverflowException)
+			{
+				// Critical error - rethrow
+				throw;
 			}
 		}
 
-		_logger?.LogDebug("Input processing stopped");
+		if (_logger != null)
+		{
+			LogInputProcessingStopped(_logger, null);
+		}
 	}
 
 	/// <summary>
@@ -169,7 +292,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		ArgumentNullException.ThrowIfNull(rootElement);
 
 		RootElement = rootElement;
-		_logger?.LogInformation("UI application setup with root element of type {ElementType}", rootElement.GetType().Name);
+		if (_logger != null)
+		{
+			LogUIApplicationSetup(_logger, rootElement.GetType().Name, null);
+		}
 	}
 
 	/// <summary>

@@ -52,7 +52,7 @@ public static class SampleCLI
 		{
 			Title = "TUI Library CLI Demo",
 			TitleAlignment = HorizontalAlignment.Center,
-			BorderStyle = BorderStyle.Double,
+							BorderStyle = BorderStyle.DoubleLine,
 			Child = new TextElement
 			{
 				Text = "Welcome to the TUI Library!",
@@ -78,7 +78,7 @@ public static class SampleCLI
 		var instructions = new BorderElement
 		{
 			Title = "Instructions",
-			BorderStyle = BorderStyle.Single,
+							BorderStyle = BorderStyle.SingleLine,
 			Child = new TextElement
 			{
 				Text = "Press ESC to exit the application",

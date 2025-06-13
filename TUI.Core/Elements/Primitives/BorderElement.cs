@@ -11,7 +11,7 @@ using ktsu.TUI.Core.Models;
 /// </summary>
 public class BorderElement : UIContainerBase
 {
-	private BorderStyle _borderStyle = BorderStyle.Single;
+	private BorderStyle _borderStyle = BorderStyle.SingleLine;
 	private TextStyle _style = TextStyle.Default;
 	private string _title = string.Empty;
 	private HorizontalAlignment _titleAlignment = HorizontalAlignment.Left;
@@ -112,6 +112,8 @@ public class BorderElement : UIContainerBase
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
+		ArgumentNullException.ThrowIfNull(provider);
+
 		Dimensions dimensions = Dimensions;
 		Position position = Position;
 
@@ -196,13 +198,13 @@ public class BorderElement : UIContainerBase
 	{
 		return style switch
 		{
-			BorderStyle.Double => new BorderCharacters('╔', '╗', '╚', '╝', '═', '║'),
+			BorderStyle.DoubleLine => new BorderCharacters('╔', '╗', '╚', '╝', '═', '║'),
 			BorderStyle.Rounded => new BorderCharacters('╭', '╮', '╰', '╯', '─', '│'),
 			BorderStyle.Thick => new BorderCharacters('┏', '┓', '┗', '┛', '━', '┃'),
 			BorderStyle.Ascii => new BorderCharacters('+', '+', '+', '+', '-', '|'),
-			BorderStyle.Single => throw new NotImplementedException(),
+			BorderStyle.SingleLine => new BorderCharacters('┌', '┐', '└', '┘', '─', '│'),
 			BorderStyle.None => throw new NotImplementedException(),
-			_ => new BorderCharacters('┌', '┐', '└', '┘', '─', '│') // Single
+			_ => new BorderCharacters('┌', '┐', '└', '┘', '─', '│') // SingleLine
 		};
 	}
 

@@ -14,13 +14,13 @@ using Moq;
 /// Tests for StackPanel layout functionality
 /// </summary>
 [TestClass]
-public class StackPanelTests
+sealed public class StackPanelTests
 {
 	/// <summary>
 	/// Tests that StackPanel initializes with correct default values
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_DefaultConstructor_InitializesCorrectly()
+	public void StackPanelDefaultConstructorInitializesCorrectly()
 	{
 		// Arrange & Act
 		StackPanel stackPanel = [];
@@ -37,7 +37,7 @@ public class StackPanelTests
 	/// Tests that StackPanel properly sets orientation
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_SetOrientation_UpdatesOrientationProperty()
+	public void StackPanelSetOrientationUpdatesOrientationProperty()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -54,7 +54,7 @@ public class StackPanelTests
 	/// Tests that StackPanel invalidates when orientation changes
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_ChangeOrientation_TriggersInvalidation()
+	public void StackPanelChangeOrientationTriggersInvalidation()
 	{
 		// Arrange
 		StackPanel stackPanel = new()
@@ -73,7 +73,7 @@ public class StackPanelTests
 	/// Tests that StackPanel properly sets spacing
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_SetSpacing_UpdatesSpacingProperty()
+	public void StackPanelSetSpacingUpdatesSpacingProperty()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -90,7 +90,7 @@ public class StackPanelTests
 	/// Tests that StackPanel invalidates when spacing changes
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_ChangeSpacing_TriggersInvalidation()
+	public void StackPanelChangeSpacingTriggersInvalidation()
 	{
 		// Arrange
 		StackPanel stackPanel = new()
@@ -109,7 +109,7 @@ public class StackPanelTests
 	/// Tests that StackPanel can add child elements
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_AddChild_AddsChildToCollection()
+	public void StackPanelAddChildAddsChildToCollection()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -128,7 +128,7 @@ public class StackPanelTests
 	/// Tests that StackPanel invalidates when child is added
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_AddChild_TriggersInvalidation()
+	public void StackPanelAddChildTriggersInvalidation()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -146,7 +146,7 @@ public class StackPanelTests
 	/// Tests that StackPanel can remove child elements
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_RemoveChild_RemovesChildFromCollection()
+	public void StackPanelRemoveChildRemovesChildFromCollection()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -166,7 +166,7 @@ public class StackPanelTests
 	/// Tests that StackPanel invalidates when child is removed
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_RemoveChild_TriggersInvalidation()
+	public void StackPanelRemoveChildTriggersInvalidation()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -186,7 +186,7 @@ public class StackPanelTests
 	/// Tests that StackPanel remove returns false for non-existent child
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_RemoveNonExistentChild_ReturnsFalse()
+	public void StackPanelRemoveNonExistentChildReturnsFalse()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -203,7 +203,7 @@ public class StackPanelTests
 	/// Tests that StackPanel can clear all children
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_ClearChildren_RemovesAllChildren()
+	public void StackPanelClearChildrenRemovesAllChildren()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -225,7 +225,7 @@ public class StackPanelTests
 	/// Tests that StackPanel invalidates when children are cleared
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_ClearChildren_TriggersInvalidation()
+	public void StackPanelClearChildrenTriggersInvalidation()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -244,7 +244,7 @@ public class StackPanelTests
 	/// Tests that StackPanel handles null child gracefully
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_AddNullChild_ThrowsArgumentNullException()
+	public void StackPanelAddNullChildThrowsArgumentNullException()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -257,7 +257,7 @@ public class StackPanelTests
 	/// Tests that StackPanel handles input by checking children in reverse order
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_HandleInput_ChecksChildrenInReverseOrder()
+	public void StackPanelHandleInputChecksChildrenInReverseOrder()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -290,7 +290,7 @@ public class StackPanelTests
 	/// Tests that StackPanel checks all children when none handle input
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_HandleInputNoChildrenHandleIt_ChecksAllChildren()
+	public void StackPanelHandleInputNoChildrenHandleItChecksAllChildren()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -322,7 +322,7 @@ public class StackPanelTests
 	/// Tests that StackPanel with no children returns false for input
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_HandleInputWithNoChildren_ReturnsFalse()
+	public void StackPanelHandleInputWithNoChildrenReturnsFalse()
 	{
 		// Arrange
 		StackPanel stackPanel = [];
@@ -342,7 +342,7 @@ public class StackPanelTests
 	[TestMethod]
 	[DataRow(Orientation.Vertical)]
 	[DataRow(Orientation.Horizontal)]
-	public void StackPanel_SetOrientationValues_AcceptsAllValidValues(Orientation orientation)
+	public void StackPanelSetOrientationValuesAcceptsAllValidValues(Orientation orientation)
 	{
 		// Arrange
 		StackPanel stackPanel = new()

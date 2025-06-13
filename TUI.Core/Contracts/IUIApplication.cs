@@ -32,9 +32,9 @@ public interface IUIApplication
 	public Task RunAsync(CancellationToken cancellationToken = default);
 
 	/// <summary>
-	/// Stops the application
+	/// Shuts down the application
 	/// </summary>
-	public void Stop();
+	public void Shutdown();
 
 	/// <summary>
 	/// Renders the current UI state

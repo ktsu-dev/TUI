@@ -13,13 +13,13 @@ using Moq;
 /// Tests for basic TUI elements functionality
 /// </summary>
 [TestClass]
-public class UIElementTests
+sealed public class UIElementTests
 {
 	/// <summary>
 	/// Tests that TextElement properly sets and gets text property
 	/// </summary>
 	[TestMethod]
-	public void TextElement_SetText_UpdatesTextProperty()
+	public void TextElementSetTextUpdatesTextProperty()
 	{
 		// Arrange
 		TextElement textElement = new();
@@ -36,7 +36,7 @@ public class UIElementTests
 	/// Tests that TextElement invalidates when text changes
 	/// </summary>
 	[TestMethod]
-	public void TextElement_ChangeText_TriggersInvalidation()
+	public void TextElementChangeTextTriggersInvalidation()
 	{
 		// Arrange
 		TextElement textElement = new("Initial text");
@@ -54,7 +54,7 @@ public class UIElementTests
 	/// Tests that TextElement doesn't invalidate when setting same text
 	/// </summary>
 	[TestMethod]
-	public void TextElement_SetSameText_DoesNotInvalidate()
+	public void TextElementSetSameTextDoesNotInvalidate()
 	{
 		// Arrange
 		string initialText = "Same text";
@@ -73,7 +73,7 @@ public class UIElementTests
 	/// Tests that TextElement handles null text gracefully
 	/// </summary>
 	[TestMethod]
-	public void TextElement_SetNullText_SetsEmptyString()
+	public void TextElementSetNullTextSetsEmptyString()
 	{
 		// Arrange
 		TextElement textElement = new()
@@ -90,7 +90,7 @@ public class UIElementTests
 	/// Tests that TextElement initializes with correct default values
 	/// </summary>
 	[TestMethod]
-	public void TextElement_DefaultConstructor_InitializesCorrectly()
+	public void TextElementDefaultConstructorInitializesCorrectly()
 	{
 		// Arrange & Act
 		TextElement textElement = new();
@@ -107,7 +107,7 @@ public class UIElementTests
 	/// Tests that TextElement constructor with text parameter works correctly
 	/// </summary>
 	[TestMethod]
-	public void TextElement_ConstructorWithText_SetsTextCorrectly()
+	public void TextElementConstructorWithTextSetsTextCorrectly()
 	{
 		// Arrange
 		string expectedText = "Constructor text";
@@ -123,7 +123,7 @@ public class UIElementTests
 	/// Tests that TextElement constructor with text and style works correctly
 	/// </summary>
 	[TestMethod]
-	public void TextElement_ConstructorWithTextAndStyle_SetsPropertiesCorrectly()
+	public void TextElementConstructorWithTextAndStyleSetsPropertiesCorrectly()
 	{
 		// Arrange
 		string expectedText = "Styled text";
@@ -143,7 +143,7 @@ public class UIElementTests
 	/// Tests that Position property changes trigger invalidation
 	/// </summary>
 	[TestMethod]
-	public void UIElement_ChangePosition_TriggersInvalidation()
+	public void UIElementChangePositionTriggersInvalidation()
 	{
 		// Arrange
 		TextElement textElement = new();
@@ -163,7 +163,7 @@ public class UIElementTests
 	/// Tests that Dimensions property changes trigger invalidation
 	/// </summary>
 	[TestMethod]
-	public void UIElement_ChangeDimensions_TriggersInvalidation()
+	public void UIElementChangeDimensionsTriggersInvalidation()
 	{
 		// Arrange
 		TextElement textElement = new();
@@ -183,7 +183,7 @@ public class UIElementTests
 	/// Tests that Visibility property changes trigger invalidation
 	/// </summary>
 	[TestMethod]
-	public void UIElement_ChangeVisibility_TriggersInvalidation()
+	public void UIElementChangeVisibilityTriggersInvalidation()
 	{
 		// Arrange
 		TextElement textElement = new();
@@ -202,7 +202,7 @@ public class UIElementTests
 	/// Tests that Render doesn't execute when element is not visible
 	/// </summary>
 	[TestMethod]
-	public void UIElement_RenderWhenNotVisible_DoesNotCallOnRender()
+	public void UIElementRenderWhenNotVisibleDoesNotCallOnRender()
 	{
 		// Arrange
 		Mock<IConsoleProvider> mockProvider = new();
@@ -222,7 +222,7 @@ public class UIElementTests
 	/// Tests that HandleInput returns false by default
 	/// </summary>
 	[TestMethod]
-	public void UIElement_HandleInput_ReturnsFalseByDefault()
+	public void UIElementHandleInputReturnsFalseByDefault()
 	{
 		// Arrange
 		TextElement textElement = new();
@@ -240,7 +240,7 @@ public class UIElementTests
 	/// Tests that Padding property is properly set and retrieved
 	/// </summary>
 	[TestMethod]
-	public void UIElement_SetPadding_UpdatesPaddingProperty()
+	public void UIElementSetPaddingUpdatesPaddingProperty()
 	{
 		// Arrange
 		TextElement textElement = new();

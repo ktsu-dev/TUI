@@ -11,13 +11,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Tests for TUI Core Models
 /// </summary>
 [TestClass]
-public class ModelsTests
+sealed public class ModelsTests
 {
 	/// <summary>
 	/// Tests Position constructor and properties
 	/// </summary>
 	[TestMethod]
-	public void Position_Constructor_SetsProperties()
+	public void PositionConstructorSetsProperties()
 	{
 		// Arrange & Act
 		Position position = new(10, 20);
@@ -31,7 +31,7 @@ public class ModelsTests
 	/// Tests Position equality
 	/// </summary>
 	[TestMethod]
-	public void Position_Equality_WorksCorrectly()
+	public void PositionEqualityWorksCorrectly()
 	{
 		// Arrange
 		Position position1 = new(10, 20);
@@ -49,7 +49,7 @@ public class ModelsTests
 	/// Tests Position Offset method
 	/// </summary>
 	[TestMethod]
-	public void Position_Offset_ReturnsNewPosition()
+	public void PositionOffsetReturnsNewPosition()
 	{
 		// Arrange
 		Position position = new(10, 20);
@@ -69,7 +69,7 @@ public class ModelsTests
 	/// Tests Dimensions constructor and properties
 	/// </summary>
 	[TestMethod]
-	public void Dimensions_Constructor_SetsProperties()
+	public void DimensionsConstructorSetsProperties()
 	{
 		// Arrange & Act
 		Dimensions dimensions = new(100, 50);
@@ -83,7 +83,7 @@ public class ModelsTests
 	/// Tests Dimensions Empty property
 	/// </summary>
 	[TestMethod]
-	public void Dimensions_Empty_ReturnsZeroDimensions()
+	public void DimensionsEmptyReturnsZeroDimensions()
 	{
 		// Act
 		Dimensions empty = Dimensions.Empty;
@@ -97,7 +97,7 @@ public class ModelsTests
 	/// Tests Dimensions IsEmpty property
 	/// </summary>
 	[TestMethod]
-	public void Dimensions_IsEmpty_DetectsEmptyCorrectly()
+	public void DimensionsIsEmptyDetectsEmptyCorrectly()
 	{
 		// Arrange
 		Dimensions empty = new(0, 0);
@@ -112,7 +112,7 @@ public class ModelsTests
 	/// Tests TextStyle default constructor
 	/// </summary>
 	[TestMethod]
-	public void TextStyle_DefaultConstructor_SetsDefaults()
+	public void TextStyleDefaultConstructorSetsDefaults()
 	{
 		// Act
 		TextStyle style = new();
@@ -130,7 +130,7 @@ public class ModelsTests
 	/// Tests TextStyle with all properties set
 	/// </summary>
 	[TestMethod]
-	public void TextStyle_AllProperties_SetCorrectly()
+	public void TextStyleAllPropertiesSetCorrectly()
 	{
 		// Arrange & Act
 		TextStyle style = new()
@@ -157,7 +157,7 @@ public class ModelsTests
 	/// Tests TextStyle with color values
 	/// </summary>
 	[TestMethod]
-	public void TextStyle_ColorProperties_WorkWithColorValues()
+	public void TextStyleColorPropertiesWorkWithColorValues()
 	{
 		// Arrange
 		Color foregroundColor = Color.Red;
@@ -179,7 +179,7 @@ public class ModelsTests
 	/// Tests Padding uniform constructor
 	/// </summary>
 	[TestMethod]
-	public void Padding_UniformConstructor_SetsAllSides()
+	public void PaddingUniformConstructorSetsAllSides()
 	{
 		// Act
 		Padding padding = Padding.Uniform(5);
@@ -195,7 +195,7 @@ public class ModelsTests
 	/// Tests Padding individual sides constructor
 	/// </summary>
 	[TestMethod]
-	public void Padding_IndividualSidesConstructor_SetsSides()
+	public void PaddingIndividualSidesConstructorSetsSides()
 	{
 		// Act
 		Padding padding = new(1, 2, 3, 4);
@@ -211,7 +211,7 @@ public class ModelsTests
 	/// Tests InputResult creation methods
 	/// </summary>
 	[TestMethod]
-	public void InputResult_CreationMethods_WorkCorrectly()
+	public void InputResultCreationMethodsWorkCorrectly()
 	{
 		// Act
 		InputResult exitInput = InputResult.Exit();
@@ -228,7 +228,7 @@ public class ModelsTests
 	/// Tests InputModifiers enum values
 	/// </summary>
 	[TestMethod]
-	public void InputModifiers_EnumValues_AreValid()
+	public void InputModifiersEnumValuesAreValid()
 	{
 		// Test each enum value
 		ConsoleModifiers[] modifiers = [InputModifiers.None, InputModifiers.Shift, InputModifiers.Control, InputModifiers.Alt];
@@ -247,7 +247,7 @@ public class ModelsTests
 	/// Tests InputType enum values
 	/// </summary>
 	[TestMethod]
-	public void InputType_EnumValues_AreValid()
+	public void InputTypeEnumValuesAreValid()
 	{
 		// Test each enum value
 		InputType[] inputTypes = [InputType.None, InputType.Keyboard, InputType.Mouse];

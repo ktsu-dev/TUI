@@ -60,7 +60,7 @@ public static class ShowcaseDemo
 		{
 			Title = "TUI Library Showcase",
 			TitleAlignment = HorizontalAlignment.Center,
-			BorderStyle = BorderStyle.Double,
+			BorderStyle = BorderStyle.DoubleLine,
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical
@@ -121,7 +121,7 @@ public static class ShowcaseDemo
 		var textStylesPanel = new BorderElement
 		{
 			Title = "Text Styles",
-			BorderStyle = BorderStyle.Single,
+			BorderStyle = BorderStyle.SingleLine,
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
@@ -213,8 +213,8 @@ public static class ShowcaseDemo
 		var borderStyles = new[]
 		{
 			(BorderStyle.None, "None"),
-			(BorderStyle.Single, "Single"),
-			(BorderStyle.Double, "Double"),
+			(BorderStyle.SingleLine, "Single"),
+			(BorderStyle.DoubleLine, "Double"),
 			(BorderStyle.Rounded, "Rounded"),
 			(BorderStyle.Thick, "Thick"),
 			(BorderStyle.Ascii, "ASCII")
@@ -252,7 +252,7 @@ public static class ShowcaseDemo
 		var horizontalAlignmentPanel = new BorderElement
 		{
 			Title = "Horizontal Alignment",
-			BorderStyle = BorderStyle.Single,
+			BorderStyle = BorderStyle.SingleLine,
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
@@ -332,10 +332,10 @@ public static class ShowcaseDemo
 		var paddingPanel = new BorderElement
 		{
 			Title = "Padding Demo",
-			BorderStyle = BorderStyle.Double,
+			BorderStyle = BorderStyle.DoubleLine,
 			Child = new BorderElement
 			{
-				BorderStyle = BorderStyle.Single,
+				BorderStyle = BorderStyle.SingleLine,
 				Child = new TextElement
 				{
 					Text = "Nested with padding",

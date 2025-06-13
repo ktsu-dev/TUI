@@ -47,7 +47,7 @@ internal static class InteractiveDemo
 		{
 			Title = "Interactive TUI Demo",
 			TitleAlignment = HorizontalAlignment.Center,
-			BorderStyle = BorderStyle.Double,
+			BorderStyle = BorderStyle.DoubleLine,
 			Child = new TextElement
 			{
 				Text = "Real-time UI Updates & Input Handling",
@@ -85,7 +85,7 @@ internal static class InteractiveDemo
 		return new BorderElement
 		{
 			Title = "Status",
-			BorderStyle = BorderStyle.Single,
+			BorderStyle = BorderStyle.SingleLine,
 			Child = _statusText
 		};
 	}

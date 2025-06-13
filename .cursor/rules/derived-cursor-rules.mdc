@@ -60,6 +60,7 @@ The architecture is based on SOLID and DRY principles to ensure maintainability 
 *   `README.md`, `DESCRIPTION.md`, and `TAGS.md` must contain actual descriptions of the TUI library's functionality, not placeholder text.
 *   `README.md`, `DESCRIPTION.md`, and `TAGS.md` must include frontmatter with `status: draft`.
 *   Populate `README.md`, `DESCRIPTION.md`, and `TAGS.md` with relevant project information.
+*   The `DESCRIPTION.md` file should contain a concise NuGet package description.
 
 ## DEBUGGING
 

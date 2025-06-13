@@ -27,6 +27,8 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	/// <inheritdoc />
 	public void Render(IUIElement element, Position position)
 	{
+		ArgumentNullException.ThrowIfNull(element);
+
 		if (!element.IsVisible)
 		{
 			return;
@@ -107,7 +109,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
 	{
 		string styleString = BuildStyleString(style);
-		string escapedText = text.Replace("[", "[[").Replace("]", "]]");
+		string escapedText = text.Replace("[", "[[", StringComparison.Ordinal).Replace("]", "]]", StringComparison.Ordinal);
 
 		return string.IsNullOrEmpty(styleString)
 			? new Markup(escapedText)
