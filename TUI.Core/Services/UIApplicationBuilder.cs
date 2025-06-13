@@ -61,7 +61,7 @@ public class UIApplicationBuilder
 	public UIApplication Build()
 	{
 		IConsoleProvider consoleProvider = _consoleProvider ?? new SpectreConsoleProvider();
-		UIApplication app = new UIApplication(consoleProvider, _logger);
+		UIApplication app = new(consoleProvider, _logger);
 
 		if (_rootElement != null)
 		{

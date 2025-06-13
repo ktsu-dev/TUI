@@ -12,7 +12,7 @@ using ktsu.TUI.Core.Services;
 /// <summary>
 /// A comprehensive sample application demonstrating advanced TUI library features
 /// </summary>
-public static class SampleApp
+internal static class SampleApp
 {
 	/// <summary>
 	/// Run the sample application
@@ -20,7 +20,7 @@ public static class SampleApp
 	internal static async Task RunAsync()
 	{
 		// Create console provider
-		SpectreConsoleProvider consoleProvider = new SpectreConsoleProvider();
+		SpectreConsoleProvider consoleProvider = new();
 
 		// Create application using builder pattern
 		UIApplication app = UIApplication.CreateBuilder(consoleProvider)
@@ -37,7 +37,7 @@ public static class SampleApp
 	private static IUIElement CreateAdvancedDemoUI()
 	{
 		// Create main layout with horizontal orientation
-		StackPanel mainLayout = new StackPanel
+		StackPanel mainLayout = new()
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 2,
@@ -58,14 +58,14 @@ public static class SampleApp
 
 	private static IUIElement CreateInfoPanel()
 	{
-		StackPanel panel = new StackPanel
+		StackPanel panel = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Header
-		BorderElement header = new BorderElement
+		BorderElement header = new()
 		{
 			Title = "TUI Library",
 			TitleAlignment = HorizontalAlignment.Center,
@@ -83,7 +83,7 @@ public static class SampleApp
 		};
 
 		// Features list
-		BorderElement features = new BorderElement
+		BorderElement features = new()
 		{
 			Title = "Features",
 			BorderStyle = BorderStyle.Single,
@@ -102,7 +102,7 @@ public static class SampleApp
 		};
 
 		// Architecture info
-		BorderElement architecture = new BorderElement
+		BorderElement architecture = new()
 		{
 			Title = "Architecture",
 			BorderStyle = BorderStyle.Rounded,
@@ -125,14 +125,14 @@ public static class SampleApp
 
 	private static IUIElement CreateFeaturesPanel()
 	{
-		StackPanel panel = new StackPanel
+		StackPanel panel = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Styling showcase
-		BorderElement stylingDemo = new BorderElement
+		BorderElement stylingDemo = new()
 		{
 			Title = "Text Styling",
 			BorderStyle = BorderStyle.Thick,
@@ -166,7 +166,7 @@ public static class SampleApp
 		});
 
 		// Border styles showcase
-		StackPanel borderDemo = new StackPanel
+		StackPanel borderDemo = new()
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 1
@@ -186,7 +186,7 @@ public static class SampleApp
 		});
 
 		// Instructions
-		BorderElement instructions = new BorderElement
+		BorderElement instructions = new()
 		{
 			Title = "Controls",
 			BorderStyle = BorderStyle.Ascii,

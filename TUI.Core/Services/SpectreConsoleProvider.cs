@@ -102,7 +102,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		}
 	}
 
-	private Position GetCursorPosition() => new(Console.CursorLeft, Console.CursorTop);
+	private static Position GetCursorPosition() => new(Console.CursorLeft, Console.CursorTop);
 
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
 	{
@@ -116,7 +116,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 	private static string BuildStyleString(TextStyle style)
 	{
-		List<string> parts = new List<string>();
+		List<string> parts = [];
 
 		if (style.ForegroundColor.HasValue)
 		{

@@ -129,7 +129,7 @@ public class BorderElement : UIContainerBase
 		provider.WriteAt(chars.BottomRight.ToString(), position.Offset(dimensions.Width - 1, dimensions.Height - 1), Style);
 
 		// Draw horizontal lines
-		string horizontalLine = new string(chars.Horizontal, dimensions.Width - 2);
+		string horizontalLine = new(chars.Horizontal, dimensions.Width - 2);
 		if (horizontalLine.Length > 0)
 		{
 			provider.WriteAt(horizontalLine, position.Offset(1, 0), Style);

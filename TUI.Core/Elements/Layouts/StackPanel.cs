@@ -12,7 +12,7 @@ using ktsu.TUI.Core.Models;
 public class StackPanel : UIContainerBase
 {
 	private Orientation _orientation = Orientation.Vertical;
-	private int _spacing = 0;
+	private int _spacing;
 
 	/// <summary>
 	/// Gets or sets the orientation of the stack
@@ -134,7 +134,7 @@ public class StackPanel : UIContainerBase
 		int maxWidth = 0;
 		int maxHeight = 0;
 
-		IUIElement[] visibleChildren = GetVisibleChildren().ToArray();
+		IUIElement[] visibleChildren = [.. GetVisibleChildren()];
 		int totalSpacing = Math.Max(0, (visibleChildren.Length - 1) * Spacing);
 
 		foreach (IUIElement? child in visibleChildren)

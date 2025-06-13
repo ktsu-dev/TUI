@@ -59,7 +59,7 @@ public class TextElement : UIElementBase
 	/// <summary>
 	/// Gets or sets whether text wrapping is enabled
 	/// </summary>
-	public bool WordWrap { get; set; } = false;
+	public bool WordWrap { get; set; }
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TextElement"/> class
@@ -167,7 +167,7 @@ public class TextElement : UIElementBase
 			return [text];
 		}
 
-		List<string> lines = new List<string>();
+		List<string> lines = [];
 		string[] words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 		string currentLine = string.Empty;
 

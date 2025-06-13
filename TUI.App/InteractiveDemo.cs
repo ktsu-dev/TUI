@@ -12,18 +12,18 @@ using ktsu.TUI.Core.Services;
 /// <summary>
 /// Interactive demo showcasing user input and dynamic updates
 /// </summary>
-public static class InteractiveDemo
+internal static class InteractiveDemo
 {
 	private static TextElement? _statusText;
 	private static TextElement? _counterText;
-	private static int _counter = 0;
+	private static int _counter;
 
 	/// <summary>
 	/// Runs the interactive demo
 	/// </summary>
 	public static async Task RunAsync()
 	{
-		SpectreConsoleProvider consoleProvider = new SpectreConsoleProvider();
+		SpectreConsoleProvider consoleProvider = new();
 		UIApplication app = UIApplication.CreateBuilder(consoleProvider)
 			.UseRootElement(CreateInteractiveUI())
 			.Build();
@@ -35,7 +35,7 @@ public static class InteractiveDemo
 
 	private static IUIElement CreateInteractiveUI()
 	{
-		StackPanel mainLayout = new StackPanel
+		StackPanel mainLayout = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1,
@@ -43,7 +43,7 @@ public static class InteractiveDemo
 		};
 
 		// Header
-		BorderElement header = new BorderElement
+		BorderElement header = new()
 		{
 			Title = "Interactive TUI Demo",
 			TitleAlignment = HorizontalAlignment.Center,
@@ -92,7 +92,7 @@ public static class InteractiveDemo
 
 	private static IUIElement CreateCounterPanel()
 	{
-		StackPanel counterLayout = new StackPanel
+		StackPanel counterLayout = new()
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 2
@@ -105,13 +105,13 @@ public static class InteractiveDemo
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 
-		TextElement counterLabel = new TextElement
+		TextElement counterLabel = new()
 		{
 			Text = "Counter:",
 			Style = new TextStyle { Foreground = "white" }
 		};
 
-		TextElement resetButton = new TextElement
+		TextElement resetButton = new()
 		{
 			Text = "[R] Reset",
 			Style = new TextStyle { Foreground = "red" }
@@ -131,7 +131,7 @@ public static class InteractiveDemo
 
 	private static IUIElement CreateInstructionsPanel()
 	{
-		TextElement instructionsText = new TextElement
+		TextElement instructionsText = new()
 		{
 			Text = "CONTROLS:\n" +
 				   "↑/↓  - Increment/Decrement Counter\n" +

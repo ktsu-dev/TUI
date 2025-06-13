@@ -13,7 +13,7 @@ using Moq;
 /// Tests for BorderElement functionality
 /// </summary>
 [TestClass]
-public class BorderElementTests
+internal class BorderElementTests
 {
 	/// <summary>
 	/// Tests that BorderElement initializes with correct default values
@@ -22,7 +22,7 @@ public class BorderElementTests
 	public void BorderElement_DefaultConstructor_InitializesCorrectly()
 	{
 		// Arrange & Act
-		BorderElement borderElement = new BorderElement();
+		BorderElement borderElement = [];
 
 		// Assert
 		Assert.AreEqual(BorderStyle.Single, borderElement.BorderStyle);
@@ -39,7 +39,7 @@ public class BorderElementTests
 	public void BorderElement_SetTitle_UpdatesTitleProperty()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement();
+		BorderElement borderElement = [];
 		string expectedTitle = "Test Title";
 
 		// Act
@@ -56,7 +56,8 @@ public class BorderElementTests
 	public void BorderElement_ChangeTitle_TriggersInvalidation()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement { Title = "Initial Title" };
+		BorderElement borderElement = new()
+		{ Title = "Initial Title" };
 		bool invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
@@ -75,7 +76,8 @@ public class BorderElementTests
 	{
 		// Arrange
 		string initialTitle = "Same Title";
-		BorderElement borderElement = new BorderElement { Title = initialTitle };
+		BorderElement borderElement = new()
+		{ Title = initialTitle };
 		bool invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
@@ -93,7 +95,7 @@ public class BorderElementTests
 	public void BorderElement_SetBorderStyle_UpdatesBorderStyleProperty()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement();
+		BorderElement borderElement = [];
 		BorderStyle expectedStyle = BorderStyle.Double;
 
 		// Act
@@ -110,7 +112,8 @@ public class BorderElementTests
 	public void BorderElement_ChangeBorderStyle_TriggersInvalidation()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement { BorderStyle = BorderStyle.Single };
+		BorderElement borderElement = new()
+		{ BorderStyle = BorderStyle.Single };
 		bool invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
@@ -128,7 +131,7 @@ public class BorderElementTests
 	public void BorderElement_SetTitleAlignment_UpdatesTitleAlignmentProperty()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement();
+		BorderElement borderElement = [];
 		HorizontalAlignment expectedAlignment = HorizontalAlignment.Center;
 
 		// Act
@@ -145,7 +148,8 @@ public class BorderElementTests
 	public void BorderElement_ChangeTitleAlignment_TriggersInvalidation()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement { TitleAlignment = HorizontalAlignment.Left };
+		BorderElement borderElement = new()
+		{ TitleAlignment = HorizontalAlignment.Left };
 		bool invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
@@ -163,8 +167,8 @@ public class BorderElementTests
 	public void BorderElement_SetChild_UpdatesChildProperty()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement();
-		TextElement childElement = new TextElement("Child content");
+		BorderElement borderElement = [];
+		TextElement childElement = new("Child content");
 
 		// Act
 		borderElement.Child = childElement;
@@ -181,7 +185,8 @@ public class BorderElementTests
 	public void BorderElement_ChangeChild_TriggersInvalidation()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement { Child = new TextElement("Initial child") };
+		BorderElement borderElement = new()
+		{ Child = new TextElement("Initial child") };
 		bool invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
@@ -199,8 +204,8 @@ public class BorderElementTests
 	public void BorderElement_SetNullChild_HandlesGracefully()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement();
-		TextElement initialChild = new TextElement("Initial child");
+		BorderElement borderElement = [];
+		TextElement initialChild = new("Initial child");
 		borderElement.Child = initialChild;
 
 		// Act
@@ -223,7 +228,7 @@ public class BorderElementTests
 	public void BorderElement_SetBorderStyleValues_AcceptsAllValidValues(BorderStyle borderStyle)
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement
+		BorderElement borderElement = new()
 		{
 			// Act
 			BorderStyle = borderStyle
@@ -240,10 +245,11 @@ public class BorderElementTests
 	public void BorderElement_ConstructorWithChild_SetsPropertiesCorrectly()
 	{
 		// Arrange
-		TextElement childElement = new TextElement("Constructor child");
+		TextElement childElement = new("Constructor child");
 
 		// Act
-		BorderElement borderElement = new BorderElement { Child = childElement };
+		BorderElement borderElement = new()
+		{ Child = childElement };
 
 		// Assert
 		Assert.AreEqual(childElement, borderElement.Child);
@@ -257,8 +263,8 @@ public class BorderElementTests
 	public void BorderElement_RenderWhenNotVisible_DoesNotCallOnRender()
 	{
 		// Arrange
-		Mock<IConsoleProvider> mockProvider = new Mock<IConsoleProvider>();
-		BorderElement borderElement = new BorderElement
+		Mock<IConsoleProvider> mockProvider = new();
+		BorderElement borderElement = new()
 		{
 			Title = "Test Border",
 			Child = new TextElement("Test content"),
@@ -279,11 +285,13 @@ public class BorderElementTests
 	public void BorderElement_HandleInput_DelegatesToChild()
 	{
 		// Arrange
-		Mock<IUIElement> mockChild = new Mock<IUIElement>();
+		Mock<IUIElement> mockChild = new();
 		mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
 		mockChild.Setup(c => c.IsVisible).Returns(true);
-		BorderElement borderElement = new BorderElement { Child = mockChild.Object };
-		InputResult input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+		BorderElement borderElement = new()
+		{ Child = mockChild.Object };
+		InputResult input = new()
+		{ Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		bool result = borderElement.HandleInput(input);
@@ -300,8 +308,9 @@ public class BorderElementTests
 	public void BorderElement_HandleInputWithNoChild_ReturnsFalse()
 	{
 		// Arrange
-		BorderElement borderElement = new BorderElement();
-		InputResult input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+		BorderElement borderElement = [];
+		InputResult input = new()
+		{ Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
 		bool result = borderElement.HandleInput(input);

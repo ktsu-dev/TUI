@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Tests for TUI Core Models
 /// </summary>
 [TestClass]
-public class ModelsTests
+internal class ModelsTests
 {
 	/// <summary>
 	/// Tests Position constructor and properties
@@ -20,7 +20,7 @@ public class ModelsTests
 	public void Position_Constructor_SetsProperties()
 	{
 		// Arrange & Act
-		Position position = new Position(10, 20);
+		Position position = new(10, 20);
 
 		// Assert
 		Assert.AreEqual(10, position.X);
@@ -34,9 +34,9 @@ public class ModelsTests
 	public void Position_Equality_WorksCorrectly()
 	{
 		// Arrange
-		Position position1 = new Position(10, 20);
-		Position position2 = new Position(10, 20);
-		Position position3 = new Position(15, 25);
+		Position position1 = new(10, 20);
+		Position position2 = new(10, 20);
+		Position position3 = new(15, 25);
 
 		// Act & Assert
 		Assert.AreEqual(position1, position2);
@@ -52,7 +52,7 @@ public class ModelsTests
 	public void Position_Offset_ReturnsNewPosition()
 	{
 		// Arrange
-		Position position = new Position(10, 20);
+		Position position = new(10, 20);
 
 		// Act
 		Position offsetPosition = position.Offset(5, 3);
@@ -72,7 +72,7 @@ public class ModelsTests
 	public void Dimensions_Constructor_SetsProperties()
 	{
 		// Arrange & Act
-		Dimensions dimensions = new Dimensions(100, 50);
+		Dimensions dimensions = new(100, 50);
 
 		// Assert
 		Assert.AreEqual(100, dimensions.Width);
@@ -100,8 +100,8 @@ public class ModelsTests
 	public void Dimensions_IsEmpty_DetectsEmptyCorrectly()
 	{
 		// Arrange
-		Dimensions empty = new Dimensions(0, 0);
-		Dimensions notEmpty = new Dimensions(10, 5);
+		Dimensions empty = new(0, 0);
+		Dimensions notEmpty = new(10, 5);
 
 		// Assert
 		Assert.IsTrue(empty.IsEmpty);
@@ -115,7 +115,7 @@ public class ModelsTests
 	public void TextStyle_DefaultConstructor_SetsDefaults()
 	{
 		// Act
-		TextStyle style = new TextStyle();
+		TextStyle style = new();
 
 		// Assert
 		Assert.IsFalse(style.IsBold);
@@ -133,7 +133,7 @@ public class ModelsTests
 	public void TextStyle_AllProperties_SetCorrectly()
 	{
 		// Arrange & Act
-		TextStyle style = new TextStyle
+		TextStyle style = new()
 		{
 			IsBold = true,
 			IsItalic = true,
@@ -164,7 +164,7 @@ public class ModelsTests
 		Color backgroundColor = Color.Blue;
 
 		// Act
-		TextStyle style = new TextStyle
+		TextStyle style = new()
 		{
 			ForegroundColor = foregroundColor,
 			BackgroundColor = backgroundColor
@@ -198,7 +198,7 @@ public class ModelsTests
 	public void Padding_IndividualSidesConstructor_SetsSides()
 	{
 		// Act
-		Padding padding = new Padding(1, 2, 3, 4);
+		Padding padding = new(1, 2, 3, 4);
 
 		// Assert
 		Assert.AreEqual(1, padding.Left);
@@ -231,7 +231,7 @@ public class ModelsTests
 	public void InputModifiers_EnumValues_AreValid()
 	{
 		// Test each enum value
-		ConsoleModifiers[] modifiers = new[] { InputModifiers.None, InputModifiers.Shift, InputModifiers.Control, InputModifiers.Alt };
+		ConsoleModifiers[] modifiers = [InputModifiers.None, InputModifiers.Shift, InputModifiers.Control, InputModifiers.Alt];
 
 		foreach (ConsoleModifiers modifier in modifiers)
 		{
@@ -250,12 +250,13 @@ public class ModelsTests
 	public void InputType_EnumValues_AreValid()
 	{
 		// Test each enum value
-		InputType[] inputTypes = new[] { InputType.None, InputType.Keyboard, InputType.Mouse };
+		InputType[] inputTypes = [InputType.None, InputType.Keyboard, InputType.Mouse];
 
 		foreach (InputType inputType in inputTypes)
 		{
 			// Arrange
-			InputResult input = new InputResult { Type = inputType };
+			InputResult input = new()
+			{ Type = inputType };
 
 			// Act & Assert
 			Assert.AreEqual(inputType, input.Type);
