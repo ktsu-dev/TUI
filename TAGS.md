@@ -1,1 +1,1 @@
-placeholder tags;use semicolons to separate tags;and spaces to separate words;
+tui;text user interface;console;terminal;spectre console;dotnet;csharp;ui library;command line;cli;interactive;rich text;borders;styling;layout;stack panel;clean architecture;solid principles;dependency injection;event driven;modular;extensible;cross platform;modern ui;terminal application;console application;text styling;input handling;keyboard input;responsive design;alignment;padding;positioning;

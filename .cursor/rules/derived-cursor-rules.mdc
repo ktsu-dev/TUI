@@ -57,7 +57,9 @@ The architecture is based on SOLID and DRY principles to ensure maintainability 
 
 ## PROJECT DOCUMENTATION & CONTEXT SYSTEM
 
-*   README.md, DESCRIPTION.md, and other documentation files should contain actual descriptions of the TUI library's functionality, not placeholder text.
+*   `README.md`, `DESCRIPTION.md`, and `TAGS.md` must contain actual descriptions of the TUI library's functionality, not placeholder text.
+*   `README.md`, `DESCRIPTION.md`, and `TAGS.md` must include frontmatter with `status: draft`.
+*   Populate `README.md`, `DESCRIPTION.md`, and `TAGS.md` with relevant project information.
 
 ## DEBUGGING
 

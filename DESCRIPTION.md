@@ -1,1 +1,1 @@
-A modern, extensible Text User Interface (TUI) library for .NET applications built on Spectre.Console with clean architecture.
+A modern, extensible Text User Interface (TUI) library for .NET that provides rich terminal UI components built on Spectre.Console. Create interactive console applications with styled text, borders, layouts, and keyboard input handling using clean, object-oriented APIs. Features modular architecture with dependency injection support, cross-platform compatibility, and comprehensive styling options for professional terminal applications.
