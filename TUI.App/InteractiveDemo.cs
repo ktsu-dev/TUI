@@ -2,13 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.App;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
-
-namespace ktsu.TUI.App;
 
 /// <summary>
 /// Interactive demo showcasing user input and dynamic updates
@@ -17,7 +16,6 @@ public static class InteractiveDemo
 {
 	private static TextElement? _statusText;
 	private static TextElement? _counterText;
-	private static BorderElement? _inputPanel;
 	private static int _counter = 0;
 
 	/// <summary>
@@ -136,12 +134,12 @@ public static class InteractiveDemo
 		var instructionsText = new TextElement
 		{
 			Text = "CONTROLS:\n" +
-			       "↑/↓  - Increment/Decrement Counter\n" +
-			       "SPACE - Add +10 to Counter\n" +
-			       "R     - Reset Counter\n" +
-			       "T     - Toggle Theme\n" +
-			       "ESC   - Exit Demo\n\n" +
-			       "Watch the status and counter update in real-time!",
+				   "↑/↓  - Increment/Decrement Counter\n" +
+				   "SPACE - Add +10 to Counter\n" +
+				   "R     - Reset Counter\n" +
+				   "T     - Toggle Theme\n" +
+				   "ESC   - Exit Demo\n\n" +
+				   "Watch the status and counter update in real-time!",
 			Style = new TextStyle { Foreground = "magenta" }
 		};
 

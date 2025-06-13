@@ -5,32 +5,6 @@
 namespace ktsu.TUI.Core.Models;
 
 /// <summary>
-/// Type alias for ConsoleModifiers to provide backward compatibility
-/// </summary>
-public static class InputModifiers
-{
-	/// <summary>
-	/// No modifiers
-	/// </summary>
-	public static readonly ConsoleModifiers None = ConsoleModifiers.None;
-
-	/// <summary>
-	/// Alt modifier
-	/// </summary>
-	public static readonly ConsoleModifiers Alt = ConsoleModifiers.Alt;
-
-	/// <summary>
-	/// Control modifier
-	/// </summary>
-	public static readonly ConsoleModifiers Control = ConsoleModifiers.Control;
-
-	/// <summary>
-	/// Shift modifier
-	/// </summary>
-	public static readonly ConsoleModifiers Shift = ConsoleModifiers.Shift;
-}
-
-/// <summary>
 /// Represents the result of input processing
 /// </summary>
 public readonly record struct InputResult
@@ -96,35 +70,4 @@ public readonly record struct InputResult
 	/// <returns>The exit input result</returns>
 	public static InputResult Exit() =>
 		new() { Type = InputType.Exit, IsExit = true };
-}
-
-/// <summary>
-/// Defines the types of input
-/// </summary>
-public enum InputType
-{
-	/// <summary>
-	/// No input
-	/// </summary>
-	None,
-
-	/// <summary>
-	/// Keyboard input
-	/// </summary>
-	Keyboard,
-
-	/// <summary>
-	/// Character input
-	/// </summary>
-	Character,
-
-	/// <summary>
-	/// Mouse input
-	/// </summary>
-	Mouse,
-
-	/// <summary>
-	/// Exit request
-	/// </summary>
-	Exit
 }

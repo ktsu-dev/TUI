@@ -2,10 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
-
-namespace ktsu.TUI.Core.Elements.Layouts;
 
 /// <summary>
 /// A container that arranges child elements in a stack (horizontal or vertical)
@@ -60,10 +59,7 @@ public class StackPanel : UIContainerBase
 	/// Initializes a new instance of the <see cref="StackPanel"/> class with the specified orientation
 	/// </summary>
 	/// <param name="orientation">The stack orientation</param>
-	public StackPanel(Orientation orientation)
-	{
-		Orientation = orientation;
-	}
+	public StackPanel(Orientation orientation) => Orientation = orientation;
 
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
@@ -78,7 +74,9 @@ public class StackPanel : UIContainerBase
 		var contentPosition = GetContentPosition();
 
 		if (contentArea.IsEmpty || Children.Count == 0)
+		{
 			return;
+		}
 
 		var currentOffset = 0;
 
@@ -99,7 +97,9 @@ public class StackPanel : UIContainerBase
 
 				// Stop if we've run out of vertical space
 				if (currentOffset >= contentArea.Height)
+				{
 					break;
+				}
 			}
 			else
 			{
@@ -114,7 +114,9 @@ public class StackPanel : UIContainerBase
 
 				// Stop if we've run out of horizontal space
 				if (currentOffset >= contentArea.Width)
+				{
 					break;
+				}
 			}
 		}
 	}
@@ -123,7 +125,9 @@ public class StackPanel : UIContainerBase
 	protected override Dimensions OnCalculateRequiredDimensionsForChildren()
 	{
 		if (Children.Count == 0)
+		{
 			return Dimensions.Empty;
+		}
 
 		var totalWidth = 0;
 		var totalHeight = 0;
@@ -153,20 +157,4 @@ public class StackPanel : UIContainerBase
 			? new Dimensions(maxWidth, totalHeight + totalSpacing)
 			: new Dimensions(totalWidth + totalSpacing, maxHeight);
 	}
-}
-
-/// <summary>
-/// Defines orientation options for layout containers
-/// </summary>
-public enum Orientation
-{
-	/// <summary>
-	/// Horizontal orientation (left to right)
-	/// </summary>
-	Horizontal,
-
-	/// <summary>
-	/// Vertical orientation (top to bottom)
-	/// </summary>
-	Vertical
 }

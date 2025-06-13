@@ -2,10 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Core.Elements;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
-
-namespace ktsu.TUI.Core.Elements;
 
 /// <summary>
 /// Base implementation for UI containers that can hold child elements
@@ -63,10 +62,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	}
 
 	/// <inheritdoc />
-	public virtual void ArrangeChildren()
-	{
-		OnArrangeChildren();
-	}
+	public virtual void ArrangeChildren() => OnArrangeChildren();
 
 	/// <inheritdoc />
 	public override void Render(IConsoleProvider provider)
@@ -116,7 +112,9 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	protected virtual Dimensions OnCalculateRequiredDimensionsForChildren()
 	{
 		if (_children.Count == 0)
+		{
 			return Dimensions.Empty;
+		}
 
 		var maxWidth = 0;
 		var maxHeight = 0;
@@ -138,13 +136,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	/// Gets children that are visible
 	/// </summary>
 	/// <returns>Enumerable of visible children</returns>
-	protected IEnumerable<IUIElement> GetVisibleChildren()
-	{
-		return _children.Where(c => c.IsVisible);
-	}
+	protected IEnumerable<IUIElement> GetVisibleChildren() => _children.Where(c => c.IsVisible);
 
-	private void OnChildInvalidated(object? sender, EventArgs e)
-	{
-		Invalidate();
-	}
+	private void OnChildInvalidated(object? sender, EventArgs e) => Invalidate();
 }

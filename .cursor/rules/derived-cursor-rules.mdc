@@ -60,6 +60,13 @@ When running tests:
 *   When test project fails to build, try running test project directly without building the whole solution: `cd TUI.Test && dotnet test --no-build --no-restore`
 *   If tests fail due to missing MSTest using statements, add `using Microsoft.VisualStudio.TestTools.UnitTesting;` to the top of the test file.
 *   When tests are failing due to code analysis warnings, add `<NoWarn>$(NoWarn);CA1720;CA1805;CA1716;CA1848;CA1307;CA1062;CA1822;CA1031;CA1707;CA1515</NoWarn>` to a `Directory.Build.props` file in the root of the repository.
+*   To run tests with detailed console output, use: `dotnet test TUI.Test/TUI.Test.csproj --logger "console;verbosity=detailed"`
+*   When using mock objects for UI elements in tests, ensure the `IsVisible` property is explicitly set to `true` to match the default behavior of `UIElementBase`. Mocking frameworks like Moq default `bool` properties to `false`. For example:
+    ```csharp
+    var mockChild = new Mock<IUIElement>();
+    mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
+    mockChild.Setup(c => c.IsVisible).Returns(true);
+    ```
 
 ## UI PRIMITIVES
 

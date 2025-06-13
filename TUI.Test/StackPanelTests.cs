@@ -2,14 +2,13 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Test;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-
-namespace ktsu.TUI.Test;
 
 /// <summary>
 /// Tests for StackPanel layout functionality
@@ -59,7 +58,7 @@ public class StackPanelTests
 	{
 		// Arrange
 		var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
-		bool invalidated = false;
+		var invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -94,7 +93,7 @@ public class StackPanelTests
 	{
 		// Arrange
 		var stackPanel = new StackPanel { Spacing = 0 };
-		bool invalidated = false;
+		var invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -131,7 +130,7 @@ public class StackPanelTests
 	{
 		// Arrange
 		var stackPanel = new StackPanel();
-		bool invalidated = false;
+		var invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -171,7 +170,7 @@ public class StackPanelTests
 		var stackPanel = new StackPanel();
 		var child = new TextElement("Test child");
 		stackPanel.AddChild(child);
-		bool invalidated = false;
+		var invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -229,7 +228,7 @@ public class StackPanelTests
 		// Arrange
 		var stackPanel = new StackPanel();
 		stackPanel.AddChild(new TextElement("Test child"));
-		bool invalidated = false;
+		var invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -264,7 +263,9 @@ public class StackPanelTests
 		var mockChild2 = new Mock<IUIElement>();
 
 		mockChild1.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(false);
+		mockChild1.Setup(c => c.IsVisible).Returns(true);
 		mockChild2.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
+		mockChild2.Setup(c => c.IsVisible).Returns(true);
 
 		stackPanel.AddChild(mockChild1.Object);
 		stackPanel.AddChild(mockChild2.Object);
@@ -327,10 +328,11 @@ public class StackPanelTests
 	public void StackPanel_SetOrientationValues_AcceptsAllValidValues(Orientation orientation)
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-
-		// Act
-		stackPanel.Orientation = orientation;
+		var stackPanel = new StackPanel
+		{
+			// Act
+			Orientation = orientation
+		};
 
 		// Assert
 		Assert.AreEqual(orientation, stackPanel.Orientation);

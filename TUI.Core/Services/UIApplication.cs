@@ -2,51 +2,42 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-using ktsu.TUI.Core.Contracts;
-using ktsu.TUI.Core.Models;
-using Microsoft.Extensions.Logging;
-
 namespace ktsu.TUI.Core.Services;
+using ktsu.TUI.Core.Contracts;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Main UI application service that orchestrates the TUI
 /// </summary>
-public class UIApplication : IUIApplication
+/// <remarks>
+/// Initializes a new instance of the <see cref="UIApplication"/> class
+/// </remarks>
+/// <param name="consoleProvider">The console provider to use</param>
+/// <param name="logger">Optional logger</param>
+public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplication>? logger = null) : IUIApplication
 {
-	private readonly ILogger<UIApplication>? _logger;
-	private bool _isRunning;
+	private readonly ILogger<UIApplication>? _logger = logger;
 	private CancellationTokenSource? _cancellationTokenSource;
 
 	/// <inheritdoc />
 	public IUIElement? RootElement { get; set; }
 
 	/// <inheritdoc />
-	public IConsoleProvider ConsoleProvider { get; }
+	public IConsoleProvider ConsoleProvider { get; } = consoleProvider ?? throw new ArgumentNullException(nameof(consoleProvider));
 
 	/// <inheritdoc />
-	public bool IsRunning => _isRunning;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="UIApplication"/> class
-	/// </summary>
-	/// <param name="consoleProvider">The console provider to use</param>
-	/// <param name="logger">Optional logger</param>
-	public UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplication>? logger = null)
-	{
-		ConsoleProvider = consoleProvider ?? throw new ArgumentNullException(nameof(consoleProvider));
-		_logger = logger;
-	}
+	public bool IsRunning { get; private set; }
 
 	/// <inheritdoc />
 	public async Task RunAsync(CancellationToken cancellationToken = default)
 	{
-		if (_isRunning)
+		if (IsRunning)
 		{
 			_logger?.LogWarning("Application is already running");
 			return;
 		}
 
-		_isRunning = true;
+		IsRunning = true;
 		_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
 		try
@@ -74,7 +65,7 @@ public class UIApplication : IUIApplication
 		}
 		finally
 		{
-			_isRunning = false;
+			IsRunning = false;
 			ConsoleProvider.SetCursorVisibility(true);
 			_logger?.LogInformation("UI application stopped");
 		}
@@ -123,7 +114,7 @@ public class UIApplication : IUIApplication
 	{
 		_logger?.LogDebug("Starting input processing");
 
-		while (!cancellationToken.IsCancellationRequested && _isRunning)
+		while (!cancellationToken.IsCancellationRequested && IsRunning)
 		{
 			try
 			{
@@ -186,77 +177,5 @@ public class UIApplication : IUIApplication
 	/// </summary>
 	/// <param name="consoleProvider">The console provider to use</param>
 	/// <returns>A new application builder</returns>
-	public static UIApplicationBuilder CreateBuilder(IConsoleProvider? consoleProvider = null)
-	{
-		return new UIApplicationBuilder(consoleProvider);
-	}
-}
-
-/// <summary>
-/// Builder for configuring UI applications
-/// </summary>
-public class UIApplicationBuilder
-{
-	private IConsoleProvider? _consoleProvider;
-	private ILogger<UIApplication>? _logger;
-	private IUIElement? _rootElement;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="UIApplicationBuilder"/> class
-	/// </summary>
-	/// <param name="consoleProvider">Optional console provider</param>
-	internal UIApplicationBuilder(IConsoleProvider? consoleProvider)
-	{
-		_consoleProvider = consoleProvider;
-	}
-
-	/// <summary>
-	/// Sets the console provider
-	/// </summary>
-	/// <param name="consoleProvider">The console provider to use</param>
-	/// <returns>This builder for method chaining</returns>
-	public UIApplicationBuilder UseConsoleProvider(IConsoleProvider consoleProvider)
-	{
-		_consoleProvider = consoleProvider ?? throw new ArgumentNullException(nameof(consoleProvider));
-		return this;
-	}
-
-	/// <summary>
-	/// Sets the logger
-	/// </summary>
-	/// <param name="logger">The logger to use</param>
-	/// <returns>This builder for method chaining</returns>
-	public UIApplicationBuilder UseLogger(ILogger<UIApplication> logger)
-	{
-		_logger = logger;
-		return this;
-	}
-
-	/// <summary>
-	/// Sets the root element
-	/// </summary>
-	/// <param name="rootElement">The root element to display</param>
-	/// <returns>This builder for method chaining</returns>
-	public UIApplicationBuilder UseRootElement(IUIElement rootElement)
-	{
-		_rootElement = rootElement ?? throw new ArgumentNullException(nameof(rootElement));
-		return this;
-	}
-
-	/// <summary>
-	/// Builds the configured UI application
-	/// </summary>
-	/// <returns>The configured UI application</returns>
-	public UIApplication Build()
-	{
-		var consoleProvider = _consoleProvider ?? new SpectreConsoleProvider();
-		var app = new UIApplication(consoleProvider, _logger);
-
-		if (_rootElement != null)
-		{
-			app.Setup(_rootElement);
-		}
-
-		return app;
-	}
+	public static UIApplicationBuilder CreateBuilder(IConsoleProvider? consoleProvider = null) => new(consoleProvider);
 }

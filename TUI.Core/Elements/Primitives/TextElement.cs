@@ -2,10 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
-
-namespace ktsu.TUI.Core.Elements.Primitives;
 
 /// <summary>
 /// A UI element that displays text
@@ -73,10 +72,7 @@ public class TextElement : UIElementBase
 	/// Initializes a new instance of the <see cref="TextElement"/> class with the specified text
 	/// </summary>
 	/// <param name="text">The text to display</param>
-	public TextElement(string text)
-	{
-		Text = text;
-	}
+	public TextElement(string text) => Text = text;
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TextElement"/> class with the specified text and style
@@ -93,21 +89,27 @@ public class TextElement : UIElementBase
 	protected override void OnRender(IConsoleProvider provider)
 	{
 		if (string.IsNullOrEmpty(Text))
+		{
 			return;
+		}
 
 		var contentArea = GetContentArea();
 		var contentPosition = GetContentPosition();
 
 		if (contentArea.IsEmpty)
+		{
 			return;
+		}
 
 		var lines = WordWrap ? WrapText(Text, contentArea.Width) : [Text];
 
-		for (int i = 0; i < lines.Length && i < contentArea.Height; i++)
+		for (var i = 0; i < lines.Length && i < contentArea.Height; i++)
 		{
 			var line = lines[i];
 			if (string.IsNullOrEmpty(line))
+			{
 				continue;
+			}
 
 			var x = CalculateHorizontalPosition(line, contentArea.Width, contentPosition.X);
 			var y = CalculateVerticalPosition(lines.Length, contentArea.Height, contentPosition.Y) + i;
@@ -120,9 +122,11 @@ public class TextElement : UIElementBase
 	protected override Dimensions OnCalculateRequiredDimensions()
 	{
 		if (string.IsNullOrEmpty(Text))
+		{
 			return Padding.Horizontal > 0 || Padding.Vertical > 0
 				? new Dimensions(Padding.Horizontal, Padding.Vertical)
 				: Dimensions.Empty;
+		}
 
 		var lines = WordWrap && Dimensions.Width > 0
 			? WrapText(Text, Math.Max(1, Dimensions.Width - Padding.Horizontal))
@@ -140,6 +144,7 @@ public class TextElement : UIElementBase
 		{
 			HorizontalAlignment.Center => baseX + Math.Max(0, (availableWidth - line.Length) / 2),
 			HorizontalAlignment.Right => baseX + Math.Max(0, availableWidth - line.Length),
+			HorizontalAlignment.Left => throw new NotImplementedException(),
 			_ => baseX
 		};
 	}
@@ -150,6 +155,7 @@ public class TextElement : UIElementBase
 		{
 			VerticalAlignment.Center => baseY + Math.Max(0, (availableHeight - totalLines) / 2),
 			VerticalAlignment.Bottom => baseY + Math.Max(0, availableHeight - totalLines),
+			VerticalAlignment.Top => throw new NotImplementedException(),
 			_ => baseY
 		};
 	}
@@ -157,7 +163,9 @@ public class TextElement : UIElementBase
 	private static string[] WrapText(string text, int maxWidth)
 	{
 		if (maxWidth <= 0)
+		{
 			return [text];
+		}
 
 		var lines = new List<string>();
 		var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -188,50 +196,10 @@ public class TextElement : UIElementBase
 		}
 
 		if (!string.IsNullOrEmpty(currentLine))
+		{
 			lines.Add(currentLine);
+		}
 
-		return lines.ToArray();
+		return [.. lines];
 	}
-}
-
-/// <summary>
-/// Defines horizontal alignment options
-/// </summary>
-public enum HorizontalAlignment
-{
-	/// <summary>
-	/// Align to the left
-	/// </summary>
-	Left,
-
-	/// <summary>
-	/// Align to the center
-	/// </summary>
-	Center,
-
-	/// <summary>
-	/// Align to the right
-	/// </summary>
-	Right
-}
-
-/// <summary>
-/// Defines vertical alignment options
-/// </summary>
-public enum VerticalAlignment
-{
-	/// <summary>
-	/// Align to the top
-	/// </summary>
-	Top,
-
-	/// <summary>
-	/// Align to the center
-	/// </summary>
-	Center,
-
-	/// <summary>
-	/// Align to the bottom
-	/// </summary>
-	Bottom
 }

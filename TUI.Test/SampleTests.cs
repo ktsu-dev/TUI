@@ -2,13 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Test;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-
-namespace ktsu.TUI.Test;
 
 /// <summary>
 /// Tests for basic TUI elements functionality
@@ -41,7 +40,7 @@ public class UIElementTests
 	{
 		// Arrange
 		var textElement = new TextElement("Initial text");
-		bool invalidated = false;
+		var invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -60,7 +59,7 @@ public class UIElementTests
 		// Arrange
 		var initialText = "Same text";
 		var textElement = new TextElement(initialText);
-		bool invalidated = false;
+		var invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -77,10 +76,11 @@ public class UIElementTests
 	public void TextElement_SetNullText_SetsEmptyString()
 	{
 		// Arrange
-		var textElement = new TextElement();
-
-		// Act
-		textElement.Text = null!;
+		var textElement = new TextElement
+		{
+			// Act
+			Text = null!
+		};
 
 		// Assert
 		Assert.AreEqual(string.Empty, textElement.Text);
@@ -146,7 +146,7 @@ public class UIElementTests
 	{
 		// Arrange
 		var textElement = new TextElement();
-		bool invalidated = false;
+		var invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -166,7 +166,7 @@ public class UIElementTests
 	{
 		// Arrange
 		var textElement = new TextElement();
-		bool invalidated = false;
+		var invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -186,7 +186,7 @@ public class UIElementTests
 	{
 		// Arrange
 		var textElement = new TextElement();
-		bool invalidated = false;
+		var invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act

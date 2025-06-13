@@ -12,39 +12,39 @@ public interface IUIApplication
 	/// <summary>
 	/// Gets or sets the root UI element
 	/// </summary>
-	IUIElement? RootElement { get; set; }
+	public IUIElement? RootElement { get; set; }
 
 	/// <summary>
 	/// Gets the console provider
 	/// </summary>
-	IConsoleProvider ConsoleProvider { get; }
+	public IConsoleProvider ConsoleProvider { get; }
 
 	/// <summary>
 	/// Gets whether the application is running
 	/// </summary>
-	bool IsRunning { get; }
+	public bool IsRunning { get; }
 
 	/// <summary>
 	/// Starts the application
 	/// </summary>
 	/// <param name="cancellationToken">Cancellation token</param>
 	/// <returns>A task representing the application run</returns>
-	Task RunAsync(CancellationToken cancellationToken = default);
+	public Task RunAsync(CancellationToken cancellationToken = default);
 
 	/// <summary>
 	/// Stops the application
 	/// </summary>
-	void Stop();
+	public void Stop();
 
 	/// <summary>
 	/// Renders the current UI state
 	/// </summary>
-	void Render();
+	public void Render();
 
 	/// <summary>
 	/// Processes input events
 	/// </summary>
 	/// <param name="cancellationToken">Cancellation token</param>
 	/// <returns>A task representing the input processing</returns>
-	Task ProcessInputAsync(CancellationToken cancellationToken = default);
+	public Task ProcessInputAsync(CancellationToken cancellationToken = default);
 }

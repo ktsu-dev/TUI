@@ -2,13 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.App;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
-
-namespace ktsu.TUI.App;
 
 /// <summary>
 /// A comprehensive sample application demonstrating advanced TUI library features
@@ -91,13 +90,13 @@ public static class SampleApp
 			Child = new TextElement
 			{
 				Text = "✓ Modular Architecture\n" +
-				       "✓ SOLID Principles\n" +
-				       "✓ DRY Implementation\n" +
-				       "✓ Extensible Design\n" +
-				       "✓ Event-Driven Rendering\n" +
-				       "✓ Input Handling\n" +
-				       "✓ Layout System\n" +
-				       "✓ Styling Support",
+					   "✓ SOLID Principles\n" +
+					   "✓ DRY Implementation\n" +
+					   "✓ Extensible Design\n" +
+					   "✓ Event-Driven Rendering\n" +
+					   "✓ Input Handling\n" +
+					   "✓ Layout System\n" +
+					   "✓ Styling Support",
 				Style = new TextStyle { Foreground = "cyan" }
 			}
 		};
@@ -110,9 +109,9 @@ public static class SampleApp
 			Child = new TextElement
 			{
 				Text = "Contracts → Models → Services\n" +
-				       "Elements → Layouts → Primitives\n" +
-				       "Provider Abstraction\n" +
-				       "Dependency Injection Ready",
+					   "Elements → Layouts → Primitives\n" +
+					   "Provider Abstraction\n" +
+					   "Dependency Injection Ready",
 				Style = new TextStyle { Foreground = "magenta" }
 			}
 		};
@@ -140,8 +139,8 @@ public static class SampleApp
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = "Bold Text",
@@ -162,7 +161,7 @@ public static class SampleApp
 						Text = "Colored Text",
 						Style = new TextStyle { Foreground = "red", Background = "yellow" }
 					}
-				}
+				]
 			}
 		};
 
@@ -171,8 +170,8 @@ public static class SampleApp
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 1,
-			Children = new List<IUIElement>
-			{
+			Children =
+			[
 				new BorderElement
 				{
 					Title = "Single",
@@ -185,7 +184,7 @@ public static class SampleApp
 					BorderStyle = BorderStyle.Double,
 					Child = new TextElement { Text = "Content" }
 				}
-			}
+			]
 		};
 
 		// Instructions
@@ -196,9 +195,9 @@ public static class SampleApp
 			Child = new TextElement
 			{
 				Text = "ESC - Exit Application\n" +
-				       "Arrow Keys - Navigate (future)\n" +
-				       "Enter - Select (future)\n" +
-				       "Tab - Focus Next (future)",
+					   "Arrow Keys - Navigate (future)\n" +
+					   "Enter - Select (future)\n" +
+					   "Tab - Focus Next (future)",
 				Style = new TextStyle
 				{
 					Foreground = "yellow",

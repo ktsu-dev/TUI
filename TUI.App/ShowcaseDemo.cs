@@ -2,13 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.App;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
-
-namespace ktsu.TUI.App;
 
 /// <summary>
 /// Comprehensive showcase of all TUI library visual features
@@ -65,8 +64,8 @@ public static class ShowcaseDemo
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = "Complete Visual Features Demonstration",
@@ -79,7 +78,7 @@ public static class ShowcaseDemo
 						HorizontalAlignment = HorizontalAlignment.Center,
 						Style = new TextStyle { Foreground = "gray" }
 					}
-				}
+				]
 			}
 		};
 	}
@@ -124,8 +123,8 @@ public static class ShowcaseDemo
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = "Normal Text",
@@ -151,7 +150,7 @@ public static class ShowcaseDemo
 						Text = "Bold Italic",
 						Style = new TextStyle { IsBold = true, IsItalic = true, Foreground = "cyan" }
 					}
-				}
+				]
 			}
 		};
 
@@ -163,8 +162,8 @@ public static class ShowcaseDemo
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = "Red Text",
@@ -190,7 +189,7 @@ public static class ShowcaseDemo
 						Text = "White on Red",
 						Style = new TextStyle { Foreground = "white", Background = "red" }
 					}
-				}
+				]
 			}
 		};
 
@@ -227,7 +226,7 @@ public static class ShowcaseDemo
 				BorderStyle = style,
 				Child = new TextElement
 				{
-					Text = $"Content with {name.ToLower()} border",
+					Text = $"Content with {name.ToLower(System.Globalization.CultureInfo.CurrentCulture)} border",
 					HorizontalAlignment = HorizontalAlignment.Center,
 					Style = new TextStyle { Foreground = "cyan" }
 				}
@@ -255,8 +254,8 @@ public static class ShowcaseDemo
 			Child = new StackPanel
 			{
 				Orientation = Orientation.Vertical,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = "Left Aligned",
@@ -275,7 +274,7 @@ public static class ShowcaseDemo
 						HorizontalAlignment = HorizontalAlignment.Right,
 						Style = new TextStyle { Foreground = "red" }
 					}
-				}
+				]
 			}
 		};
 
@@ -288,8 +287,8 @@ public static class ShowcaseDemo
 			{
 				Orientation = Orientation.Vertical,
 				Spacing = 1,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = "Vertical Layout:",
@@ -299,8 +298,8 @@ public static class ShowcaseDemo
 					{
 						Orientation = Orientation.Horizontal,
 						Spacing = 1,
-						Children = new List<IUIElement>
-						{
+						Children =
+						[
 							new TextElement
 							{
 								Text = "[A]",
@@ -316,14 +315,14 @@ public static class ShowcaseDemo
 								Text = "[C]",
 								Style = new TextStyle { Background = "green", Foreground = "white" }
 							}
-						}
+						]
 					},
 					new TextElement
 					{
 						Text = "Horizontal Layout ↑",
 						Style = new TextStyle { Foreground = "gray" }
 					}
-				}
+				]
 			}
 		};
 
@@ -362,8 +361,8 @@ public static class ShowcaseDemo
 			{
 				Orientation = Orientation.Horizontal,
 				Spacing = 3,
-				Children = new List<IUIElement>
-				{
+				Children =
+				[
 					new TextElement
 					{
 						Text = $"Platform: {Environment.OSVersion.Platform}",
@@ -384,7 +383,7 @@ public static class ShowcaseDemo
 						Text = "Press ESC to exit",
 						Style = new TextStyle { Foreground = "red", IsBold = true }
 					}
-				}
+				]
 			}
 		};
 	}

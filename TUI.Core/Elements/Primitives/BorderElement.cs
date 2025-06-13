@@ -2,10 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
-
-namespace ktsu.TUI.Core.Elements.Primitives;
 
 /// <summary>
 /// A UI element that draws a border
@@ -100,20 +99,15 @@ public class BorderElement : UIContainerBase
 	/// <summary>
 	/// Initializes a new instance of the <see cref="BorderElement"/> class
 	/// </summary>
-	public BorderElement()
-	{
+	public BorderElement() =>
 		// Border elements need at least 2x2 to be visible
 		Padding = new Padding(1, 1, 1, 1);
-	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="BorderElement"/> class with the specified style
 	/// </summary>
 	/// <param name="borderStyle">The border style</param>
-	public BorderElement(BorderStyle borderStyle) : this()
-	{
-		BorderStyle = borderStyle;
-	}
+	public BorderElement(BorderStyle borderStyle) : this() => BorderStyle = borderStyle;
 
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
@@ -122,7 +116,9 @@ public class BorderElement : UIContainerBase
 		var position = Position;
 
 		if (dimensions.Width < 2 || dimensions.Height < 2)
+		{
 			return;
+		}
 
 		var chars = GetBorderCharacters(BorderStyle);
 
@@ -141,7 +137,7 @@ public class BorderElement : UIContainerBase
 		}
 
 		// Draw vertical lines
-		for (int y = 1; y < dimensions.Height - 1; y++)
+		for (var y = 1; y < dimensions.Height - 1; y++)
 		{
 			provider.WriteAt(chars.Vertical.ToString(), position.Offset(0, y), Style);
 			provider.WriteAt(chars.Vertical.ToString(), position.Offset(dimensions.Width - 1, y), Style);
@@ -158,6 +154,7 @@ public class BorderElement : UIContainerBase
 			{
 				HorizontalAlignment.Center => position.X + Math.Max(1, (dimensions.Width - titleWithPadding.Length) / 2),
 				HorizontalAlignment.Right => position.X + Math.Max(1, dimensions.Width - titleWithPadding.Length - 1),
+				HorizontalAlignment.Left => throw new NotImplementedException(),
 				_ => position.X + 1
 			};
 
@@ -184,7 +181,9 @@ public class BorderElement : UIContainerBase
 	protected override Dimensions OnCalculateRequiredDimensionsForChildren()
 	{
 		if (Children.Count == 0)
+		{
 			return new Dimensions(2, 2); // Minimum size for border
+		}
 
 		var childDimensions = Children.First().CalculateRequiredDimensions();
 		return new Dimensions(
@@ -201,6 +200,7 @@ public class BorderElement : UIContainerBase
 			BorderStyle.Rounded => new BorderCharacters('╭', '╮', '╰', '╯', '─', '│'),
 			BorderStyle.Thick => new BorderCharacters('┏', '┓', '┗', '┛', '━', '┃'),
 			BorderStyle.Ascii => new BorderCharacters('+', '+', '+', '+', '-', '|'),
+			BorderStyle.Single => throw new NotImplementedException(),
 			_ => new BorderCharacters('┌', '┐', '└', '┘', '─', '│') // Single
 		};
 	}
@@ -212,35 +212,4 @@ public class BorderElement : UIContainerBase
 		char BottomRight,
 		char Horizontal,
 		char Vertical);
-}
-
-/// <summary>
-/// Defines border styles
-/// </summary>
-public enum BorderStyle
-{
-	/// <summary>
-	/// Single line border
-	/// </summary>
-	Single,
-
-	/// <summary>
-	/// Double line border
-	/// </summary>
-	Double,
-
-	/// <summary>
-	/// Rounded corner border
-	/// </summary>
-	Rounded,
-
-	/// <summary>
-	/// Thick line border
-	/// </summary>
-	Thick,
-
-	/// <summary>
-	/// ASCII compatible border
-	/// </summary>
-	Ascii
 }

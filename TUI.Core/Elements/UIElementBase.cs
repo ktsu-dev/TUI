@@ -2,10 +2,9 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Core.Elements;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
-
-namespace ktsu.TUI.Core.Elements;
 
 /// <summary>
 /// Base implementation for UI elements
@@ -15,7 +14,6 @@ public abstract class UIElementBase : IUIElement
 	private Position _position;
 	private Dimensions _dimensions;
 	private bool _isVisible = true;
-	private bool _isDirty = true;
 
 	/// <inheritdoc />
 	public Position Position
@@ -65,7 +63,7 @@ public abstract class UIElementBase : IUIElement
 	/// <summary>
 	/// Gets whether the element needs to be re-rendered
 	/// </summary>
-	protected bool IsDirty => _isDirty;
+	protected bool IsDirty { get; private set; } = true;
 
 	/// <summary>
 	/// Gets or sets the padding for this element
@@ -81,31 +79,27 @@ public abstract class UIElementBase : IUIElement
 	public virtual void Render(IConsoleProvider provider)
 	{
 		if (!IsVisible)
+		{
 			return;
+		}
 
 		if (IsDirty)
 		{
 			OnRender(provider);
-			_isDirty = false;
+			IsDirty = false;
 		}
 	}
 
 	/// <inheritdoc />
-	public virtual bool HandleInput(InputResult input)
-	{
-		return OnHandleInput(input);
-	}
+	public virtual bool HandleInput(InputResult input) => OnHandleInput(input);
 
 	/// <inheritdoc />
-	public virtual Dimensions CalculateRequiredDimensions()
-	{
-		return OnCalculateRequiredDimensions();
-	}
+	public virtual Dimensions CalculateRequiredDimensions() => OnCalculateRequiredDimensions();
 
 	/// <inheritdoc />
 	public void Invalidate()
 	{
-		_isDirty = true;
+		IsDirty = true;
 		Parent?.Invalidate();
 		Invalidated?.Invoke(this, EventArgs.Empty);
 	}
@@ -121,35 +115,23 @@ public abstract class UIElementBase : IUIElement
 	/// </summary>
 	/// <param name="input">The input to handle</param>
 	/// <returns>True if the input was handled, false otherwise</returns>
-	protected virtual bool OnHandleInput(InputResult input)
-	{
-		return false;
-	}
+	protected virtual bool OnHandleInput(InputResult input) => false;
 
 	/// <summary>
 	/// When overridden in a derived class, calculates the required dimensions for the element
 	/// </summary>
 	/// <returns>The calculated dimensions</returns>
-	protected virtual Dimensions OnCalculateRequiredDimensions()
-	{
-		return Dimensions;
-	}
+	protected virtual Dimensions OnCalculateRequiredDimensions() => Dimensions;
 
 	/// <summary>
 	/// Gets the content area (dimensions minus padding)
 	/// </summary>
 	/// <returns>The content area dimensions</returns>
-	protected Dimensions GetContentArea()
-	{
-		return Dimensions.WithoutPadding(Padding);
-	}
+	protected Dimensions GetContentArea() => Dimensions.WithoutPadding(Padding);
 
 	/// <summary>
 	/// Gets the content position (position plus padding offset)
 	/// </summary>
 	/// <returns>The content position</returns>
-	protected Position GetContentPosition()
-	{
-		return Position.Offset(Padding.Left, Padding.Top);
-	}
+	protected Position GetContentPosition() => Position.Offset(Padding.Left, Padding.Top);
 }

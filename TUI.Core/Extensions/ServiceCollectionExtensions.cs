@@ -2,12 +2,11 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Core.Extensions;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-
-namespace ktsu.TUI.Core.Extensions;
 
 /// <summary>
 /// Extension methods for configuring TUI services in dependency injection

@@ -2,13 +2,12 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
+namespace ktsu.TUI.Test;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-
-namespace ktsu.TUI.Test;
 
 /// <summary>
 /// Tests for BorderElement functionality
@@ -58,7 +57,7 @@ public class BorderElementTests
 	{
 		// Arrange
 		var borderElement = new BorderElement { Title = "Initial Title" };
-		bool invalidated = false;
+		var invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -77,7 +76,7 @@ public class BorderElementTests
 		// Arrange
 		var initialTitle = "Same Title";
 		var borderElement = new BorderElement { Title = initialTitle };
-		bool invalidated = false;
+		var invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -112,7 +111,7 @@ public class BorderElementTests
 	{
 		// Arrange
 		var borderElement = new BorderElement { BorderStyle = BorderStyle.Single };
-		bool invalidated = false;
+		var invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -147,7 +146,7 @@ public class BorderElementTests
 	{
 		// Arrange
 		var borderElement = new BorderElement { TitleAlignment = HorizontalAlignment.Left };
-		bool invalidated = false;
+		var invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -183,7 +182,7 @@ public class BorderElementTests
 	{
 		// Arrange
 		var borderElement = new BorderElement { Child = new TextElement("Initial child") };
-		bool invalidated = false;
+		var invalidated = false;
 		borderElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -224,10 +223,11 @@ public class BorderElementTests
 	public void BorderElement_SetBorderStyleValues_AcceptsAllValidValues(BorderStyle borderStyle)
 	{
 		// Arrange
-		var borderElement = new BorderElement();
-
-		// Act
-		borderElement.BorderStyle = borderStyle;
+		var borderElement = new BorderElement
+		{
+			// Act
+			BorderStyle = borderStyle
+		};
 
 		// Assert
 		Assert.AreEqual(borderStyle, borderElement.BorderStyle);
@@ -281,6 +281,7 @@ public class BorderElementTests
 		// Arrange
 		var mockChild = new Mock<IUIElement>();
 		mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
+		mockChild.Setup(c => c.IsVisible).Returns(true);
 		var borderElement = new BorderElement { Child = mockChild.Object };
 		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 

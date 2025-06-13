@@ -2,43 +2,35 @@
 // All rights reserved.
 // Licensed under the MIT license.
 
-using System.Drawing;
+namespace ktsu.TUI.Core.Services;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 using Spectre.Console;
 
-namespace ktsu.TUI.Core.Services;
-
 /// <summary>
 /// Console provider implementation using Spectre.Console
 /// </summary>
-public class SpectreConsoleProvider : IConsoleProvider
+/// <remarks>
+/// Initializes a new instance of the <see cref="SpectreConsoleProvider"/> class
+/// </remarks>
+/// <param name="console">The Spectre.Console instance to use</param>
+public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProvider
 {
-	private readonly IAnsiConsole _console;
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="SpectreConsoleProvider"/> class
-	/// </summary>
-	/// <param name="console">The Spectre.Console instance to use</param>
-	public SpectreConsoleProvider(IAnsiConsole? console = null)
-	{
-		_console = console ?? AnsiConsole.Console;
-	}
+	private readonly IAnsiConsole _console = console ?? AnsiConsole.Console;
 
 	/// <inheritdoc />
 	public Dimensions Dimensions => new(_console.Profile.Width, _console.Profile.Height);
 
 	/// <inheritdoc />
-	public void Clear()
-	{
-		_console.Clear();
-	}
+	public void Clear() => _console.Clear();
 
 	/// <inheritdoc />
 	public void Render(IUIElement element, Position position)
 	{
 		if (!element.IsVisible)
+		{
 			return;
+		}
 
 		// Save current cursor position
 		var originalPosition = GetCursorPosition();
@@ -57,7 +49,9 @@ public class SpectreConsoleProvider : IConsoleProvider
 	public void WriteAt(string text, Position position, TextStyle? style = null)
 	{
 		if (string.IsNullOrEmpty(text))
+		{
 			return;
+		}
 
 		SetCursorPosition(position);
 
@@ -108,10 +102,7 @@ public class SpectreConsoleProvider : IConsoleProvider
 		}
 	}
 
-	private Position GetCursorPosition()
-	{
-		return new Position(Console.CursorLeft, Console.CursorTop);
-	}
+	private Position GetCursorPosition() => new(Console.CursorLeft, Console.CursorTop);
 
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
 	{
@@ -140,16 +131,24 @@ public class SpectreConsoleProvider : IConsoleProvider
 		}
 
 		if (style.IsBold)
+		{
 			parts.Add("bold");
+		}
 
 		if (style.IsItalic)
+		{
 			parts.Add("italic");
+		}
 
 		if (style.IsUnderlined)
+		{
 			parts.Add("underline");
+		}
 
 		if (style.IsStrikethrough)
+		{
 			parts.Add("strikethrough");
+		}
 
 		return string.Join(" ", parts);
 	}
