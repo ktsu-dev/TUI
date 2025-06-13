@@ -37,6 +37,19 @@ The architecture is based on SOLID and DRY principles to ensure maintainability 
     // All rights reserved.
     // Licensed under the MIT license.
     ```
+*   When using `UIContainerBase`, add children via the `AddChild()` method or collection initializer syntax. Direct assignment to the `Children` property is not allowed as it is read-only. For example:
+
+    ```csharp
+    // Correct usage with collection initializer
+    var panel = new StackPanel
+    {
+        new TextElement { Text = "Hello" },
+        new BorderElement { /* ... */ }
+    };
+
+    // Correct usage with AddChild()
+    panel.AddChild(new TextElement { Text = "World" });
+    ```
 
 ## WORKFLOW & RELEASE RULES
 
@@ -68,19 +81,6 @@ When running tests:
     mockChild.Setup(c => c.IsVisible).Returns(true);
     ```
 *   If the project uses central package management, ensure no explicit versions are defined in the project files (`.csproj`). Define package versions in `Directory.Packages.props` instead.
-*   When using `UIContainerBase`, add children via the `AddChild()` method or collection initializer syntax. Direct assignment to the `Children` property is not allowed as it is read-only. For example:
-
-    ```csharp
-    // Correct usage with collection initializer
-    var panel = new StackPanel
-    {
-        new TextElement { Text = "Hello" },
-        new BorderElement { /* ... */ }
-    };
-
-    // Correct usage with AddChild()
-    panel.AddChild(new TextElement { Text = "World" });
-    ```
 *   If build fails due to CA (code analysis) warnings, and these are not desired, add the problematic CA rules to the NoWarn list in `.editorconfig`.
 
 ## UI PRIMITIVES
@@ -108,7 +108,8 @@ dotnet run --project TUI.App -- --showcase
 
 Based on the current state of the project, the following steps are recommended:
 
-1.  **Document the project properly:** Replace placeholder content in `README.md` and `DESCRIPTION.md` with actual descriptions of the TUI library's functionality.
-2.  **Review the core implementation:** Examine the contents of `TUI.Core` to understand the current API and features.
-3.  **Add missing features:** Implement additional TUI components or functionality based on the project's goals.
-4.  **Write tests:** Expand the `TUI.Test` project with comprehensive tests.
+1.  **Fix ShowcaseDemo.cs** - Replace all `Children = [...]` assignments with `AddChild()` calls
+2.  **Add more UI elements** - Create components like Grid, ScrollPanel, Button, InputField
+3.  **Improve console provider** - Add more styling options, mouse support, clipboard integration
+4.  **Performance optimization** - Add rendering optimizations and dirty region tracking
+5.  **Add more demo applications** - Create examples for different use cases

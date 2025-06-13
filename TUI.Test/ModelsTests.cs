@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Tests for TUI Core Models
 /// </summary>
 [TestClass]
-internal class ModelsTests
+public class ModelsTests
 {
 	/// <summary>
 	/// Tests Position constructor and properties

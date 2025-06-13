@@ -14,7 +14,7 @@ using Moq;
 /// Tests for StackPanel layout functionality
 /// </summary>
 [TestClass]
-internal class StackPanelTests
+public class StackPanelTests
 {
 	/// <summary>
 	/// Tests that StackPanel initializes with correct default values

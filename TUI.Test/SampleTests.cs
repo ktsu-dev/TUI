@@ -13,7 +13,7 @@ using Moq;
 /// Tests for basic TUI elements functionality
 /// </summary>
 [TestClass]
-internal class UIElementTests
+public class UIElementTests
 {
 	/// <summary>
 	/// Tests that TextElement properly sets and gets text property

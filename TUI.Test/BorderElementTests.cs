@@ -13,7 +13,7 @@ using Moq;
 /// Tests for BorderElement functionality
 /// </summary>
 [TestClass]
-internal class BorderElementTests
+public class BorderElementTests
 {
 	/// <summary>
 	/// Tests that BorderElement initializes with correct default values
