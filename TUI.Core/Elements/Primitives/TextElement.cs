@@ -93,26 +93,26 @@ public class TextElement : UIElementBase
 			return;
 		}
 
-		var contentArea = GetContentArea();
-		var contentPosition = GetContentPosition();
+		Dimensions contentArea = GetContentArea();
+		Position contentPosition = GetContentPosition();
 
 		if (contentArea.IsEmpty)
 		{
 			return;
 		}
 
-		var lines = WordWrap ? WrapText(Text, contentArea.Width) : [Text];
+		string[] lines = WordWrap ? WrapText(Text, contentArea.Width) : [Text];
 
-		for (var i = 0; i < lines.Length && i < contentArea.Height; i++)
+		for (int i = 0; i < lines.Length && i < contentArea.Height; i++)
 		{
-			var line = lines[i];
+			string line = lines[i];
 			if (string.IsNullOrEmpty(line))
 			{
 				continue;
 			}
 
-			var x = CalculateHorizontalPosition(line, contentArea.Width, contentPosition.X);
-			var y = CalculateVerticalPosition(lines.Length, contentArea.Height, contentPosition.Y) + i;
+			int x = CalculateHorizontalPosition(line, contentArea.Width, contentPosition.X);
+			int y = CalculateVerticalPosition(lines.Length, contentArea.Height, contentPosition.Y) + i;
 
 			provider.WriteAt(line, new Position(x, y), Style);
 		}
@@ -128,12 +128,12 @@ public class TextElement : UIElementBase
 				: Dimensions.Empty;
 		}
 
-		var lines = WordWrap && Dimensions.Width > 0
+		string[] lines = WordWrap && Dimensions.Width > 0
 			? WrapText(Text, Math.Max(1, Dimensions.Width - Padding.Horizontal))
 			: [Text];
 
-		var maxWidth = lines.Max(line => line.Length);
-		var height = lines.Length;
+		int maxWidth = lines.Max(line => line.Length);
+		int height = lines.Length;
 
 		return new Dimensions(maxWidth, height).WithPadding(Padding);
 	}
@@ -167,13 +167,13 @@ public class TextElement : UIElementBase
 			return [text];
 		}
 
-		var lines = new List<string>();
-		var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-		var currentLine = string.Empty;
+		List<string> lines = new List<string>();
+		string[] words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+		string currentLine = string.Empty;
 
-		foreach (var word in words)
+		foreach (string word in words)
 		{
-			var testLine = string.IsNullOrEmpty(currentLine) ? word : $"{currentLine} {word}";
+			string testLine = string.IsNullOrEmpty(currentLine) ? word : $"{currentLine} {word}";
 
 			if (testLine.Length <= maxWidth)
 			{

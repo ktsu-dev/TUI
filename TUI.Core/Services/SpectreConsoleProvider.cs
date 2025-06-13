@@ -33,7 +33,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		}
 
 		// Save current cursor position
-		var originalPosition = GetCursorPosition();
+		Position originalPosition = GetCursorPosition();
 
 		// Set cursor to render position
 		SetCursorPosition(position);
@@ -57,7 +57,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 		if (style.HasValue)
 		{
-			var markup = CreateStyledMarkup(text, style.Value);
+			Markup markup = CreateStyledMarkup(text, style.Value);
 			_console.Write(markup);
 		}
 		else
@@ -71,7 +71,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	{
 		return await Task.Run(() =>
 		{
-			var keyInfo = Console.ReadKey(true);
+			ConsoleKeyInfo keyInfo = Console.ReadKey(true);
 
 			// Handle special cases
 			if (keyInfo.Key == ConsoleKey.Escape ||
@@ -106,8 +106,8 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
 	{
-		var styleString = BuildStyleString(style);
-		var escapedText = text.Replace("[", "[[").Replace("]", "]]");
+		string styleString = BuildStyleString(style);
+		string escapedText = text.Replace("[", "[[").Replace("]", "]]");
 
 		return string.IsNullOrEmpty(styleString)
 			? new Markup(escapedText)
@@ -116,17 +116,17 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 	private static string BuildStyleString(TextStyle style)
 	{
-		var parts = new List<string>();
+		List<string> parts = new List<string>();
 
 		if (style.ForegroundColor.HasValue)
 		{
-			var color = style.ForegroundColor.Value;
+			System.Drawing.Color color = style.ForegroundColor.Value;
 			parts.Add($"#{color.R:X2}{color.G:X2}{color.B:X2}");
 		}
 
 		if (style.BackgroundColor.HasValue)
 		{
-			var color = style.BackgroundColor.Value;
+			System.Drawing.Color color = style.BackgroundColor.Value;
 			parts.Add($"on #{color.R:X2}{color.G:X2}{color.B:X2}");
 		}
 

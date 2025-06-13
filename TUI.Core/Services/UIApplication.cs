@@ -118,7 +118,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		{
 			try
 			{
-				var input = await ConsoleProvider.ReadInputAsync();
+				Models.InputResult input = await ConsoleProvider.ReadInputAsync();
 
 				_logger?.LogDebug("Received input: {InputType}", input.Type);
 
@@ -131,7 +131,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				}
 
 				// Let the root element handle the input
-				var handled = RootElement?.HandleInput(input) ?? false;
+				bool handled = RootElement?.HandleInput(input) ?? false;
 
 				if (!handled)
 				{

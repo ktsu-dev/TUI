@@ -22,8 +22,8 @@ public class UIElementTests
 	public void TextElement_SetText_UpdatesTextProperty()
 	{
 		// Arrange
-		var textElement = new TextElement();
-		var expectedText = "Hello World";
+		TextElement textElement = new TextElement();
+		string expectedText = "Hello World";
 
 		// Act
 		textElement.Text = expectedText;
@@ -39,8 +39,8 @@ public class UIElementTests
 	public void TextElement_ChangeText_TriggersInvalidation()
 	{
 		// Arrange
-		var textElement = new TextElement("Initial text");
-		var invalidated = false;
+		TextElement textElement = new TextElement("Initial text");
+		bool invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -57,9 +57,9 @@ public class UIElementTests
 	public void TextElement_SetSameText_DoesNotInvalidate()
 	{
 		// Arrange
-		var initialText = "Same text";
-		var textElement = new TextElement(initialText);
-		var invalidated = false;
+		string initialText = "Same text";
+		TextElement textElement = new TextElement(initialText);
+		bool invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -76,7 +76,7 @@ public class UIElementTests
 	public void TextElement_SetNullText_SetsEmptyString()
 	{
 		// Arrange
-		var textElement = new TextElement
+		TextElement textElement = new TextElement
 		{
 			// Act
 			Text = null!
@@ -93,7 +93,7 @@ public class UIElementTests
 	public void TextElement_DefaultConstructor_InitializesCorrectly()
 	{
 		// Arrange & Act
-		var textElement = new TextElement();
+		TextElement textElement = new TextElement();
 
 		// Assert
 		Assert.AreEqual(string.Empty, textElement.Text);
@@ -110,10 +110,10 @@ public class UIElementTests
 	public void TextElement_ConstructorWithText_SetsTextCorrectly()
 	{
 		// Arrange
-		var expectedText = "Constructor text";
+		string expectedText = "Constructor text";
 
 		// Act
-		var textElement = new TextElement(expectedText);
+		TextElement textElement = new TextElement(expectedText);
 
 		// Assert
 		Assert.AreEqual(expectedText, textElement.Text);
@@ -126,11 +126,11 @@ public class UIElementTests
 	public void TextElement_ConstructorWithTextAndStyle_SetsPropertiesCorrectly()
 	{
 		// Arrange
-		var expectedText = "Styled text";
-		var expectedStyle = new TextStyle { IsBold = true, Foreground = "red" };
+		string expectedText = "Styled text";
+		TextStyle expectedStyle = new TextStyle { IsBold = true, Foreground = "red" };
 
 		// Act
-		var textElement = new TextElement(expectedText, expectedStyle);
+		TextElement textElement = new TextElement(expectedText, expectedStyle);
 
 		// Assert
 		Assert.AreEqual(expectedText, textElement.Text);
@@ -145,8 +145,8 @@ public class UIElementTests
 	public void UIElement_ChangePosition_TriggersInvalidation()
 	{
 		// Arrange
-		var textElement = new TextElement();
-		var invalidated = false;
+		TextElement textElement = new TextElement();
+		bool invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -165,8 +165,8 @@ public class UIElementTests
 	public void UIElement_ChangeDimensions_TriggersInvalidation()
 	{
 		// Arrange
-		var textElement = new TextElement();
-		var invalidated = false;
+		TextElement textElement = new TextElement();
+		bool invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -185,8 +185,8 @@ public class UIElementTests
 	public void UIElement_ChangeVisibility_TriggersInvalidation()
 	{
 		// Arrange
-		var textElement = new TextElement();
-		var invalidated = false;
+		TextElement textElement = new TextElement();
+		bool invalidated = false;
 		textElement.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -204,8 +204,8 @@ public class UIElementTests
 	public void UIElement_RenderWhenNotVisible_DoesNotCallOnRender()
 	{
 		// Arrange
-		var mockProvider = new Mock<IConsoleProvider>();
-		var textElement = new TextElement("Test text")
+		Mock<IConsoleProvider> mockProvider = new Mock<IConsoleProvider>();
+		TextElement textElement = new TextElement("Test text")
 		{
 			IsVisible = false
 		};
@@ -224,11 +224,11 @@ public class UIElementTests
 	public void UIElement_HandleInput_ReturnsFalseByDefault()
 	{
 		// Arrange
-		var textElement = new TextElement();
-		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+		TextElement textElement = new TextElement();
+		InputResult input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
-		var result = textElement.HandleInput(input);
+		bool result = textElement.HandleInput(input);
 
 		// Assert
 		Assert.IsFalse(result);
@@ -241,8 +241,8 @@ public class UIElementTests
 	public void UIElement_SetPadding_UpdatesPaddingProperty()
 	{
 		// Arrange
-		var textElement = new TextElement();
-		var expectedPadding = new Padding(1, 2, 3, 4);
+		TextElement textElement = new TextElement();
+		Padding expectedPadding = new Padding(1, 2, 3, 4);
 
 		// Act
 		textElement.Padding = expectedPadding;

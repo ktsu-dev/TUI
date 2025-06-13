@@ -56,31 +56,33 @@ public static class ShowcaseDemo
 
 	private static IUIElement CreateHeader()
 	{
-		return new BorderElement
+		var header = new BorderElement
 		{
 			Title = "TUI Library Showcase",
 			TitleAlignment = HorizontalAlignment.Center,
 			BorderStyle = BorderStyle.Double,
 			Child = new StackPanel
 			{
-				Orientation = Orientation.Vertical,
-				Children =
-				[
-					new TextElement
-					{
-						Text = "Complete Visual Features Demonstration",
-						HorizontalAlignment = HorizontalAlignment.Center,
-						Style = new TextStyle { IsBold = true, Foreground = "yellow" }
-					},
-					new TextElement
-					{
-						Text = "Text Styles • Borders • Layouts • Alignments • Colors",
-						HorizontalAlignment = HorizontalAlignment.Center,
-						Style = new TextStyle { Foreground = "gray" }
-					}
-				]
+				Orientation = Orientation.Vertical
 			}
 		};
+
+		// Add children to header panel
+		var headerPanel = (StackPanel)header.Child;
+		headerPanel.AddChild(new TextElement
+		{
+			Text = "Complete Visual Features Demonstration",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Style = new TextStyle { IsBold = true, Foreground = "yellow" }
+		});
+		headerPanel.AddChild(new TextElement
+		{
+			Text = "Text Styles • Borders • Layouts • Alignments • Colors",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			Style = new TextStyle { Foreground = "gray" }
+		});
+
+		return header;
 	}
 
 	private static IUIElement CreateContentArea()

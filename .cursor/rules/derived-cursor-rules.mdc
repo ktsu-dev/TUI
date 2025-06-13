@@ -9,7 +9,7 @@ This project is a .NET library designed for building text-based user interfaces 
 
 ## TECH STACK
 
-*   .NET (Specify version when available)
+*   .NET (Specify version when available), currently .NET 9.0
 *   Spectre.Console (for console provider support), version 0.49.1 was used during initial development.
 *   Microsoft.Extensions.DependencyInjection.Abstractions (Version 8.0.1)
 *   Microsoft.Extensions.Logging.Abstractions (Version 8.0.1)
@@ -44,7 +44,7 @@ The architecture is based on SOLID and DRY principles to ensure maintainability 
 
 ## PROJECT DOCUMENTATION & CONTEXT SYSTEM
 
-(To be defined)
+*   README.md, DESCRIPTION.md, and other documentation files should contain actual descriptions of the TUI library's functionality, not placeholder text.
 
 ## DEBUGGING
 
@@ -56,7 +56,7 @@ When running tests:
 *   `dotnet test --logger "console;verbosity=detailed"` provides the most detailed output.
 *   `dotnet test TUI.Test --logger trx --logger "console;verbosity=normal"` runs tests for a specific project with detailed console and trx logger output.
 *   If encountering SDK-related issues, ensure the correct SDK is installed and configured in `global.json`.
-*   If using central package version management, ensure no explicit versions are defined in `PackageReference` items, but are defined in `Directory.Packages.props`.
+*   If using central package version management, ensure no explicit versions are defined in `Directory.Packages.props`.
 *   When test project fails to build, try running test project directly without building the whole solution: `cd TUI.Test && dotnet test --no-build --no-restore`
 *   If tests fail due to missing MSTest using statements, add `using Microsoft.VisualStudio.TestTools.UnitTesting;` to the top of the test file.
 *   When tests are failing due to code analysis warnings, add `<NoWarn>$(NoWarn);CA1720;CA1805;CA1716;CA1848;CA1307;CA1062;CA1822;CA1031;CA1707;CA1515</NoWarn>` to a `Directory.Build.props` file in the root of the repository.
@@ -67,6 +67,21 @@ When running tests:
     mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
     mockChild.Setup(c => c.IsVisible).Returns(true);
     ```
+*   If the project uses central package management, ensure no explicit versions are defined in the project files (`.csproj`). Define package versions in `Directory.Packages.props` instead.
+*   When using `UIContainerBase`, add children via the `AddChild()` method or collection initializer syntax. Direct assignment to the `Children` property is not allowed as it is read-only. For example:
+
+    ```csharp
+    // Correct usage with collection initializer
+    var panel = new StackPanel
+    {
+        new TextElement { Text = "Hello" },
+        new BorderElement { /* ... */ }
+    };
+
+    // Correct usage with AddChild()
+    panel.AddChild(new TextElement { Text = "World" });
+    ```
+*   If build fails due to CA (code analysis) warnings, and these are not desired, add the problematic CA rules to the NoWarn list in `.editorconfig`.
 
 ## UI PRIMITIVES
 
@@ -77,3 +92,23 @@ When running tests:
 
 *   **StackPanel:** A container that arranges child elements in a horizontal or vertical stack.
 *   **BorderElement:** Inherits from `UIContainerBase` and uses the `Children` collection to store child elements, not a `Child` property. However, a `Child` property is provided as a convenience for single-child scenarios.
+*   **UIContainerBase:** The `Children` property is read-only. To add children, use the `AddChild()` method or collection initializer syntax.
+
+## RUNNING DEMOS
+
+To run the demo applications:
+
+```bash
+dotnet run --project TUI.App
+dotnet run --project TUI.App -- --interactive
+dotnet run --project TUI.App -- --showcase
+```
+
+## NEXT STEPS
+
+Based on the current state of the project, the following steps are recommended:
+
+1.  **Document the project properly:** Replace placeholder content in `README.md` and `DESCRIPTION.md` with actual descriptions of the TUI library's functionality.
+2.  **Review the core implementation:** Examine the contents of `TUI.Core` to understand the current API and features.
+3.  **Add missing features:** Implement additional TUI components or functionality based on the project's goals.
+4.  **Write tests:** Expand the `TUI.Test` project with comprehensive tests.

@@ -23,7 +23,7 @@ public class StackPanelTests
 	public void StackPanel_DefaultConstructor_InitializesCorrectly()
 	{
 		// Arrange & Act
-		var stackPanel = new StackPanel();
+		StackPanel stackPanel = new StackPanel();
 
 		// Assert
 		Assert.AreEqual(Orientation.Vertical, stackPanel.Orientation);
@@ -40,8 +40,8 @@ public class StackPanelTests
 	public void StackPanel_SetOrientation_UpdatesOrientationProperty()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var expectedOrientation = Orientation.Horizontal;
+		StackPanel stackPanel = new StackPanel();
+		Orientation expectedOrientation = Orientation.Horizontal;
 
 		// Act
 		stackPanel.Orientation = expectedOrientation;
@@ -57,8 +57,8 @@ public class StackPanelTests
 	public void StackPanel_ChangeOrientation_TriggersInvalidation()
 	{
 		// Arrange
-		var stackPanel = new StackPanel { Orientation = Orientation.Vertical };
-		var invalidated = false;
+		StackPanel stackPanel = new StackPanel { Orientation = Orientation.Vertical };
+		bool invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -75,8 +75,8 @@ public class StackPanelTests
 	public void StackPanel_SetSpacing_UpdatesSpacingProperty()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var expectedSpacing = 5;
+		StackPanel stackPanel = new StackPanel();
+		int expectedSpacing = 5;
 
 		// Act
 		stackPanel.Spacing = expectedSpacing;
@@ -92,8 +92,8 @@ public class StackPanelTests
 	public void StackPanel_ChangeSpacing_TriggersInvalidation()
 	{
 		// Arrange
-		var stackPanel = new StackPanel { Spacing = 0 };
-		var invalidated = false;
+		StackPanel stackPanel = new StackPanel { Spacing = 0 };
+		bool invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -110,8 +110,8 @@ public class StackPanelTests
 	public void StackPanel_AddChild_AddsChildToCollection()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var child = new TextElement("Test child");
+		StackPanel stackPanel = new StackPanel();
+		TextElement child = new TextElement("Test child");
 
 		// Act
 		stackPanel.AddChild(child);
@@ -129,8 +129,8 @@ public class StackPanelTests
 	public void StackPanel_AddChild_TriggersInvalidation()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var invalidated = false;
+		StackPanel stackPanel = new StackPanel();
+		bool invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -147,12 +147,12 @@ public class StackPanelTests
 	public void StackPanel_RemoveChild_RemovesChildFromCollection()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var child = new TextElement("Test child");
+		StackPanel stackPanel = new StackPanel();
+		TextElement child = new TextElement("Test child");
 		stackPanel.AddChild(child);
 
 		// Act
-		var result = stackPanel.RemoveChild(child);
+		bool result = stackPanel.RemoveChild(child);
 
 		// Assert
 		Assert.IsTrue(result);
@@ -167,10 +167,10 @@ public class StackPanelTests
 	public void StackPanel_RemoveChild_TriggersInvalidation()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var child = new TextElement("Test child");
+		StackPanel stackPanel = new StackPanel();
+		TextElement child = new TextElement("Test child");
 		stackPanel.AddChild(child);
-		var invalidated = false;
+		bool invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -187,11 +187,11 @@ public class StackPanelTests
 	public void StackPanel_RemoveNonExistentChild_ReturnsFalse()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var child = new TextElement("Test child");
+		StackPanel stackPanel = new StackPanel();
+		TextElement child = new TextElement("Test child");
 
 		// Act
-		var result = stackPanel.RemoveChild(child);
+		bool result = stackPanel.RemoveChild(child);
 
 		// Assert
 		Assert.IsFalse(result);
@@ -204,9 +204,9 @@ public class StackPanelTests
 	public void StackPanel_ClearChildren_RemovesAllChildren()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var child1 = new TextElement("Child 1");
-		var child2 = new TextElement("Child 2");
+		StackPanel stackPanel = new StackPanel();
+		TextElement child1 = new TextElement("Child 1");
+		TextElement child2 = new TextElement("Child 2");
 		stackPanel.AddChild(child1);
 		stackPanel.AddChild(child2);
 
@@ -226,9 +226,9 @@ public class StackPanelTests
 	public void StackPanel_ClearChildren_TriggersInvalidation()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
+		StackPanel stackPanel = new StackPanel();
 		stackPanel.AddChild(new TextElement("Test child"));
-		var invalidated = false;
+		bool invalidated = false;
 		stackPanel.Invalidated += (sender, args) => invalidated = true;
 
 		// Act
@@ -245,22 +245,22 @@ public class StackPanelTests
 	public void StackPanel_AddNullChild_ThrowsArgumentNullException()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
+		StackPanel stackPanel = new StackPanel();
 
 		// Act & Assert
 		Assert.ThrowsException<ArgumentNullException>(() => stackPanel.AddChild(null!));
 	}
 
 	/// <summary>
-	/// Tests that StackPanel handles input by checking children
+	/// Tests that StackPanel handles input by checking children in reverse order
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_HandleInput_ChecksChildren()
+	public void StackPanel_HandleInput_ChecksChildrenInReverseOrder()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var mockChild1 = new Mock<IUIElement>();
-		var mockChild2 = new Mock<IUIElement>();
+		StackPanel stackPanel = new StackPanel();
+		Mock<IUIElement> mockChild1 = new Mock<IUIElement>();
+		Mock<IUIElement> mockChild2 = new Mock<IUIElement>();
 
 		mockChild1.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(false);
 		mockChild1.Setup(c => c.IsVisible).Returns(true);
@@ -270,36 +270,48 @@ public class StackPanelTests
 		stackPanel.AddChild(mockChild1.Object);
 		stackPanel.AddChild(mockChild2.Object);
 
-		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+		InputResult input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
-		var result = stackPanel.HandleInput(input);
+		bool result = stackPanel.HandleInput(input);
 
 		// Assert
 		Assert.IsTrue(result);
-		mockChild1.Verify(c => c.HandleInput(input), Times.Once);
+		// mockChild2 (added last) should be called first and handle the input
 		mockChild2.Verify(c => c.HandleInput(input), Times.Once);
+		// mockChild1 should not be called because mockChild2 handled the input
+		mockChild1.Verify(c => c.HandleInput(input), Times.Never);
 	}
 
 	/// <summary>
-	/// Tests that StackPanel returns false when no children handle input
+	/// Tests that StackPanel checks all children when none handle input
 	/// </summary>
 	[TestMethod]
-	public void StackPanel_HandleInputNoChildrenHandleIt_ReturnsFalse()
+	public void StackPanel_HandleInputNoChildrenHandleIt_ChecksAllChildren()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var mockChild = new Mock<IUIElement>();
-		mockChild.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(false);
-		stackPanel.AddChild(mockChild.Object);
+		StackPanel stackPanel = new StackPanel();
+		Mock<IUIElement> mockChild1 = new Mock<IUIElement>();
+		Mock<IUIElement> mockChild2 = new Mock<IUIElement>();
 
-		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+		mockChild1.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(false);
+		mockChild1.Setup(c => c.IsVisible).Returns(true);
+		mockChild2.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(false);
+		mockChild2.Setup(c => c.IsVisible).Returns(true);
+
+		stackPanel.AddChild(mockChild1.Object);
+		stackPanel.AddChild(mockChild2.Object);
+
+		InputResult input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
-		var result = stackPanel.HandleInput(input);
+		bool result = stackPanel.HandleInput(input);
 
 		// Assert
 		Assert.IsFalse(result);
+		// Both children should be called since neither handles the input
+		mockChild1.Verify(c => c.HandleInput(input), Times.Once);
+		mockChild2.Verify(c => c.HandleInput(input), Times.Once);
 	}
 
 	/// <summary>
@@ -309,11 +321,11 @@ public class StackPanelTests
 	public void StackPanel_HandleInputWithNoChildren_ReturnsFalse()
 	{
 		// Arrange
-		var stackPanel = new StackPanel();
-		var input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+		StackPanel stackPanel = new StackPanel();
+		InputResult input = new InputResult { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
 
 		// Act
-		var result = stackPanel.HandleInput(input);
+		bool result = stackPanel.HandleInput(input);
 
 		// Assert
 		Assert.IsFalse(result);
@@ -328,7 +340,7 @@ public class StackPanelTests
 	public void StackPanel_SetOrientationValues_AcceptsAllValidValues(Orientation orientation)
 	{
 		// Arrange
-		var stackPanel = new StackPanel
+		StackPanel stackPanel = new StackPanel
 		{
 			// Act
 			Orientation = orientation

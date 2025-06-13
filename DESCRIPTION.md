@@ -1,1 +1,1 @@
-Placeholder description, a single line concise description of the project, suitable for the package description in the nuget list UI.
+A modern, extensible Text User Interface (TUI) library for .NET applications built on Spectre.Console with clean architecture.

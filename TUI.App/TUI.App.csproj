@@ -5,10 +5,16 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors />
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../TUI.Core/TUI.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ShowcaseDemo.cs" />
   </ItemGroup>
 
 </Project>

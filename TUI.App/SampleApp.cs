@@ -15,15 +15,15 @@ using ktsu.TUI.Core.Services;
 public static class SampleApp
 {
 	/// <summary>
-	/// Main entry point for the application
+	/// Run the sample application
 	/// </summary>
-	public static async Task Main()
+	internal static async Task RunAsync()
 	{
 		// Create console provider
-		var consoleProvider = new SpectreConsoleProvider();
+		SpectreConsoleProvider consoleProvider = new SpectreConsoleProvider();
 
 		// Create application using builder pattern
-		var app = UIApplication.CreateBuilder(consoleProvider)
+		UIApplication app = UIApplication.CreateBuilder(consoleProvider)
 			.UseRootElement(CreateAdvancedDemoUI())
 			.Build();
 
@@ -37,7 +37,7 @@ public static class SampleApp
 	private static IUIElement CreateAdvancedDemoUI()
 	{
 		// Create main layout with horizontal orientation
-		var mainLayout = new StackPanel
+		StackPanel mainLayout = new StackPanel
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 2,
@@ -45,10 +45,10 @@ public static class SampleApp
 		};
 
 		// Left panel - Information
-		var leftPanel = CreateInfoPanel();
+		IUIElement leftPanel = CreateInfoPanel();
 
 		// Right panel - Features showcase
-		var rightPanel = CreateFeaturesPanel();
+		IUIElement rightPanel = CreateFeaturesPanel();
 
 		mainLayout.AddChild(leftPanel);
 		mainLayout.AddChild(rightPanel);
@@ -58,14 +58,14 @@ public static class SampleApp
 
 	private static IUIElement CreateInfoPanel()
 	{
-		var panel = new StackPanel
+		StackPanel panel = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Header
-		var header = new BorderElement
+		BorderElement header = new BorderElement
 		{
 			Title = "TUI Library",
 			TitleAlignment = HorizontalAlignment.Center,
@@ -83,7 +83,7 @@ public static class SampleApp
 		};
 
 		// Features list
-		var features = new BorderElement
+		BorderElement features = new BorderElement
 		{
 			Title = "Features",
 			BorderStyle = BorderStyle.Single,
@@ -102,7 +102,7 @@ public static class SampleApp
 		};
 
 		// Architecture info
-		var architecture = new BorderElement
+		BorderElement architecture = new BorderElement
 		{
 			Title = "Architecture",
 			BorderStyle = BorderStyle.Rounded,
@@ -125,70 +125,68 @@ public static class SampleApp
 
 	private static IUIElement CreateFeaturesPanel()
 	{
-		var panel = new StackPanel
+		StackPanel panel = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Styling showcase
-		var stylingDemo = new BorderElement
+		BorderElement stylingDemo = new BorderElement
 		{
 			Title = "Text Styling",
 			BorderStyle = BorderStyle.Thick,
 			Child = new StackPanel
 			{
-				Orientation = Orientation.Vertical,
-				Children =
-				[
-					new TextElement
-					{
-						Text = "Bold Text",
-						Style = new TextStyle { IsBold = true }
-					},
-					new TextElement
-					{
-						Text = "Italic Text",
-						Style = new TextStyle { IsItalic = true }
-					},
-					new TextElement
-					{
-						Text = "Underlined Text",
-						Style = new TextStyle { IsUnderline = true }
-					},
-					new TextElement
-					{
-						Text = "Colored Text",
-						Style = new TextStyle { Foreground = "red", Background = "yellow" }
-					}
-				]
+				Orientation = Orientation.Vertical
 			}
 		};
 
+		// Add children to the styling demo
+		StackPanel stylingPanel = (StackPanel)stylingDemo.Child;
+		stylingPanel.AddChild(new TextElement
+		{
+			Text = "Bold Text",
+			Style = new TextStyle { IsBold = true }
+		});
+		stylingPanel.AddChild(new TextElement
+		{
+			Text = "Italic Text",
+			Style = new TextStyle { IsItalic = true }
+		});
+		stylingPanel.AddChild(new TextElement
+		{
+			Text = "Underlined Text",
+			Style = new TextStyle { IsUnderline = true }
+		});
+		stylingPanel.AddChild(new TextElement
+		{
+			Text = "Colored Text",
+			Style = new TextStyle { Foreground = "red", Background = "yellow" }
+		});
+
 		// Border styles showcase
-		var borderDemo = new StackPanel
+		StackPanel borderDemo = new StackPanel
 		{
 			Orientation = Orientation.Horizontal,
-			Spacing = 1,
-			Children =
-			[
-				new BorderElement
-				{
-					Title = "Single",
-					BorderStyle = BorderStyle.Single,
-					Child = new TextElement { Text = "Content" }
-				},
-				new BorderElement
-				{
-					Title = "Double",
-					BorderStyle = BorderStyle.Double,
-					Child = new TextElement { Text = "Content" }
-				}
-			]
+			Spacing = 1
 		};
 
+		borderDemo.AddChild(new BorderElement
+		{
+			Title = "Single",
+			BorderStyle = BorderStyle.Single,
+			Child = new TextElement { Text = "Content" }
+		});
+		borderDemo.AddChild(new BorderElement
+		{
+			Title = "Double",
+			BorderStyle = BorderStyle.Double,
+			Child = new TextElement { Text = "Content" }
+		});
+
 		// Instructions
-		var instructions = new BorderElement
+		BorderElement instructions = new BorderElement
 		{
 			Title = "Controls",
 			BorderStyle = BorderStyle.Ascii,

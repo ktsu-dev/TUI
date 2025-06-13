@@ -3,13 +3,14 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Elements;
+using System.Collections;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 
 /// <summary>
 /// Base implementation for UI containers that can hold child elements
 /// </summary>
-public abstract class UIContainerBase : UIElementBase, IUIContainer
+public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable<IUIElement>
 {
 	private readonly List<IUIElement> _children = [];
 
@@ -51,7 +52,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	/// <inheritdoc />
 	public virtual void ClearChildren()
 	{
-		foreach (var child in _children)
+		foreach (IUIElement child in _children)
 		{
 			child.Parent = null;
 			child.Invalidated -= OnChildInvalidated;
@@ -71,7 +72,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 		base.Render(provider);
 
 		// Render all visible children
-		foreach (var child in _children.Where(c => c.IsVisible))
+		foreach (IUIElement? child in _children.Where(c => c.IsVisible))
 		{
 			child.Render(provider);
 		}
@@ -81,7 +82,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	public override bool HandleInput(InputResult input)
 	{
 		// Let children handle input first (reverse order for top-most first)
-		foreach (var child in _children.Reverse<IUIElement>())
+		foreach (IUIElement child in _children.Reverse<IUIElement>())
 		{
 			if (child.IsVisible && child.HandleInput(input))
 			{
@@ -96,7 +97,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	/// <inheritdoc />
 	protected override Dimensions OnCalculateRequiredDimensions()
 	{
-		var requiredDimensions = OnCalculateRequiredDimensionsForChildren();
+		Dimensions requiredDimensions = OnCalculateRequiredDimensionsForChildren();
 		return requiredDimensions.WithPadding(Padding);
 	}
 
@@ -116,14 +117,14 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 			return Dimensions.Empty;
 		}
 
-		var maxWidth = 0;
-		var maxHeight = 0;
+		int maxWidth = 0;
+		int maxHeight = 0;
 
-		foreach (var child in _children)
+		foreach (IUIElement child in _children)
 		{
-			var childDimensions = child.CalculateRequiredDimensions();
-			var childRight = child.Position.X + childDimensions.Width;
-			var childBottom = child.Position.Y + childDimensions.Height;
+			Dimensions childDimensions = child.CalculateRequiredDimensions();
+			int childRight = child.Position.X + childDimensions.Width;
+			int childBottom = child.Position.Y + childDimensions.Height;
 
 			maxWidth = Math.Max(maxWidth, childRight);
 			maxHeight = Math.Max(maxHeight, childBottom);
@@ -137,6 +138,18 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer
 	/// </summary>
 	/// <returns>Enumerable of visible children</returns>
 	protected IEnumerable<IUIElement> GetVisibleChildren() => _children.Where(c => c.IsVisible);
+
+	/// <inheritdoc />
+	public IEnumerator<IUIElement> GetEnumerator() => _children.GetEnumerator();
+
+	/// <inheritdoc />
+	IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+	/// <summary>
+	/// Adds a child element to the container (for collection initializer syntax)
+	/// </summary>
+	/// <param name="child">The child element to add</param>
+	public void Add(IUIElement child) => AddChild(child);
 
 	private void OnChildInvalidated(object? sender, EventArgs e) => Invalidate();
 }

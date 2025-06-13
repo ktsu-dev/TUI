@@ -10,6 +10,11 @@ namespace ktsu.TUI.Core.Elements.Primitives;
 public enum BorderStyle
 {
 	/// <summary>
+	/// No border
+	/// </summary>
+	None,
+
+	/// <summary>
 	/// Single line border
 	/// </summary>
 	Single,

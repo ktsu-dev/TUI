@@ -70,19 +70,19 @@ public class StackPanel : UIContainerBase
 	/// <inheritdoc />
 	protected override void OnArrangeChildren()
 	{
-		var contentArea = GetContentArea();
-		var contentPosition = GetContentPosition();
+		Dimensions contentArea = GetContentArea();
+		Position contentPosition = GetContentPosition();
 
 		if (contentArea.IsEmpty || Children.Count == 0)
 		{
 			return;
 		}
 
-		var currentOffset = 0;
+		int currentOffset = 0;
 
-		foreach (var child in GetVisibleChildren())
+		foreach (IUIElement child in GetVisibleChildren())
 		{
-			var childDimensions = child.CalculateRequiredDimensions();
+			Dimensions childDimensions = child.CalculateRequiredDimensions();
 
 			if (Orientation == Orientation.Vertical)
 			{
@@ -129,17 +129,17 @@ public class StackPanel : UIContainerBase
 			return Dimensions.Empty;
 		}
 
-		var totalWidth = 0;
-		var totalHeight = 0;
-		var maxWidth = 0;
-		var maxHeight = 0;
+		int totalWidth = 0;
+		int totalHeight = 0;
+		int maxWidth = 0;
+		int maxHeight = 0;
 
-		var visibleChildren = GetVisibleChildren().ToArray();
-		var totalSpacing = Math.Max(0, (visibleChildren.Length - 1) * Spacing);
+		IUIElement[] visibleChildren = GetVisibleChildren().ToArray();
+		int totalSpacing = Math.Max(0, (visibleChildren.Length - 1) * Spacing);
 
-		foreach (var child in visibleChildren)
+		foreach (IUIElement? child in visibleChildren)
 		{
-			var childDimensions = child.CalculateRequiredDimensions();
+			Dimensions childDimensions = child.CalculateRequiredDimensions();
 
 			if (Orientation == Orientation.Vertical)
 			{

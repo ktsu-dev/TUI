@@ -112,15 +112,15 @@ public class BorderElement : UIContainerBase
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
-		var dimensions = Dimensions;
-		var position = Position;
+		Dimensions dimensions = Dimensions;
+		Position position = Position;
 
 		if (dimensions.Width < 2 || dimensions.Height < 2)
 		{
 			return;
 		}
 
-		var chars = GetBorderCharacters(BorderStyle);
+		BorderCharacters chars = GetBorderCharacters(BorderStyle);
 
 		// Draw corners
 		provider.WriteAt(chars.TopLeft.ToString(), position, Style);
@@ -129,7 +129,7 @@ public class BorderElement : UIContainerBase
 		provider.WriteAt(chars.BottomRight.ToString(), position.Offset(dimensions.Width - 1, dimensions.Height - 1), Style);
 
 		// Draw horizontal lines
-		var horizontalLine = new string(chars.Horizontal, dimensions.Width - 2);
+		string horizontalLine = new string(chars.Horizontal, dimensions.Width - 2);
 		if (horizontalLine.Length > 0)
 		{
 			provider.WriteAt(horizontalLine, position.Offset(1, 0), Style);
@@ -137,7 +137,7 @@ public class BorderElement : UIContainerBase
 		}
 
 		// Draw vertical lines
-		for (var y = 1; y < dimensions.Height - 1; y++)
+		for (int y = 1; y < dimensions.Height - 1; y++)
 		{
 			provider.WriteAt(chars.Vertical.ToString(), position.Offset(0, y), Style);
 			provider.WriteAt(chars.Vertical.ToString(), position.Offset(dimensions.Width - 1, y), Style);
@@ -146,11 +146,11 @@ public class BorderElement : UIContainerBase
 		// Draw title if present
 		if (!string.IsNullOrEmpty(Title) && dimensions.Width > 4)
 		{
-			var maxTitleWidth = dimensions.Width - 4; // Leave space for border and padding
-			var displayTitle = Title.Length > maxTitleWidth ? Title[..maxTitleWidth] : Title;
-			var titleWithPadding = $" {displayTitle} ";
+			int maxTitleWidth = dimensions.Width - 4; // Leave space for border and padding
+			string displayTitle = Title.Length > maxTitleWidth ? Title[..maxTitleWidth] : Title;
+			string titleWithPadding = $" {displayTitle} ";
 
-			var titleX = TitleAlignment switch
+			int titleX = TitleAlignment switch
 			{
 				HorizontalAlignment.Center => position.X + Math.Max(1, (dimensions.Width - titleWithPadding.Length) / 2),
 				HorizontalAlignment.Right => position.X + Math.Max(1, dimensions.Width - titleWithPadding.Length - 1),
@@ -165,13 +165,13 @@ public class BorderElement : UIContainerBase
 	/// <inheritdoc />
 	protected override void OnArrangeChildren()
 	{
-		var contentArea = GetContentArea();
-		var contentPosition = GetContentPosition();
+		Dimensions contentArea = GetContentArea();
+		Position contentPosition = GetContentPosition();
 
 		// For a simple border, we'll just position the first child to fill the content area
 		if (Children.Count > 0)
 		{
-			var child = Children.First();
+			IUIElement child = Children.First();
 			child.Position = contentPosition;
 			child.Dimensions = contentArea;
 		}
@@ -185,7 +185,7 @@ public class BorderElement : UIContainerBase
 			return new Dimensions(2, 2); // Minimum size for border
 		}
 
-		var childDimensions = Children.First().CalculateRequiredDimensions();
+		Dimensions childDimensions = Children.First().CalculateRequiredDimensions();
 		return new Dimensions(
 			Math.Max(2, childDimensions.Width + 2), // +2 for left and right border
 			Math.Max(2, childDimensions.Height + 2)  // +2 for top and bottom border
@@ -201,6 +201,7 @@ public class BorderElement : UIContainerBase
 			BorderStyle.Thick => new BorderCharacters('┏', '┓', '┗', '┛', '━', '┃'),
 			BorderStyle.Ascii => new BorderCharacters('+', '+', '+', '+', '-', '|'),
 			BorderStyle.Single => throw new NotImplementedException(),
+			BorderStyle.None => throw new NotImplementedException(),
 			_ => new BorderCharacters('┌', '┐', '└', '┘', '─', '│') // Single
 		};
 	}

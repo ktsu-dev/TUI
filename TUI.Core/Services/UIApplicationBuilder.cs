@@ -60,8 +60,8 @@ public class UIApplicationBuilder
 	/// <returns>The configured UI application</returns>
 	public UIApplication Build()
 	{
-		var consoleProvider = _consoleProvider ?? new SpectreConsoleProvider();
-		var app = new UIApplication(consoleProvider, _logger);
+		IConsoleProvider consoleProvider = _consoleProvider ?? new SpectreConsoleProvider();
+		UIApplication app = new UIApplication(consoleProvider, _logger);
 
 		if (_rootElement != null)
 		{

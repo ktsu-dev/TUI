@@ -23,8 +23,8 @@ public static class InteractiveDemo
 	/// </summary>
 	public static async Task RunAsync()
 	{
-		var consoleProvider = new SpectreConsoleProvider();
-		var app = UIApplication.CreateBuilder(consoleProvider)
+		SpectreConsoleProvider consoleProvider = new SpectreConsoleProvider();
+		UIApplication app = UIApplication.CreateBuilder(consoleProvider)
 			.UseRootElement(CreateInteractiveUI())
 			.Build();
 
@@ -35,7 +35,7 @@ public static class InteractiveDemo
 
 	private static IUIElement CreateInteractiveUI()
 	{
-		var mainLayout = new StackPanel
+		StackPanel mainLayout = new StackPanel
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1,
@@ -43,7 +43,7 @@ public static class InteractiveDemo
 		};
 
 		// Header
-		var header = new BorderElement
+		BorderElement header = new BorderElement
 		{
 			Title = "Interactive TUI Demo",
 			TitleAlignment = HorizontalAlignment.Center,
@@ -57,13 +57,13 @@ public static class InteractiveDemo
 		};
 
 		// Status panel
-		var statusPanel = CreateStatusPanel();
+		IUIElement statusPanel = CreateStatusPanel();
 
 		// Counter panel
-		var counterPanel = CreateCounterPanel();
+		IUIElement counterPanel = CreateCounterPanel();
 
 		// Input instructions
-		var instructionsPanel = CreateInstructionsPanel();
+		IUIElement instructionsPanel = CreateInstructionsPanel();
 
 		mainLayout.AddChild(header);
 		mainLayout.AddChild(statusPanel);
@@ -92,7 +92,7 @@ public static class InteractiveDemo
 
 	private static IUIElement CreateCounterPanel()
 	{
-		var counterLayout = new StackPanel
+		StackPanel counterLayout = new StackPanel
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 2
@@ -105,13 +105,13 @@ public static class InteractiveDemo
 			HorizontalAlignment = HorizontalAlignment.Center
 		};
 
-		var counterLabel = new TextElement
+		TextElement counterLabel = new TextElement
 		{
 			Text = "Counter:",
 			Style = new TextStyle { Foreground = "white" }
 		};
 
-		var resetButton = new TextElement
+		TextElement resetButton = new TextElement
 		{
 			Text = "[R] Reset",
 			Style = new TextStyle { Foreground = "red" }
@@ -131,7 +131,7 @@ public static class InteractiveDemo
 
 	private static IUIElement CreateInstructionsPanel()
 	{
-		var instructionsText = new TextElement
+		TextElement instructionsText = new TextElement
 		{
 			Text = "CONTROLS:\n" +
 				   "↑/↓  - Increment/Decrement Counter\n" +
@@ -215,7 +215,7 @@ public static class InteractiveDemo
 	{
 		if (_counterText != null)
 		{
-			var currentStyle = _counterText.Style;
+			TextStyle currentStyle = _counterText.Style;
 			_counterText.Style = new TextStyle
 			{
 				IsBold = currentStyle.IsBold,
