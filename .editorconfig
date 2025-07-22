@@ -54,8 +54,8 @@ dotnet_style_explicit_tuple_names = true:error
 dotnet_style_prefer_inferred_tuple_names = true:error
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:error
 dotnet_style_prefer_auto_properties = true:error
-dotnet_style_prefer_conditional_expression_over_assignment = true:error
-dotnet_style_prefer_conditional_expression_over_return = true:error
+dotnet_style_prefer_conditional_expression_over_assignment = true:none
+dotnet_style_prefer_conditional_expression_over_return = true:none
 dotnet_style_prefer_compound_assignment = true:error
 dotnet_style_prefer_simplified_interpolation = true:error
 dotnet_style_prefer_simplified_boolean_expressions = true:error
@@ -180,6 +180,8 @@ dotnet_style_allow_multiple_blank_lines_experimental = false:error
 dotnet_style_allow_statement_immediately_after_block_experimental = true:silent
 
 # Static code analysis rules
+dotnet_diagnostic.IDE0010.severity = none # Populate switch
+dotnet_diagnostic.IDE0072.severity = none # Populate switch expression
 dotnet_diagnostic.CA1002.severity = error # Do not expose generic lists
 dotnet_diagnostic.CA1003.severity = error # Use generic event handler instances
 dotnet_diagnostic.CA1005.severity = error # Avoid excessive parameters on generic types

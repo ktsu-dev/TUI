@@ -131,7 +131,10 @@ function Get-BuildConfiguration {
     $APPLICATION_PATTERN = Join-Path $STAGING_PATH "*.zip"
 
     # Set build arguments
-    $BUILD_ARGS = $USE_DOTNET_SCRIPT ? "-maxCpuCount:1" : ""
+    $BUILD_ARGS = ""
+    if ($USE_DOTNET_SCRIPT) {
+        $BUILD_ARGS = "-maxCpuCount:1"
+    }
 
     # Create configuration object with standard format
     $config = [PSCustomObject]@{
@@ -1267,12 +1270,19 @@ function Update-ProjectMetadata {
             "PROJECT_URL.url",
             "AUTHORS.url"
         )
+        
+        # Add latest changelog if it exists
+        if (Test-Path $BuildConfiguration.LatestChangelogFile) {
+            $filesToAdd += $BuildConfiguration.LatestChangelogFile
+        }
         Write-Information "Files to add: $($filesToAdd -join ", ")" -Tags "Update-ProjectMetadata"
         "git add $filesToAdd" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Update-ProjectMetadata"
 
         Write-Information "Checking for changes to commit..." -Tags "Update-ProjectMetadata"
-        $postStatus = "git status --porcelain" | Invoke-ExpressionWithLogging
-        Write-Information "Git status: $($postStatus ? 'Changes detected' : 'No changes')" -Tags "Update-ProjectMetadata"
+        $postStatus = "git status --porcelain" | Invoke-ExpressionWithLogging -Tags "Update-ProjectMetadata" | Out-String
+        $hasChanges = -not [string]::IsNullOrWhiteSpace($postStatus)
+        $statusMessage = if ($hasChanges) { 'Changes detected' } else { 'No changes' }
+        Write-Information "Git status: $statusMessage" -Tags "Update-ProjectMetadata"
 
         # Get the current commit hash regardless of whether we make changes
         $currentHash = "git rev-parse HEAD" | Invoke-ExpressionWithLogging
@@ -1413,11 +1423,11 @@ function Invoke-DotNetBuild {
 function Invoke-DotNetTest {
     <#
     .SYNOPSIS
-        Runs unit tests.
+        Runs dotnet test with code coverage collection.
     .DESCRIPTION
         Runs dotnet test with code coverage collection.
     .PARAMETER Configuration
-        The build configuration (Debug/Release).
+        The build configuration to use.
     .PARAMETER CoverageOutputPath
         The path to output code coverage results.
     #>
@@ -1427,11 +1437,26 @@ function Invoke-DotNetTest {
         [string]$CoverageOutputPath = "coverage"
     )
 
-    Write-StepHeader "Running Tests" -Tags "Invoke-DotNetTest"
+    Write-StepHeader "Running Tests with Coverage" -Tags "Invoke-DotNetTest"
 
-    # Execute command and stream output directly to console
-    "dotnet test -m:1 --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=quiet`" --no-build --collect:`"XPlat Code Coverage`" --results-directory $CoverageOutputPath" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetTest"
+    # Ensure the TestResults directory exists
+    $testResultsPath = Join-Path $CoverageOutputPath "TestResults"
+    New-Item -Path $testResultsPath -ItemType Directory -Force | Out-Null
+
+    # Run tests with both coverage collection and TRX logging for SonarQube
+    "dotnet test --configuration $Configuration /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=`"coverage.opencover.xml`" --results-directory `"$testResultsPath`" --logger `"trx;LogFileName=TestResults.trx`"" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetTest"
     Assert-LastExitCode "Tests failed"
+
+    # Find and copy coverage file to expected location for SonarQube
+    $coverageFiles = @(Get-ChildItem -Path . -Recurse -Filter "coverage.opencover.xml" -ErrorAction SilentlyContinue)
+    if ($coverageFiles.Count -gt 0) {
+        $latestCoverageFile = $coverageFiles | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        $targetCoverageFile = Join-Path $CoverageOutputPath "coverage.opencover.xml"
+        Copy-Item -Path $latestCoverageFile.FullName -Destination $targetCoverageFile -Force
+        Write-Information "Coverage file copied to: $targetCoverageFile" -Tags "Invoke-DotNetTest"
+    } else {
+        Write-Information "Warning: No coverage file found" -Tags "Invoke-DotNetTest"
+    }
 }
 
 function Invoke-DotNetPack {
@@ -1446,13 +1471,16 @@ function Invoke-DotNetPack {
         The path to output packages to.
     .PARAMETER Project
         Optional specific project to package. If not provided, all projects are packaged.
+    .PARAMETER LatestChangelogFile
+        Optional path to the latest changelog file to use for PackageReleaseNotes. Defaults to "LATEST_CHANGELOG.md".
     #>
     [CmdletBinding()]
     param (
         [string]$Configuration = "Release",
         [Parameter(Mandatory=$true)]
         [string]$OutputPath,
-        [string]$Project = ""
+        [string]$Project = "",
+        [string]$LatestChangelogFile = "LATEST_CHANGELOG.md"
     )
 
     Write-StepHeader "Packaging Libraries" -Tags "Invoke-DotNetPack"
@@ -1468,19 +1496,29 @@ function Invoke-DotNetPack {
     }
 
     try {
+        # Prepare PackageReleaseNotesFile property if latest changelog exists
+        $releaseNotesProperty = ""
+        if (Test-Path $LatestChangelogFile) {
+            # Use PackageReleaseNotesFile to reference the file path instead of inline content
+            # This avoids command-line parsing issues with special characters like semicolons
+            $absolutePath = (Resolve-Path $LatestChangelogFile).Path
+            $releaseNotesProperty = "-p:PackageReleaseNotesFile=`"$absolutePath`""
+            Write-Information "Using PackageReleaseNotesFile from $LatestChangelogFile" -Tags "Invoke-DotNetPack"
+        }
+
         # Build either a specific project or all projects
         if ([string]::IsNullOrWhiteSpace($Project)) {
             Write-Information "Packaging all projects in solution..." -Tags "Invoke-DotNetPack"
-            "dotnet pack --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=quiet`" --no-build --output $OutputPath" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetPack"
+            "dotnet pack --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=quiet`" --no-build --output $OutputPath $releaseNotesProperty" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetPack"
         } else {
             Write-Information "Packaging project: $Project" -Tags "Invoke-DotNetPack"
-            "dotnet pack $Project --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=quiet`" --no-build --output $OutputPath" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetPack"
+            "dotnet pack $Project --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=quiet`" --no-build --output $OutputPath $releaseNotesProperty" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetPack"
         }
 
         if ($LASTEXITCODE -ne 0) {
             # Get more details about what might have failed
             Write-Information "Packaging failed with exit code $LASTEXITCODE, trying again with detailed verbosity..." -Tags "Invoke-DotNetPack"
-            "dotnet pack --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=detailed`" --no-build --output $OutputPath" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetPack"
+            "dotnet pack --configuration $Configuration -logger:`"Microsoft.Build.Logging.ConsoleLogger,Microsoft.Build;Summary;ForceNoAlign;ShowTimestamp;ShowCommandLine;Verbosity=detailed`" --no-build --output $OutputPath $releaseNotesProperty" | Invoke-ExpressionWithLogging | Write-InformationStream -Tags "Invoke-DotNetPack"
             throw "Library packaging failed with exit code $LASTEXITCODE"
         }
 
@@ -1609,20 +1647,7 @@ function Invoke-DotNetPublish {
         Write-Information "No applications were published (projects may not be configured as executables)" -Tags "Invoke-DotNetPublish"
     }
 
-    # Publish packages if we have any and NuGet key is provided AND this is a release build
-    $packages = @(Get-Item -Path $BuildConfiguration.PackagePattern -ErrorAction SilentlyContinue)
-    if ($packages.Count -gt 0 -and -not [string]::IsNullOrWhiteSpace($BuildConfiguration.NuGetApiKey) -and $BuildConfiguration.ShouldRelease) {
-        Write-StepHeader "Publishing NuGet Packages" -Tags "Invoke-NuGetPublish"
-        try {
-            Invoke-NuGetPublish -BuildConfiguration $BuildConfiguration | Write-InformationStream -Tags "Invoke-NuGetPublish"
-        }
-        catch {
-            Write-Information "NuGet package publishing failed: $_" -Tags "Invoke-NuGetPublish"
-            Write-Information "Continuing with release process." -Tags "Invoke-NuGetPublish"
-        }
-    } elseif ($packages.Count -gt 0 -and -not $BuildConfiguration.ShouldRelease) {
-        Write-Information "Packages found but skipping publication (not a release build: ShouldRelease=$($BuildConfiguration.ShouldRelease))" -Tags "Invoke-DotNetPublish"
-    }
+    # Note: NuGet package publishing is handled separately in Invoke-ReleaseWorkflow
 
     Write-StepHeader "Release Process Completed" -Tags "Invoke-ReleaseWorkflow"
     Write-Information "Release process completed successfully!" -Tags "Invoke-ReleaseWorkflow"
@@ -2150,8 +2175,8 @@ function Invoke-ReleaseWorkflow {
 
         # Create NuGet packages
         try {
-            Write-StepHeader "Packaging Libraries" -Tags "Invoke-DotNetPack"
-            Invoke-DotNetPack -Configuration $Configuration -OutputPath $BuildConfiguration.StagingPath | Write-InformationStream -Tags "Invoke-DotNetPack"
+                    Write-StepHeader "Packaging Libraries" -Tags "Invoke-DotNetPack"
+        Invoke-DotNetPack -Configuration $Configuration -OutputPath $BuildConfiguration.StagingPath -LatestChangelogFile $BuildConfiguration.LatestChangelogFile | Write-InformationStream -Tags "Invoke-DotNetPack"
 
             # Add package paths if they exist
             if (Test-Path $BuildConfiguration.PackagePattern) {
