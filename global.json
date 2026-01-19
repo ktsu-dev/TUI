@@ -4,9 +4,9 @@
     "rollForward": "latestFeature"
   },
   "msbuild-sdks": {
-    "ktsu.Sdk": "1.75.0",
+    "ktsu.Sdk": "2.2.1",
     "ktsu.Sdk.Lib": "1.59.0",
-    "ktsu.Sdk.ConsoleApp": "1.75.0",
+    "ktsu.Sdk.ConsoleApp": "2.2.1",
     "ktsu.Sdk.Test": "1.65.0",
     "ktsu.Sdk.ImGuiApp": "1.65.0",
     "ktsu.Sdk.WinApp": "1.65.0",
