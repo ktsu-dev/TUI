@@ -22,7 +22,7 @@ public readonly record struct Position(int X, int Y)
 	/// <param name="a">First position</param>
 	/// <param name="b">Second position</param>
 	/// <returns>The sum of the positions</returns>
-	public static Position operator +(Position a, Position b) => new(a.X + b.X, a.Y + b.Y);
+	public static Position operator +(Position a, Position b) => Add(a, b);
 
 	/// <summary>
 	/// Subtracts one position from another
@@ -30,7 +30,23 @@ public readonly record struct Position(int X, int Y)
 	/// <param name="a">First position</param>
 	/// <param name="b">Second position</param>
 	/// <returns>The difference of the positions</returns>
-	public static Position operator -(Position a, Position b) => new(a.X - b.X, a.Y - b.Y);
+	public static Position operator -(Position a, Position b) => Subtract(a, b);
+
+	/// <summary>
+	/// Adds two positions together
+	/// </summary>
+	/// <param name="a">First position</param>
+	/// <param name="b">Second position</param>
+	/// <returns>The sum of the positions</returns>
+	public static Position Add(Position a, Position b) => new(a.X + b.X, a.Y + b.Y);
+
+	/// <summary>
+	/// Subtracts one position from another
+	/// </summary>
+	/// <param name="a">First position</param>
+	/// <param name="b">Second position</param>
+	/// <returns>The difference of the positions</returns>
+	public static Position Subtract(Position a, Position b) => new(a.X - b.X, a.Y - b.Y);
 
 	/// <summary>
 	/// Creates a new position offset by the specified amounts

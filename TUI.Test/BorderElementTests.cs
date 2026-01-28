@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Test;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
@@ -29,7 +30,7 @@ public sealed class BorderElementTests
 		Assert.AreEqual(string.Empty, borderElement.Title);
 		Assert.AreEqual(HorizontalAlignment.Left, borderElement.TitleAlignment);
 		Assert.IsNull(borderElement.Child);
-		Assert.IsTrue(borderElement.IsVisible);
+		Assert.IsTrue(borderElement.IsVisible, "Default IsVisible should be true");
 	}
 
 	/// <summary>
@@ -65,7 +66,7 @@ public sealed class BorderElementTests
 		borderElement.Title = "New Title";
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing title should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -85,7 +86,7 @@ public sealed class BorderElementTests
 		borderElement.Title = initialTitle;
 
 		// Assert
-		Assert.IsFalse(invalidated);
+		Assert.IsFalse(invalidated, "Setting the same title value should not trigger invalidation");
 	}
 
 	/// <summary>
@@ -121,7 +122,7 @@ public sealed class BorderElementTests
 		borderElement.BorderStyle = BorderStyle.DoubleLine;
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing border style should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -157,7 +158,7 @@ public sealed class BorderElementTests
 		borderElement.TitleAlignment = HorizontalAlignment.Right;
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing title alignment should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -194,7 +195,7 @@ public sealed class BorderElementTests
 		borderElement.Child = new TextElement("New child");
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing child should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -297,7 +298,7 @@ public sealed class BorderElementTests
 		bool result = borderElement.HandleInput(input);
 
 		// Assert
-		Assert.IsTrue(result);
+		Assert.IsTrue(result, "HandleInput should return true when child handles the input");
 		mockChild.Verify(c => c.HandleInput(input), Times.Once);
 	}
 
@@ -316,6 +317,6 @@ public sealed class BorderElementTests
 		bool result = borderElement.HandleInput(input);
 
 		// Assert
-		Assert.IsFalse(result);
+		Assert.IsFalse(result, "HandleInput should return false when there is no child");
 	}
 }

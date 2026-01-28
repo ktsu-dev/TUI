@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Services;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 using Spectre.Console;
@@ -27,7 +28,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	/// <inheritdoc />
 	public void Render(IUIElement element, Position position)
 	{
-		ArgumentNullException.ThrowIfNull(element);
+		_ = element ?? throw new ArgumentNullException(nameof(element));
 
 		if (!element.IsVisible)
 		{
@@ -84,7 +85,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 			// Return keyboard input
 			return InputResult.FromKey(keyInfo.Key, keyInfo.Modifiers);
-		});
+		}).ConfigureAwait(false);
 	}
 
 	/// <inheritdoc />
@@ -109,7 +110,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
 	{
 		string styleString = BuildStyleString(style);
-		string escapedText = text.Replace("[", "[[", StringComparison.Ordinal).Replace("]", "]]", StringComparison.Ordinal);
+		string escapedText = text.Replace("[", "[[").Replace("]", "]]");
 
 		return string.IsNullOrEmpty(styleString)
 			? new Markup(escapedText)

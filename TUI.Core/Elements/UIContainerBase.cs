@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Elements;
+
 using System.Collections;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
@@ -20,7 +21,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public virtual void AddChild(IUIElement child)
 	{
-		ArgumentNullException.ThrowIfNull(child);
+		_ = child ?? throw new ArgumentNullException(nameof(child));
 
 		if (!_children.Contains(child))
 		{
@@ -35,7 +36,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public virtual bool RemoveChild(IUIElement child)
 	{
-		ArgumentNullException.ThrowIfNull(child);
+		_ = child ?? throw new ArgumentNullException(nameof(child));
 
 		if (_children.Remove(child))
 		{

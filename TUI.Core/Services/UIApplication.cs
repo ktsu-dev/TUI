@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Services;
+
 using ktsu.TUI.Core.Contracts;
 using Microsoft.Extensions.Logging;
 
@@ -107,7 +108,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			Render();
 
 			// Start input processing
-			await ProcessInputAsync(_cancellationTokenSource.Token);
+			await ProcessInputAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
 		}
 		catch (OperationCanceledException)
 		{
@@ -211,7 +212,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		{
 			try
 			{
-				Models.InputResult input = await ConsoleProvider.ReadInputAsync();
+				Models.InputResult input = await ConsoleProvider.ReadInputAsync().ConfigureAwait(false);
 
 				if (_logger != null)
 				{
@@ -289,7 +290,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// <param name="rootElement">The root element to display</param>
 	public void Setup(IUIElement rootElement)
 	{
-		ArgumentNullException.ThrowIfNull(rootElement);
+		_ = rootElement ?? throw new ArgumentNullException(nameof(rootElement));
 
 		RootElement = rootElement;
 		if (_logger != null)

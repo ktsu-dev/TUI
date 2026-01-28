@@ -45,7 +45,7 @@ public readonly record struct InputResult
 	/// <param name="key">The key that was pressed</param>
 	/// <param name="modifiers">The modifiers that were held</param>
 	/// <returns>The input result</returns>
-	public static InputResult FromKey(ConsoleKey key, ConsoleModifiers modifiers = ConsoleModifiers.None) =>
+	public static InputResult FromKey(ConsoleKey key, ConsoleModifiers modifiers = default) =>
 		new() { Type = InputType.Keyboard, Key = key, Modifiers = modifiers };
 
 	/// <summary>

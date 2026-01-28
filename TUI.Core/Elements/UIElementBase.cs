@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Elements;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 
@@ -11,19 +12,15 @@ using ktsu.TUI.Core.Models;
 /// </summary>
 public abstract class UIElementBase : IUIElement
 {
-	private Position _position;
-	private Dimensions _dimensions;
-	private bool _isVisible = true;
-
 	/// <inheritdoc />
 	public Position Position
 	{
-		get => _position;
+		get;
 		set
 		{
-			if (_position != value)
+			if (field != value)
 			{
-				_position = value;
+				field = value;
 				Invalidate();
 			}
 		}
@@ -32,12 +29,12 @@ public abstract class UIElementBase : IUIElement
 	/// <inheritdoc />
 	public Dimensions Dimensions
 	{
-		get => _dimensions;
+		get;
 		set
 		{
-			if (_dimensions != value)
+			if (field != value)
 			{
-				_dimensions = value;
+				field = value;
 				Invalidate();
 			}
 		}
@@ -46,16 +43,16 @@ public abstract class UIElementBase : IUIElement
 	/// <inheritdoc />
 	public bool IsVisible
 	{
-		get => _isVisible;
+		get;
 		set
 		{
-			if (_isVisible != value)
+			if (field != value)
 			{
-				_isVisible = value;
+				field = value;
 				Invalidate();
 			}
 		}
-	}
+	} = true;
 
 	/// <inheritdoc />
 	public IUIContainer? Parent { get; set; }

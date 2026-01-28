@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Elements.Primitives;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 
@@ -11,40 +12,37 @@ using ktsu.TUI.Core.Models;
 /// </summary>
 public class TextElement : UIElementBase
 {
-	private string _text = string.Empty;
-	private TextStyle _style = TextStyle.Default;
-
 	/// <summary>
 	/// Gets or sets the text to display
 	/// </summary>
 	public string Text
 	{
-		get => _text;
+		get;
 		set
 		{
-			if (_text != value)
+			if (field != value)
 			{
-				_text = value ?? string.Empty;
+				field = value ?? string.Empty;
 				Invalidate();
 			}
 		}
-	}
+	} = string.Empty;
 
 	/// <summary>
 	/// Gets or sets the text style
 	/// </summary>
 	public TextStyle Style
 	{
-		get => _style;
+		get;
 		set
 		{
-			if (_style != value)
+			if (field != value)
 			{
-				_style = value;
+				field = value;
 				Invalidate();
 			}
 		}
-	}
+	} = TextStyle.Default;
 
 	/// <summary>
 	/// Gets or sets the horizontal alignment
@@ -88,7 +86,7 @@ public class TextElement : UIElementBase
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
-		ArgumentNullException.ThrowIfNull(provider);
+		_ = provider ?? throw new ArgumentNullException(nameof(provider));
 
 		if (string.IsNullOrEmpty(Text))
 		{

@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Elements.Primitives;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 
@@ -11,74 +12,69 @@ using ktsu.TUI.Core.Models;
 /// </summary>
 public class BorderElement : UIContainerBase
 {
-	private BorderStyle _borderStyle = BorderStyle.SingleLine;
-	private TextStyle _style = TextStyle.Default;
-	private string _title = string.Empty;
-	private HorizontalAlignment _titleAlignment = HorizontalAlignment.Left;
-
 	/// <summary>
 	/// Gets or sets the border style
 	/// </summary>
 	public BorderStyle BorderStyle
 	{
-		get => _borderStyle;
+		get;
 		set
 		{
-			if (_borderStyle != value)
+			if (field != value)
 			{
-				_borderStyle = value;
+				field = value;
 				Invalidate();
 			}
 		}
-	}
+	} = BorderStyle.SingleLine;
 
 	/// <summary>
 	/// Gets or sets the border style (color, etc.)
 	/// </summary>
 	public TextStyle Style
 	{
-		get => _style;
+		get;
 		set
 		{
-			if (_style != value)
+			if (field != value)
 			{
-				_style = value;
+				field = value;
 				Invalidate();
 			}
 		}
-	}
+	} = TextStyle.Default;
 
 	/// <summary>
 	/// Gets or sets the title to display in the border
 	/// </summary>
 	public string Title
 	{
-		get => _title;
+		get;
 		set
 		{
-			if (_title != value)
+			if (field != value)
 			{
-				_title = value ?? string.Empty;
+				field = value ?? string.Empty;
 				Invalidate();
 			}
 		}
-	}
+	} = string.Empty;
 
 	/// <summary>
 	/// Gets or sets the title alignment
 	/// </summary>
 	public HorizontalAlignment TitleAlignment
 	{
-		get => _titleAlignment;
+		get;
 		set
 		{
-			if (_titleAlignment != value)
+			if (field != value)
 			{
-				_titleAlignment = value;
+				field = value;
 				Invalidate();
 			}
 		}
-	}
+	} = HorizontalAlignment.Left;
 
 	/// <summary>
 	/// Gets or sets the child element (convenience property for single child)
@@ -112,7 +108,7 @@ public class BorderElement : UIContainerBase
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
-		ArgumentNullException.ThrowIfNull(provider);
+		_ = provider ?? throw new ArgumentNullException(nameof(provider));
 
 		Dimensions dimensions = Dimensions;
 		Position position = Position;

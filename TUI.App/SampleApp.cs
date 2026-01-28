@@ -3,7 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.App;
-using ktsu.TUI.Core.Contracts;
+
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
@@ -29,12 +29,12 @@ internal static class SampleApp
 
 		// Run the application
 		Console.WriteLine("Starting TUI Advanced Demo. Press ESC to exit.");
-		await app.RunAsync();
+		await app.RunAsync().ConfigureAwait(false);
 
 		Console.WriteLine("TUI Advanced Demo finished.");
 	}
 
-	private static IUIElement CreateAdvancedDemoUI()
+	private static StackPanel CreateAdvancedDemoUI()
 	{
 		// Create main layout with horizontal orientation
 		StackPanel mainLayout = new()
@@ -45,10 +45,10 @@ internal static class SampleApp
 		};
 
 		// Left panel - Information
-		IUIElement leftPanel = CreateInfoPanel();
+		StackPanel leftPanel = CreateInfoPanel();
 
 		// Right panel - Features showcase
-		IUIElement rightPanel = CreateFeaturesPanel();
+		StackPanel rightPanel = CreateFeaturesPanel();
 
 		mainLayout.AddChild(leftPanel);
 		mainLayout.AddChild(rightPanel);
@@ -56,7 +56,7 @@ internal static class SampleApp
 		return mainLayout;
 	}
 
-	private static IUIElement CreateInfoPanel()
+	private static StackPanel CreateInfoPanel()
 	{
 		StackPanel panel = new()
 		{
@@ -123,7 +123,7 @@ internal static class SampleApp
 		return panel;
 	}
 
-	private static IUIElement CreateFeaturesPanel()
+	private static StackPanel CreateFeaturesPanel()
 	{
 		StackPanel panel = new()
 		{

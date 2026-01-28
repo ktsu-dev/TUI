@@ -3,7 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.App;
-using ktsu.TUI.Core.Contracts;
+
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
@@ -29,11 +29,11 @@ internal static class InteractiveDemo
 			.Build();
 
 		Console.WriteLine("Starting TUI Interactive Demo. Use the controls shown on screen!");
-		await app.RunAsync();
+		await app.RunAsync().ConfigureAwait(false);
 		Console.WriteLine("Interactive Demo finished.");
 	}
 
-	private static IUIElement CreateInteractiveUI()
+	private static StackPanel CreateInteractiveUI()
 	{
 		StackPanel mainLayout = new()
 		{
@@ -57,13 +57,13 @@ internal static class InteractiveDemo
 		};
 
 		// Status panel
-		IUIElement statusPanel = CreateStatusPanel();
+		BorderElement statusPanel = CreateStatusPanel();
 
 		// Counter panel
-		IUIElement counterPanel = CreateCounterPanel();
+		BorderElement counterPanel = CreateCounterPanel();
 
 		// Input instructions
-		IUIElement instructionsPanel = CreateInstructionsPanel();
+		BorderElement instructionsPanel = CreateInstructionsPanel();
 
 		mainLayout.AddChild(header);
 		mainLayout.AddChild(statusPanel);
@@ -73,7 +73,7 @@ internal static class InteractiveDemo
 		return mainLayout;
 	}
 
-	private static IUIElement CreateStatusPanel()
+	private static BorderElement CreateStatusPanel()
 	{
 		_statusText = new TextElement
 		{
@@ -90,7 +90,7 @@ internal static class InteractiveDemo
 		};
 	}
 
-	private static IUIElement CreateCounterPanel()
+	private static BorderElement CreateCounterPanel()
 	{
 		StackPanel counterLayout = new()
 		{
@@ -129,7 +129,7 @@ internal static class InteractiveDemo
 		};
 	}
 
-	private static IUIElement CreateInstructionsPanel()
+	private static BorderElement CreateInstructionsPanel()
 	{
 		TextElement instructionsText = new()
 		{
@@ -197,17 +197,17 @@ internal static class InteractiveDemo
 
 	private static void UpdateCounter()
 	{
-		if (_counterText != null)
+		if (_counterText is { } counterText)
 		{
-			_counterText.Text = _counter.ToString();
+			counterText.Text = _counter.ToString();
 		}
 	}
 
 	private static void UpdateStatus(string message)
 	{
-		if (_statusText != null)
+		if (_statusText is { } statusText)
 		{
-			_statusText.Text = $"{DateTime.Now:HH:mm:ss} - {message}";
+			statusText.Text = $"{DateTime.Now:HH:mm:ss} - {message}";
 		}
 	}
 

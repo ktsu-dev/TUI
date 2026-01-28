@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Contracts;
+
 using ktsu.TUI.Core.Models;
 
 /// <summary>

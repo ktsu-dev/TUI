@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Elements.Layouts;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 
@@ -11,37 +12,34 @@ using ktsu.TUI.Core.Models;
 /// </summary>
 public class StackPanel : UIContainerBase
 {
-	private Orientation _orientation = Orientation.Vertical;
-	private int _spacing;
-
 	/// <summary>
 	/// Gets or sets the orientation of the stack
 	/// </summary>
 	public Orientation Orientation
 	{
-		get => _orientation;
+		get;
 		set
 		{
-			if (_orientation != value)
+			if (field != value)
 			{
-				_orientation = value;
+				field = value;
 				ArrangeChildren();
 				Invalidate();
 			}
 		}
-	}
+	} = Orientation.Vertical;
 
 	/// <summary>
 	/// Gets or sets the spacing between child elements
 	/// </summary>
 	public int Spacing
 	{
-		get => _spacing;
+		get;
 		set
 		{
-			if (_spacing != value)
+			if (field != value)
 			{
-				_spacing = Math.Max(0, value);
+				field = Math.Max(0, value);
 				ArrangeChildren();
 				Invalidate();
 			}

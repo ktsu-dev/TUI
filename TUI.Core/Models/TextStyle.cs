@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Models;
+
 using System.Drawing;
 
 /// <summary>

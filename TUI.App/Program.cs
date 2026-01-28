@@ -21,23 +21,33 @@ internal static class Program
 			// Check for command line arguments
 			if (args.Length > 0 && args[0] == "--interactive")
 			{
-				await InteractiveDemo.RunAsync();
+				await InteractiveDemo.RunAsync().ConfigureAwait(false);
 			}
 			else if (args.Length > 0 && args[0] == "--showcase")
 			{
 				Console.WriteLine("ShowcaseDemo is currently being fixed - using SampleApp instead");
-				await SampleApp.RunAsync();
+				await SampleApp.RunAsync().ConfigureAwait(false);
 			}
 			else
 			{
-				await SampleApp.RunAsync();
+				await SampleApp.RunAsync().ConfigureAwait(false);
 			}
 
 			return 0;
 		}
-		catch (Exception ex)
+		catch (OperationCanceledException)
 		{
-			Console.Error.WriteLine($"Error: {ex.Message}");
+			// User cancelled - normal exit
+			return 0;
+		}
+		catch (InvalidOperationException ex)
+		{
+			await Console.Error.WriteLineAsync($"Error: {ex.Message}").ConfigureAwait(false);
+			return 1;
+		}
+		catch (ArgumentException ex)
+		{
+			await Console.Error.WriteLineAsync($"Error: {ex.Message}").ConfigureAwait(false);
 			return 1;
 		}
 	}

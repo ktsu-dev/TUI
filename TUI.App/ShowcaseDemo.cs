@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.App;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
@@ -25,7 +26,7 @@ public static class ShowcaseDemo
 			.Build();
 
 		Console.WriteLine("Starting TUI Showcase Demo. Displaying all visual features...");
-		await app.RunAsync();
+		await app.RunAsync().ConfigureAwait(false);
 		Console.WriteLine("Showcase Demo finished.");
 	}
 

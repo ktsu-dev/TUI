@@ -12,7 +12,7 @@ public static class InputModifiers
 	/// <summary>
 	/// No modifiers
 	/// </summary>
-	public static readonly ConsoleModifiers None = ConsoleModifiers.None;
+	public static readonly ConsoleModifiers None;
 
 	/// <summary>
 	/// Alt modifier

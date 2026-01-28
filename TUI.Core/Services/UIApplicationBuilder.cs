@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Core.Services;
+
 using ktsu.TUI.Core.Contracts;
 using Microsoft.Extensions.Logging;
 

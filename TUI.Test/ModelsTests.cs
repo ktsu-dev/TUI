@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Test;
+
 using System.Drawing;
 using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Tests for TUI Core Models
 /// </summary>
 [TestClass]
-sealed public class ModelsTests
+public sealed class ModelsTests
 {
 	/// <summary>
 	/// Tests Position constructor and properties
@@ -41,8 +42,8 @@ sealed public class ModelsTests
 		// Act & Assert
 		Assert.AreEqual(position1, position2);
 		Assert.AreNotEqual(position1, position3);
-		Assert.IsTrue(position1 == position2);
-		Assert.IsTrue(position1 != position3);
+		Assert.IsTrue(position1 == position2, "Position equality operator should return true for equal positions");
+		Assert.IsTrue(position1 != position3, "Position inequality operator should return true for different positions");
 	}
 
 	/// <summary>
@@ -104,8 +105,8 @@ sealed public class ModelsTests
 		Dimensions notEmpty = new(10, 5);
 
 		// Assert
-		Assert.IsTrue(empty.IsEmpty);
-		Assert.IsFalse(notEmpty.IsEmpty);
+		Assert.IsTrue(empty.IsEmpty, "Dimensions with zero width and height should be empty");
+		Assert.IsFalse(notEmpty.IsEmpty, "Dimensions with non-zero width and height should not be empty");
 	}
 
 	/// <summary>
@@ -118,10 +119,10 @@ sealed public class ModelsTests
 		TextStyle style = new();
 
 		// Assert
-		Assert.IsFalse(style.IsBold);
-		Assert.IsFalse(style.IsItalic);
-		Assert.IsFalse(style.IsUnderline);
-		Assert.IsFalse(style.IsStrikethrough);
+		Assert.IsFalse(style.IsBold, "Default TextStyle should not be bold");
+		Assert.IsFalse(style.IsItalic, "Default TextStyle should not be italic");
+		Assert.IsFalse(style.IsUnderline, "Default TextStyle should not be underlined");
+		Assert.IsFalse(style.IsStrikethrough, "Default TextStyle should not be strikethrough");
 		Assert.IsNull(style.Foreground);
 		Assert.IsNull(style.Background);
 	}
@@ -144,10 +145,10 @@ sealed public class ModelsTests
 		};
 
 		// Assert
-		Assert.IsTrue(style.IsBold);
-		Assert.IsTrue(style.IsItalic);
-		Assert.IsTrue(style.IsUnderline);
-		Assert.IsTrue(style.IsStrikethrough);
+		Assert.IsTrue(style.IsBold, "TextStyle IsBold should be true when set");
+		Assert.IsTrue(style.IsItalic, "TextStyle IsItalic should be true when set");
+		Assert.IsTrue(style.IsUnderline, "TextStyle IsUnderline should be true when set");
+		Assert.IsTrue(style.IsStrikethrough, "TextStyle IsStrikethrough should be true when set");
 		// Color.FromName("red") returns Color.Red, which has Name = "Red"
 		Assert.AreEqual("Red", style.Foreground);
 		Assert.AreEqual("Blue", style.Background);
@@ -218,7 +219,7 @@ sealed public class ModelsTests
 		InputResult keyInput = InputResult.FromKey(ConsoleKey.Enter, InputModifiers.None);
 
 		// Assert
-		Assert.IsTrue(exitInput.IsExit);
+		Assert.IsTrue(exitInput.IsExit, "InputResult.Exit() should return an input with IsExit set to true");
 		Assert.AreEqual(InputType.Keyboard, keyInput.Type);
 		Assert.AreEqual(ConsoleKey.Enter, keyInput.Key);
 		Assert.AreEqual(InputModifiers.None, keyInput.Modifiers);

@@ -43,5 +43,6 @@
     <PackageVersion Include="YamlDotNet" Version="16.2.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    <PackageVersion Include="Polyfill" Version="9.7.6" />
   </ItemGroup>
 </Project>

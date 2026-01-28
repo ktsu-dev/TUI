@@ -1,16 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+  <Sdk Name="Microsoft.NET.Sdk" />
+  <Sdk Name="ktsu.Sdk" />
+  <Sdk Name="ktsu.Sdk.ConsoleApp" />
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <WarningsAsErrors />
-    <WarningsNotAsErrors />
+    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../TUI.Core/TUI.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" />
+    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" />
+    <PackageReference Include="Polyfill" />
   </ItemGroup>
 
   <ItemGroup>

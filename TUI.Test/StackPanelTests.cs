@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Test;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
@@ -14,7 +15,7 @@ using Moq;
 /// Tests for StackPanel layout functionality
 /// </summary>
 [TestClass]
-sealed public class StackPanelTests
+public sealed class StackPanelTests
 {
 	/// <summary>
 	/// Tests that StackPanel initializes with correct default values
@@ -29,8 +30,8 @@ sealed public class StackPanelTests
 		Assert.AreEqual(Orientation.Vertical, stackPanel.Orientation);
 		Assert.AreEqual(0, stackPanel.Spacing);
 		Assert.IsNotNull(stackPanel.Children);
-		Assert.AreEqual(0, stackPanel.Children.Count);
-		Assert.IsTrue(stackPanel.IsVisible);
+		Assert.IsEmpty(stackPanel.Children);
+		Assert.IsTrue(stackPanel.IsVisible, "Default IsVisible should be true");
 	}
 
 	/// <summary>
@@ -66,7 +67,7 @@ sealed public class StackPanelTests
 		stackPanel.Orientation = Orientation.Horizontal;
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing orientation should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -102,7 +103,7 @@ sealed public class StackPanelTests
 		stackPanel.Spacing = 3;
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing spacing should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -119,7 +120,7 @@ sealed public class StackPanelTests
 		stackPanel.AddChild(child);
 
 		// Assert
-		Assert.AreEqual(1, stackPanel.Children.Count);
+		Assert.HasCount(1, stackPanel.Children);
 		Assert.AreEqual(child, stackPanel.Children.First());
 		Assert.AreEqual(stackPanel, child.Parent);
 	}
@@ -139,7 +140,7 @@ sealed public class StackPanelTests
 		stackPanel.AddChild(new TextElement("Test child"));
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Adding a child should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -157,8 +158,8 @@ sealed public class StackPanelTests
 		bool result = stackPanel.RemoveChild(child);
 
 		// Assert
-		Assert.IsTrue(result);
-		Assert.AreEqual(0, stackPanel.Children.Count);
+		Assert.IsTrue(result, "RemoveChild should return true when child is successfully removed");
+		Assert.IsEmpty(stackPanel.Children);
 		Assert.IsNull(child.Parent);
 	}
 
@@ -179,7 +180,7 @@ sealed public class StackPanelTests
 		stackPanel.RemoveChild(child);
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Removing a child should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -196,7 +197,7 @@ sealed public class StackPanelTests
 		bool result = stackPanel.RemoveChild(child);
 
 		// Assert
-		Assert.IsFalse(result);
+		Assert.IsFalse(result, "RemoveChild should return false when child is not in the collection");
 	}
 
 	/// <summary>
@@ -216,7 +217,7 @@ sealed public class StackPanelTests
 		stackPanel.ClearChildren();
 
 		// Assert
-		Assert.AreEqual(0, stackPanel.Children.Count);
+		Assert.IsEmpty(stackPanel.Children);
 		Assert.IsNull(child1.Parent);
 		Assert.IsNull(child2.Parent);
 	}
@@ -237,7 +238,7 @@ sealed public class StackPanelTests
 		stackPanel.ClearChildren();
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Clearing children should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -250,7 +251,7 @@ sealed public class StackPanelTests
 		StackPanel stackPanel = [];
 
 		// Act & Assert
-		Assert.ThrowsException<ArgumentNullException>(() => stackPanel.AddChild(null!));
+		Assert.ThrowsExactly<ArgumentNullException>(() => stackPanel.AddChild(null!));
 	}
 
 	/// <summary>
@@ -279,7 +280,7 @@ sealed public class StackPanelTests
 		bool result = stackPanel.HandleInput(input);
 
 		// Assert
-		Assert.IsTrue(result);
+		Assert.IsTrue(result, "HandleInput should return true when a child handles the input");
 		// mockChild2 (added last) should be called first and handle the input
 		mockChild2.Verify(c => c.HandleInput(input), Times.Once);
 		// mockChild1 should not be called because mockChild2 handled the input
@@ -312,7 +313,7 @@ sealed public class StackPanelTests
 		bool result = stackPanel.HandleInput(input);
 
 		// Assert
-		Assert.IsFalse(result);
+		Assert.IsFalse(result, "HandleInput should return false when no child handles the input");
 		// Both children should be called since neither handles the input
 		mockChild1.Verify(c => c.HandleInput(input), Times.Once);
 		mockChild2.Verify(c => c.HandleInput(input), Times.Once);
@@ -333,7 +334,7 @@ sealed public class StackPanelTests
 		bool result = stackPanel.HandleInput(input);
 
 		// Assert
-		Assert.IsFalse(result);
+		Assert.IsFalse(result, "HandleInput should return false when there are no children");
 	}
 
 	/// <summary>

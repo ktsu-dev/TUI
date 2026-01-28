@@ -32,7 +32,7 @@ public readonly record struct Dimensions(int Width, int Height)
 	/// <param name="a">First dimensions</param>
 	/// <param name="b">Second dimensions</param>
 	/// <returns>The sum of the dimensions</returns>
-	public static Dimensions operator +(Dimensions a, Dimensions b) => new(a.Width + b.Width, a.Height + b.Height);
+	public static Dimensions operator +(Dimensions a, Dimensions b) => Add(a, b);
 
 	/// <summary>
 	/// Subtracts one dimensions from another
@@ -40,7 +40,23 @@ public readonly record struct Dimensions(int Width, int Height)
 	/// <param name="a">First dimensions</param>
 	/// <param name="b">Second dimensions</param>
 	/// <returns>The difference of the dimensions</returns>
-	public static Dimensions operator -(Dimensions a, Dimensions b) => new(a.Width - b.Width, a.Height - b.Height);
+	public static Dimensions operator -(Dimensions a, Dimensions b) => Subtract(a, b);
+
+	/// <summary>
+	/// Adds two dimensions together
+	/// </summary>
+	/// <param name="a">First dimensions</param>
+	/// <param name="b">Second dimensions</param>
+	/// <returns>The sum of the dimensions</returns>
+	public static Dimensions Add(Dimensions a, Dimensions b) => new(a.Width + b.Width, a.Height + b.Height);
+
+	/// <summary>
+	/// Subtracts one dimensions from another
+	/// </summary>
+	/// <param name="a">First dimensions</param>
+	/// <param name="b">Second dimensions</param>
+	/// <returns>The difference of the dimensions</returns>
+	public static Dimensions Subtract(Dimensions a, Dimensions b) => new(a.Width - b.Width, a.Height - b.Height);
 
 	/// <summary>
 	/// Creates new dimensions with the specified padding

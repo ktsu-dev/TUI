@@ -3,6 +3,7 @@
 // Licensed under the MIT license.
 
 namespace ktsu.TUI.Test;
+
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
@@ -13,7 +14,7 @@ using Moq;
 /// Tests for basic TUI elements functionality
 /// </summary>
 [TestClass]
-sealed public class UIElementTests
+public sealed class UIElementTests
 {
 	/// <summary>
 	/// Tests that TextElement properly sets and gets text property
@@ -47,7 +48,7 @@ sealed public class UIElementTests
 		textElement.Text = "New text";
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing text should trigger invalidation event");
 	}
 
 	/// <summary>
@@ -66,7 +67,7 @@ sealed public class UIElementTests
 		textElement.Text = initialText;
 
 		// Assert
-		Assert.IsFalse(invalidated);
+		Assert.IsFalse(invalidated, "Setting the same text value should not trigger invalidation");
 	}
 
 	/// <summary>
@@ -99,8 +100,8 @@ sealed public class UIElementTests
 		Assert.AreEqual(string.Empty, textElement.Text);
 		Assert.AreEqual(HorizontalAlignment.Left, textElement.HorizontalAlignment);
 		Assert.AreEqual(VerticalAlignment.Top, textElement.VerticalAlignment);
-		Assert.IsFalse(textElement.WordWrap);
-		Assert.IsTrue(textElement.IsVisible);
+		Assert.IsFalse(textElement.WordWrap, "Default WordWrap should be false");
+		Assert.IsTrue(textElement.IsVisible, "Default IsVisible should be true");
 	}
 
 	/// <summary>
@@ -154,7 +155,7 @@ sealed public class UIElementTests
 		textElement.Position = new Position(10, 20);
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing position should trigger invalidation event");
 		Assert.AreEqual(10, textElement.Position.X);
 		Assert.AreEqual(20, textElement.Position.Y);
 	}
@@ -174,7 +175,7 @@ sealed public class UIElementTests
 		textElement.Dimensions = new Dimensions(100, 50);
 
 		// Assert
-		Assert.IsTrue(invalidated);
+		Assert.IsTrue(invalidated, "Changing dimensions should trigger invalidation event");
 		Assert.AreEqual(100, textElement.Dimensions.Width);
 		Assert.AreEqual(50, textElement.Dimensions.Height);
 	}
@@ -194,8 +195,8 @@ sealed public class UIElementTests
 		textElement.IsVisible = false;
 
 		// Assert
-		Assert.IsTrue(invalidated);
-		Assert.IsFalse(textElement.IsVisible);
+		Assert.IsTrue(invalidated, "Changing visibility should trigger invalidation event");
+		Assert.IsFalse(textElement.IsVisible, "IsVisible should be false after setting it to false");
 	}
 
 	/// <summary>
@@ -233,7 +234,7 @@ sealed public class UIElementTests
 		bool result = textElement.HandleInput(input);
 
 		// Assert
-		Assert.IsFalse(result);
+		Assert.IsFalse(result, "HandleInput should return false by default for non-interactive elements");
 	}
 
 	/// <summary>
