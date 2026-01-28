@@ -1,3 +1,6 @@
+## v1.0.2
+
+No significant changes detected since v1.0.2.
 ## v1.0.2 (patch)
 
 Changes since v1.0.1:
@@ -22,9 +25,7 @@ Changes since v1.0.2-pre.1:
 - Bump Microsoft.NET.Test.Sdk from 17.14.0 to 17.14.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
 ## v1.0.2-pre.1 (prerelease)
 
-Changes since v1.0.1:
-
-- Update: - MSTest.TestAdapter to 3.9.1 - MSTest.TestFramework to 3.9.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+Incremental prerelease update.
 ## v1.0.1 (patch)
 
 Changes since v1.0.0:
