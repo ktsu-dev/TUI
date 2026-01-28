@@ -1,3 +1,5 @@
-## v1.0.2
+## v1.0.3 (patch)
 
-No significant changes detected since v1.0.2.
+Changes since v1.0.2:
+
+- Add step to ensure NuGet cache directory exists in workflow ([@matt-edmondson](https://github.com/matt-edmondson))
