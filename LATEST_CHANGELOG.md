@@ -1,5 +1,7 @@
-## v1.0.3 (patch)
+## v1.0.4-pre.1 (prerelease)
 
-Changes since v1.0.2:
+Changes since v1.0.3:
 
-- Add step to ensure NuGet cache directory exists in workflow ([@matt-edmondson](https://github.com/matt-edmondson))
+- Bump Polyfill from 9.7.6 to 9.7.7 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the microsoft group with 2 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the ktsu group with 3 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
