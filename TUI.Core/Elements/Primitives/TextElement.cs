@@ -86,7 +86,7 @@ public class TextElement : UIElementBase
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
-		_ = provider ?? throw new ArgumentNullException(nameof(provider));
+		Ensure.NotNull(provider);
 
 		if (string.IsNullOrEmpty(Text))
 		{

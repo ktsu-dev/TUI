@@ -28,7 +28,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	/// <inheritdoc />
 	public void Render(IUIElement element, Position position)
 	{
-		_ = element ?? throw new ArgumentNullException(nameof(element));
+		Ensure.NotNull(element);
 
 		if (!element.IsVisible)
 		{

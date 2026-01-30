@@ -108,7 +108,7 @@ public class BorderElement : UIContainerBase
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
-		_ = provider ?? throw new ArgumentNullException(nameof(provider));
+		Ensure.NotNull(provider);
 
 		Dimensions dimensions = Dimensions;
 		Position position = Position;

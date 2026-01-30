@@ -29,7 +29,7 @@ public class UIApplicationBuilder
 	/// <returns>This builder for method chaining</returns>
 	public UIApplicationBuilder UseConsoleProvider(IConsoleProvider consoleProvider)
 	{
-		_consoleProvider = consoleProvider ?? throw new ArgumentNullException(nameof(consoleProvider));
+		_consoleProvider = Ensure.NotNull(consoleProvider);
 		return this;
 	}
 
@@ -51,7 +51,7 @@ public class UIApplicationBuilder
 	/// <returns>This builder for method chaining</returns>
 	public UIApplicationBuilder UseRootElement(IUIElement rootElement)
 	{
-		_rootElement = rootElement ?? throw new ArgumentNullException(nameof(rootElement));
+		_rootElement = Ensure.NotNull(rootElement);
 		return this;
 	}
 

@@ -21,7 +21,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public virtual void AddChild(IUIElement child)
 	{
-		_ = child ?? throw new ArgumentNullException(nameof(child));
+		Ensure.NotNull(child);
 
 		if (!_children.Contains(child))
 		{
@@ -36,7 +36,7 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public virtual bool RemoveChild(IUIElement child)
 	{
-		_ = child ?? throw new ArgumentNullException(nameof(child));
+		Ensure.NotNull(child);
 
 		if (_children.Remove(child))
 		{

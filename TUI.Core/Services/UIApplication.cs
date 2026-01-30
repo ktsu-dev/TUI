@@ -73,7 +73,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	public IUIElement? RootElement { get; set; }
 
 	/// <inheritdoc />
-	public IConsoleProvider ConsoleProvider { get; } = consoleProvider ?? throw new ArgumentNullException(nameof(consoleProvider));
+	public IConsoleProvider ConsoleProvider { get; } = Ensure.NotNull(consoleProvider);
 
 	/// <inheritdoc />
 	public bool IsRunning { get; private set; }
@@ -290,7 +290,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// <param name="rootElement">The root element to display</param>
 	public void Setup(IUIElement rootElement)
 	{
-		_ = rootElement ?? throw new ArgumentNullException(nameof(rootElement));
+		Ensure.NotNull(rootElement);
 
 		RootElement = rootElement;
 		if (_logger != null)
