@@ -1,6 +1,5 @@
-## v1.0.4 (patch)
+## v1.0.5-pre.1 (prerelease)
 
-Changes since v1.0.3:
+Changes since v1.0.4:
 
-- Refactor null checks to use Ensure.NotNull for consistency ([@matt-edmondson](https://github.com/matt-edmondson))
-- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
+- Bump the ktsu group with 3 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
