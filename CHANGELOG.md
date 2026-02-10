@@ -1,9 +1,8 @@
-## v1.0.5-pre.9 (prerelease)
+## v1.0.5-pre.10 (prerelease)
 
-Changes since v1.0.5-pre.8:
+Changes since v1.0.5-pre.9:
 
-- Sync scripts\update-winget-manifests.ps1 ([@ktsu[bot]](https://github.com/ktsu[bot]))
-- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Bump the microsoft group with 4 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
 ## v1.0.5-pre.9 (prerelease)
 
 Changes since v1.0.5-pre.8:
