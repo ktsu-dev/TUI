@@ -1,3 +1,9 @@
+## v1.0.6 (patch)
+
+Changes since v1.0.5:
+
+- Remove legacy build scripts ([@matt-edmondson](https://github.com/matt-edmondson))
+
 ## v1.0.5 (patch)
 
 Changes since v1.0.4:
@@ -97,9 +103,7 @@ Changes since v1.0.5-pre.1:
 
 ## v1.0.5-pre.1 (prerelease)
 
-Changes since v1.0.4:
-
-- Bump the ktsu group with 3 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
+No significant changes detected since v1.0.5.
 
 ## v1.0.4 (patch)
 
