@@ -1,6 +1,6 @@
-## v1.0.7 (patch)
+## v1.0.8 (patch)
 
-Changes since v1.0.6:
+Changes since v1.0.7:
 
-- Update permissions and enhance SonarCloud scanner command with exclusions ([@matt-edmondson](https://github.com/matt-edmondson))
+- Bump Polyfill from 9.8.1 to 9.9.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
 
