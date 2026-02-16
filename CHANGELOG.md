@@ -1,3 +1,9 @@
+## v1.0.7 (patch)
+
+Changes since v1.0.6:
+
+- Update permissions and enhance SonarCloud scanner command with exclusions ([@matt-edmondson](https://github.com/matt-edmondson))
+
 ## v1.0.7-pre.1 (prerelease)
 
 Changes since v1.0.6:
