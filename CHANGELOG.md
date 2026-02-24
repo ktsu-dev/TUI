@@ -1,3 +1,9 @@
+## v1.0.10 (patch)
+
+Changes since v1.0.9:
+
+- Bump Polyfill from 9.10.0 to 9.11.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+
 ## v1.0.9 (patch)
 
 Changes since v1.0.8:
@@ -7,9 +13,7 @@ Changes since v1.0.8:
 
 ## v1.0.9-pre.1 (prerelease)
 
-Changes since v1.0.8:
-
-- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
+No significant changes detected since v1.0.9.
 
 ## v1.0.8 (patch)
 
