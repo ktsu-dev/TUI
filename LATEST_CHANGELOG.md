@@ -1,4 +1,6 @@
-## v1.0.12
+## v1.0.13 (patch)
 
-No significant changes detected since v1.0.12.
+Changes since v1.0.12:
+
+- Bump Polyfill from 9.13.0 to 9.17.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
 
