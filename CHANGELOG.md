@@ -1,6 +1,7 @@
 ## v1.0.18
 
-No significant changes detected since v1.0.18.
+Changes since v1.0.18:
+
 
 ## v1.0.18 (patch)
 
