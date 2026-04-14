@@ -1,6 +1,6 @@
-## v1.0.19 (patch)
+## v1.0.20 (patch)
 
-Changes since v1.0.18:
+Changes since v1.0.19:
 
-- Bump Polyfill from 10.2.0 to 10.3.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Bump the microsoft group with 4 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
 
