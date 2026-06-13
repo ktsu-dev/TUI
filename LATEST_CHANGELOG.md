@@ -1,6 +1,7 @@
-## v1.0.35 (patch)
+## v1.0.36 (patch)
 
-Changes since v1.0.34:
+Changes since v1.0.35:
 
-- Bump Spectre.Console from 0.56.0 to 0.57.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
 
