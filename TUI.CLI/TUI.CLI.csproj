@@ -11,8 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="../TUI.Core/TUI.Core.csproj" />
     <PackageReference Include="Polyfill" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" />
-    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" />
   </ItemGroup>
 
 </Project>

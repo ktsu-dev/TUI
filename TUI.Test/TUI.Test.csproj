@@ -10,8 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TUI.Core\TUI.Core.csproj" />
-    <PackageReference Update="Microsoft.SourceLink.AzureRepos.Git" />
-    <PackageReference Update="Microsoft.SourceLink.GitHub" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 
