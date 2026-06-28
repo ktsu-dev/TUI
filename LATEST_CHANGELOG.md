@@ -1,7 +1,8 @@
-## v1.0.36 (patch)
+## v1.0.37 (patch)
 
-Changes since v1.0.35:
+Changes since v1.0.36:
 
-- chore: remove unused SourceLink package references ([@matt-edmondson](https://github.com/matt-edmondson))
-- chore: remove unused central package and SourceLink refs ([@matt-edmondson](https://github.com/matt-edmondson))
+- Merge remote-tracking branch 'refs/remotes/origin/main' ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync global.json ([@ktsu[bot]](https://github.com/ktsu[bot]))
 
