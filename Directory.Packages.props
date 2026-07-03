@@ -11,7 +11,7 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.Retry" Version="1.7.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="1.7.1" />
     <PackageVersion Include="Moq" Version="4.20.72" />
-    <PackageVersion Include="Spectre.Console" Version="0.57.1" />
+    <PackageVersion Include="Spectre.Console" Version="0.57.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.9" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />
     <PackageVersion Include="Polyfill" Version="10.11.2" />
