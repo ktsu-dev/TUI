@@ -3,13 +3,11 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="1.7.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.Fakes" Version="17.14.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.HangDump" Version="1.7.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.HotReload" Version="1.7.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.Retry" Version="1.7.1" />
-    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="1.7.1" />
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Spectre.Console" Version="0.57.2" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />

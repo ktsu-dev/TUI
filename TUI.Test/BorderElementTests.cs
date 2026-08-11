@@ -1,6 +1,4 @@
-// Copyright (c) ktsu.dev
-// All rights reserved.
-// Licensed under the MIT license.
+// Copyright (c) 2023-2026 ktsu-dev contributors
 
 namespace ktsu.TUI.Test;
 
@@ -176,7 +174,7 @@ public sealed class BorderElementTests
 
 		// Assert
 		Assert.AreEqual(childElement, borderElement.Child);
-		Assert.AreEqual(borderElement, childElement.Parent);
+		Assert.AreSame(borderElement, childElement.Parent);
 	}
 
 	/// <summary>
@@ -254,7 +252,7 @@ public sealed class BorderElementTests
 
 		// Assert
 		Assert.AreEqual(childElement, borderElement.Child);
-		Assert.AreEqual(borderElement, childElement.Parent);
+		Assert.AreSame(borderElement, childElement.Parent);
 	}
 
 	/// <summary>

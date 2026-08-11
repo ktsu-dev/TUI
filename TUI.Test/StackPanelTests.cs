@@ -1,6 +1,4 @@
-// Copyright (c) ktsu.dev
-// All rights reserved.
-// Licensed under the MIT license.
+// Copyright (c) 2023-2026 ktsu-dev contributors
 
 namespace ktsu.TUI.Test;
 
@@ -122,7 +120,7 @@ public sealed class StackPanelTests
 		// Assert
 		Assert.HasCount(1, stackPanel.Children);
 		Assert.AreEqual(child, stackPanel.Children.First());
-		Assert.AreEqual(stackPanel, child.Parent);
+		Assert.AreSame(stackPanel, child.Parent);
 	}
 
 	/// <summary>
