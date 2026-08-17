@@ -10,7 +10,11 @@
     <PackageReference Include="Spectre.Console" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Polyfill" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ktsu.TUI.Test" />
   </ItemGroup>
 
 </Project>

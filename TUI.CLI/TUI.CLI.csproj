@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../TUI.Core/TUI.Core.csproj" />
-    <PackageReference Include="Polyfill" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
