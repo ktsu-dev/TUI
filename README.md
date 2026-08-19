@@ -2,6 +2,14 @@
 
 A modern, extensible Text User Interface (TUI) library for .NET applications built on top of Spectre.Console. This library provides a clean, object-oriented approach to building interactive terminal applications with rich visual features.
 
+[![License](https://img.shields.io/github/license/ktsu-dev/TUI.svg?label=License&logo=nuget)](LICENSE.md)
+[![NuGet Version](https://img.shields.io/nuget/v/ktsu.TUI.Core?label=Stable&logo=nuget)](https://nuget.org/packages/ktsu.TUI.Core)
+[![NuGet Version](https://img.shields.io/nuget/vpre/ktsu.TUI.Core?label=Latest&logo=nuget)](https://nuget.org/packages/ktsu.TUI.Core)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ktsu.TUI.Core?label=Downloads&logo=nuget)](https://nuget.org/packages/ktsu.TUI.Core)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ktsu-dev/TUI?label=Commits&logo=github)](https://github.com/ktsu-dev/TUI/commits/main)
+[![GitHub contributors](https://img.shields.io/github/contributors/ktsu-dev/TUI?label=Contributors&logo=github)](https://github.com/ktsu-dev/TUI/graphs/contributors)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ktsu-dev/TUI/dotnet.yml?label=Build&logo=github)](https://github.com/ktsu-dev/TUI/actions)
+
 ## Overview
 
 ktsu.TUI is designed with SOLID principles and provides a modular architecture for creating terminal-based user interfaces. It features:
