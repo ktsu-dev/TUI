@@ -1,8 +1,6 @@
-## v1.0.45 (patch)
+## v1.0.46 (patch)
 
-Changes since v1.0.44:
+Changes since v1.0.45:
 
-- chore: store icon.png in LFS as .gitattributes declares ([@matt-edmondson](https://github.com/matt-edmondson))
-- docs: scope build badge to the default branch ([@matt-edmondson](https://github.com/matt-edmondson))
-- docs: correct README, DESCRIPTION and TAGS metadata ([@matt-edmondson](https://github.com/matt-edmondson))
+- Bump the ktsu group with 9 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
 
