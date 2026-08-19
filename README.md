@@ -8,7 +8,7 @@ A modern, extensible Text User Interface (TUI) library for .NET applications bui
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ktsu.TUI.Core?label=Downloads&logo=nuget)](https://nuget.org/packages/ktsu.TUI.Core)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ktsu-dev/TUI?label=Commits&logo=github)](https://github.com/ktsu-dev/TUI/commits/main)
 [![GitHub contributors](https://img.shields.io/github/contributors/ktsu-dev/TUI?label=Contributors&logo=github)](https://github.com/ktsu-dev/TUI/graphs/contributors)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ktsu-dev/TUI/dotnet.yml?label=Build&logo=github)](https://github.com/ktsu-dev/TUI/actions)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ktsu-dev/TUI/dotnet.yml?branch=main&label=Build&logo=github)](https://github.com/ktsu-dev/TUI/actions)
 
 ## Overview
 
