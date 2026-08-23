@@ -6,8 +6,6 @@ on:
     paths-ignore:
       ["**.md", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md"]
   pull_request:
-    paths-ignore:
-      ["**.md", ".github/ISSUE_TEMPLATE/**", ".github/pull_request_template.md"]
   schedule:
     - cron: "0 23 * * *" # Daily at 11 PM UTC
   workflow_dispatch: # Allow manual triggers
