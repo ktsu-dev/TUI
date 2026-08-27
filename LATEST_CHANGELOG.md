@@ -1,4 +1,6 @@
-## v1.0.50
+## v1.0.51 (patch)
 
-No significant changes detected since v1.0.50.
+Changes since v1.0.50:
+
+- [patch] Fix NotImplementedException on the default render path ([@Claude](https://github.com/Claude))
 
