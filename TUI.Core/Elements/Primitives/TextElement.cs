@@ -142,7 +142,7 @@ public class TextElement : UIElementBase
 		{
 			HorizontalAlignment.Center => baseX + Math.Max(0, (availableWidth - line.Length) / 2),
 			HorizontalAlignment.Right => baseX + Math.Max(0, availableWidth - line.Length),
-			HorizontalAlignment.Left => throw new NotImplementedException(),
+			HorizontalAlignment.Left => baseX,
 			_ => baseX
 		};
 	}
@@ -153,7 +153,7 @@ public class TextElement : UIElementBase
 		{
 			VerticalAlignment.Center => baseY + Math.Max(0, (availableHeight - totalLines) / 2),
 			VerticalAlignment.Bottom => baseY + Math.Max(0, availableHeight - totalLines),
-			VerticalAlignment.Top => throw new NotImplementedException(),
+			VerticalAlignment.Top => baseY,
 			_ => baseY
 		};
 	}
