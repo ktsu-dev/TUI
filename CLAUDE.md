@@ -83,6 +83,38 @@ var mockChild = new Mock<IUIElement>();
 mockChild.Setup(c => c.IsVisible).Returns(true);
 ```
 
+### Render tests
+
+Property round-tripping is not enough on its own. Every alignment combination of `TextElement`,
+every titled `BorderElement` with the default `TitleAlignment`, and every `BorderStyle.None`
+element once threw `NotImplementedException` from the render path, and the suite stayed green
+throughout because no test called `Render`.
+
+`RecordingConsoleProvider` (in `TUI.Test`) is the test double for this. It implements
+`IConsoleProvider` and records every `WriteAt` call rather than drawing, so a test can assert
+*what* was drawn and *where*:
+
+```csharp
+RecordingConsoleProvider provider = new();
+element.Render(provider);
+Assert.AreEqual(0, provider.WritesOf("abc").Single().Position.X);
+```
+
+Rendering to the real `SpectreConsoleProvider` in a test writes to the runner's console and
+leaves the output unobservable, so use the recorder instead.
+
+Any new element needs render coverage across the full matrix of whatever enum drives its
+layout — that is exactly where the bug above lived. `TextElementTests` and
+`BorderElementRenderTests` use `[DynamicData]` over `Enum.GetValues<T>()` so a newly added
+enum member is covered automatically rather than silently skipped.
+
+Two sizing traps when writing these:
+
+- `Dimensions.WithoutPadding` floors at zero, and an element with an empty content area returns
+  from `OnRender` before drawing. An element must be larger than its own padding or it draws
+  nothing and the assertion fails for a reason unrelated to what is under test.
+- `BorderElement` only draws its title when `Width > 4`, and draws no border at all below 2x2.
+
 ## File Headers
 
 All source files require this copyright header:

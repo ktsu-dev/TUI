@@ -116,6 +116,13 @@ public class BorderElement : UIContainerBase
 			return;
 		}
 
+		// BorderStyle.None means draw no border and no title. Children are still rendered by
+		// the base class after this method returns, so the element remains a usable container.
+		if (BorderStyle == BorderStyle.None)
+		{
+			return;
+		}
+
 		BorderCharacters chars = GetBorderCharacters(BorderStyle);
 
 		// Draw corners
@@ -150,7 +157,7 @@ public class BorderElement : UIContainerBase
 			{
 				HorizontalAlignment.Center => position.X + Math.Max(1, (dimensions.Width - titleWithPadding.Length) / 2),
 				HorizontalAlignment.Right => position.X + Math.Max(1, dimensions.Width - titleWithPadding.Length - 1),
-				HorizontalAlignment.Left => throw new NotImplementedException(),
+				HorizontalAlignment.Left => position.X + 1,
 				_ => position.X + 1
 			};
 
@@ -197,7 +204,6 @@ public class BorderElement : UIContainerBase
 			BorderStyle.Thick => new BorderCharacters('┏', '┓', '┗', '┛', '━', '┃'),
 			BorderStyle.Ascii => new BorderCharacters('+', '+', '+', '+', '-', '|'),
 			BorderStyle.SingleLine => new BorderCharacters('┌', '┐', '└', '┘', '─', '│'),
-			BorderStyle.None => throw new NotImplementedException(),
 			_ => new BorderCharacters('┌', '┐', '└', '┘', '─', '│') // SingleLine
 		};
 	}
