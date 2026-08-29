@@ -182,18 +182,14 @@ jobs:
       # A project the host cannot build is skipped and named before anything is built, and a
       # project that fails does not stop the ones after it, so one run reports everything broken.
       #
-      # The five UI suites are effectively the whole cost of this job. They run in parallel, so the
-      # slowest of them sets the job's duration, while all nine other test projects finish in about
-      # thirty-four seconds combined. They are therefore run on Linux only:
+      # UI test projects are excluded on Windows. What they exercise is a pure managed CPU
+      # rasterizer with no window, GPU or driver, so one platform covers the same ground, and
+      # Linux is both the faster host for that work and the cheaper runner. Where these suites
+      # exist they dominate the job, running tens of minutes on Windows against seconds for
+      # everything else. A repository with no UI test project matches nothing here and is
+      # unaffected, which is why the exclusion is safe to carry in the shared workflow.
       #
-      #   * measured per assembly on Windows: 17m28s, 14m32s, 10m05s, 8m20s, 1m01s against ~34s for
-      #     everything else, in a job whose test phase took 17m45s.
-      #   * what they exercise is a pure managed CPU rasterizer with no window, GPU or driver. Timed
-      #     on one machine, self-contained for each runtime, it renders the same workload in 482.6ms
-      #     on Windows against 476.0ms on Linux, so running it on one platform covers the same ground.
-      #   * Linux is the faster host for this work, so it keeps them.
-      #
-      # Only the UI test projects are excluded. The example applications they drive stay in the
+      # Only the test projects are excluded. The example applications they drive stay in the
       # build on both platforms, so a change that breaks one still fails here.
       - name: Test
         shell: bash
@@ -304,9 +300,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "${{ runner.temp }}/ktsubuild" >> $env:GITHUB_PATH
 
-      # Every cell wrote a file named coverage.xml, so the downloads must stay in their own
-      # per-artifact directories. Merging them would leave one file and report the coverage of
-      # a single test project as though it were the whole repository's.
+      # Each platform's artifact holds one coverage.xml, already merged across that platform's test
+      # projects by `test all`. The downloads must stay in their own per-artifact directories so
+      # both survive: flattened, one platform's report would overwrite the other's and the scanner
+      # would see a single platform's coverage as though it were the whole matrix's.
       - name: Download Coverage
         if: needs.discover.outputs.has_tests == 'true'
         uses: actions/download-artifact@v7
