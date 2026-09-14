@@ -82,28 +82,34 @@ jobs:
           # An unrecognized platform must stop the run rather than drop the project. Dropping
           # it would produce a smaller matrix that still reports success, which is the failure
           # this design exists to remove.
-          unknown=$(echo "$projects" | jq -r '[.[] | select(.platform as $p | ["neutral","windows"] | index($p) | not) | .platform] | unique | join(", ")')
+          unknown=$(echo "$projects" | jq -r '[.[] | select(.platform as $p | ["neutral","windows","macos"] | index($p) | not) | .platform] | unique | join(", ")')
           if [ -n "$unknown" ]; then
             echo "::error::Cannot place test project(s) on a runner. Unhandled platform(s): $unknown"
-            echo "::error::macOS is currently excluded from the matrix, so an ios-tied test project has nowhere to run."
+            echo "::error::An ios-tied test project needs 'dotnet workload install ios', which this job does not run; the iOS workflow is where iOS builds happen."
             exit 1
           fi
 
-          # macOS is deliberately absent from this mapping. A macOS runner builds any project
-          # whose target frameworks are widened on that host, and in a repo with an iOS head that
-          # pulls in a target framework needing a workload this job does not install, so every
-          # macOS cell fails during its build. Restoring the workload on each cell is slow and
-          # macOS runner minutes are billed at a premium, so the platform is excluded until the
-          # underlying problem is fixed rather than papered over. An ios-tied test project now
-          # fails the guard above instead of silently finding no runner.
+          # macOS is back in this mapping. It was excluded org-wide because of one repository:
+          # a macOS runner widened ktsu-dev/ImGuiApp's target frameworks to include net10.0-ios,
+          # which needs a workload this job does not install, so every macOS cell failed during
+          # its build with NETSDK1147 -- and every other repository paid for that by losing a
+          # platform it had no trouble on. That widening is now opt-in (IncludeIosTargets, set
+          # only by the iOS workflow), so a macOS cell builds exactly what Linux and Windows
+          # build. An ios-tied test project would still have nowhere to run and fails the guard
+          # above rather than silently disappearing.
+          #
+          # The UI test projects, which are what makes a test job expensive, are run on Linux
+          # only -- see the Test step below -- so a macOS cell stays cheap despite macOS minutes
+          # being billed at roughly ten times Linux.
           matrix=$(echo "$projects" | jq -c '
             {
               include: [
                 .[]
                 | . as $p
                 | {
-                    neutral: ["ubuntu-latest", "windows-latest"],
-                    windows: ["windows-latest"]
+                    neutral: ["ubuntu-latest", "windows-latest", "macos-latest"],
+                    windows: ["windows-latest"],
+                    macos: ["macos-latest"]
                   }[$p.platform][]
                 | {
                     os: .,
@@ -156,7 +162,14 @@ jobs:
       - name: Setup .NET SDK ${{ env.DOTNET_VERSION }}
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}.x
+          # Test projects commonly multi-target every framework their library publishes, so the
+          # test hosts for the older ones need those runtimes present alongside the SDK, or the
+          # run fails looking for a framework it was built against. global.json pins the SDK, so
+          # naming the older versions here only adds runtimes -- it does not change what builds.
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            ${{ env.DOTNET_VERSION }}.x
           cache: true
           cache-dependency-path: |
             **/*.csproj
@@ -182,23 +195,33 @@ jobs:
       # A project the host cannot build is skipped and named before anything is built, and a
       # project that fails does not stop the ones after it, so one run reports everything broken.
       #
-      # UI test projects are excluded on Windows. What they exercise is a pure managed CPU
+      # UI test projects are run on Linux only. What they exercise is a pure managed CPU
       # rasterizer with no window, GPU or driver, so one platform covers the same ground, and
-      # Linux is both the faster host for that work and the cheaper runner. Where these suites
-      # exist they dominate the job, running tens of minutes on Windows against seconds for
-      # everything else. A repository with no UI test project matches nothing here and is
-      # unaffected, which is why the exclusion is safe to carry in the shared workflow.
+      # Linux is both the faster host for that work and much the cheaper runner -- which is also
+      # what keeps macOS affordable now that it is in the matrix, since macOS runner minutes are
+      # billed at roughly ten times Linux.
+      #
+      # Where these suites exist they dominate the job. Measured in ktsu-dev/ImGuiApp, five of
+      # them took 17m28s, 14m32s, 10m05s, 8m20s and 1m01s on Windows against about thirty-four
+      # seconds for all nine other test projects combined, in a test phase of 17m45s; the
+      # rasterizer itself renders the same workload in 482.6ms on Windows against 476.0ms on
+      # Linux, self-contained for each runtime and timed on one machine. A repository with no UI
+      # test project matches nothing here and is unaffected, which is why the rule is safe to
+      # carry in the shared workflow.
       #
       # Only the test projects are excluded. The example applications they drive stay in the
-      # build on both platforms, so a change that breaks one still fails here.
+      # build on every platform, so a change that breaks one still fails here.
+      #
+      # The test is on Linux rather than against Windows, so a platform added to the matrix later
+      # gets the cheap treatment by default rather than silently inheriting the expensive one.
       - name: Test
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            ktsubuild test all --workspace "$GITHUB_WORKSPACE" --verbose --exclude "**/*.UITests/*"
-          else
+          if [ "${{ runner.os }}" = "Linux" ]; then
             ktsubuild test all --workspace "$GITHUB_WORKSPACE" --verbose
+          else
+            ktsubuild test all --workspace "$GITHUB_WORKSPACE" --verbose --exclude "**/*.UITests/*"
           fi
 
       - name: Upload Coverage
@@ -251,7 +274,14 @@ jobs:
       - name: Setup .NET SDK ${{ env.DOTNET_VERSION }}
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}.x
+          # Test projects commonly multi-target every framework their library publishes, so the
+          # test hosts for the older ones need those runtimes present alongside the SDK, or the
+          # run fails looking for a framework it was built against. global.json pins the SDK, so
+          # naming the older versions here only adds runtimes -- it does not change what builds.
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            ${{ env.DOTNET_VERSION }}.x
           cache: true
           cache-dependency-path: |
             **/*.csproj
@@ -263,8 +293,68 @@ jobs:
         run: New-Item -Path "$env:USERPROFILE\.nuget\packages" -ItemType Directory -Force
         shell: pwsh
 
-      - name: Cache SonarQube Cloud packages
+      # SonarCloud is a third party, and when it is down the scanner fails in pre-processing —
+      # before a single project is compiled or a single test runs. A total outage therefore turned
+      # every pull request red while saying nothing about the change, which is a false signal
+      # rather than a quality gate. Probed here so that an outage skips analysis instead.
+      #
+      # Three attempts, because the point is to tell an outage from a blip: analysis is worth
+      # having, and one slow response should not cost a run its quality gate.
+      #
+      # Where the gate is blocking, an outage still fails. Skipping is safe only while the gate is
+      # advisory: the Release step below is implicitly gated on the steps before it succeeding, and
+      # a skipped step is not a failed one, so forgiving an outage in a repository that has opted
+      # in would release past the very gate it opted into.
+      #
+      # Skipping is otherwise deliberately loud. No quality gate is produced when analysis is
+      # skipped, so the SonarCloud check simply does not report — it is never made to look as though
+      # it passed, and a branch rule that requires it still holds the merge until a human decides.
+      - name: Probe SonarQube Cloud
+        id: sonar
         if: ${{ env.SONAR_TOKEN != '' }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_BLOCKING_GATE: ${{ vars.SONAR_BLOCKING_GATE }}
+        shell: pwsh
+        run: |
+          $available = $false
+          foreach ($attempt in 1..3) {
+            try {
+              $response = Invoke-WebRequest -Uri "https://sonarcloud.io/api/server/version" -Method Get -TimeoutSec 20
+              if ($response.StatusCode -eq 200) {
+                Write-Host "sonarcloud.io answered on attempt $attempt."
+                $available = $true
+                break
+              }
+
+              Write-Host "Attempt ${attempt}: sonarcloud.io answered $($response.StatusCode)."
+            } catch {
+              Write-Host "Attempt ${attempt}: sonarcloud.io did not answer. $($_.Exception.Message)"
+            }
+
+            if ($attempt -lt 3) { Start-Sleep -Seconds (10 * $attempt) }
+          }
+
+          "available=$($available.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
+          if ($available) { exit 0 }
+
+          # Only a run that could publish is held to a blocking gate. A pull request cannot
+          # release, so failing it would cost exactly the tolerance this step exists for and buy
+          # nothing: a required SonarCloud check still holds the merge, because a skipped analysis
+          # reports no gate at all.
+          if ($env:SONAR_BLOCKING_GATE -eq 'true' -and $env:GITHUB_EVENT_NAME -ne 'pull_request') {
+            Write-Host "::error title=SonarQube Cloud unreachable::The quality gate is blocking for this repository and this run could publish, so it fails rather than releasing ungated."
+            exit 1
+          }
+
+          Write-Host "::warning title=SonarQube Cloud unreachable::Static analysis was skipped. The build and tests still ran and still had to pass, but no quality gate was produced, so this run is not evidence that one would pass."
+          "### SonarQube Cloud unreachable" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "Static analysis was skipped for this run. The build and tests still ran; no quality gate was produced." >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Cache SonarQube Cloud packages
+        if: ${{ env.SONAR_TOKEN != '' && steps.sonar.outputs.available == 'true' }}
         uses: actions/cache@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -274,7 +364,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: Cache SonarQube Cloud scanner
-        if: ${{ env.SONAR_TOKEN != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && steps.sonar.outputs.available == 'true' }}
         id: cache-sonar-scanner
         uses: actions/cache@v6
         env:
@@ -285,7 +375,7 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar-scanner
 
       - name: Install SonarQube Cloud scanner
-        if: ${{ env.SONAR_TOKEN != '' && steps.cache-sonar-scanner.outputs.cache-hit != 'true' }}
+        if: ${{ env.SONAR_TOKEN != '' && steps.sonar.outputs.available == 'true' && steps.cache-sonar-scanner.outputs.cache-hit != 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         shell: pwsh
@@ -302,14 +392,53 @@ jobs:
 
       # Each platform's artifact holds one coverage.xml, already merged across that platform's test
       # projects by `test all`. The downloads must stay in their own per-artifact directories so
-      # both survive: flattened, one platform's report would overwrite the other's and the scanner
-      # would see a single platform's coverage as though it were the whole matrix's.
+      # they all survive: flattened, one platform's report would overwrite the others' and the
+      # scanner would see a single platform's coverage as though it were the whole matrix's.
       - name: Download Coverage
         if: needs.discover.outputs.has_tests == 'true'
         uses: actions/download-artifact@v7
         with:
           pattern: coverage-*
           path: coverage
+
+      # The UI suites run on Linux only, so their coverage exists only in the Linux report, which
+      # records the paths that runner checked out to. This job analyses a
+      # Windows checkout, and Sonar matches coverage to source files by path, so every entry from
+      # that report was dropped without a word: five suites' worth of coverage, and with it every
+      # file only they exercise, reported as untested. Pointing those paths at this workspace is
+      # what makes them count.
+      - name: Point Linux Coverage Paths at This Workspace
+        if: needs.discover.outputs.has_tests == 'true'
+        shell: pwsh
+        run: |
+          $report = Join-Path $env:GITHUB_WORKSPACE 'coverage/coverage-ubuntu-latest/coverage.xml'
+          if (-not (Test-Path $report)) {
+            Write-Host 'No Linux coverage report to rewrite.'
+            exit 0
+          }
+
+          # Where the Linux runner checks out to. Fixed by the runner image, and not reported to
+          # this job, so it is rebuilt from the repository name rather than read.
+          $repository = ($env:GITHUB_REPOSITORY -split '/')[1]
+          $linuxRoot = "/home/runner/work/$repository/$repository"
+
+          $text = [IO.File]::ReadAllText($report)
+          $pattern = 'path="' + [regex]::Escape($linuxRoot) + '([^"]*)"'
+          $found = [regex]::Matches($text, $pattern).Count
+
+          if ($found -eq 0) {
+            Write-Host "::warning::No coverage paths under '$linuxRoot' were found, so the Linux suites' coverage will not be counted. The runner's checkout path has probably changed."
+            exit 0
+          }
+
+          $workspace = $env:GITHUB_WORKSPACE
+          $text = [regex]::Replace($text, $pattern, {
+            param($match)
+            'path="' + $workspace + $match.Groups[1].Value.Replace('/', '\') + '"'
+          })
+
+          [IO.File]::WriteAllText($report, $text)
+          Write-Host "Pointed $found coverage path(s) at $workspace."
 
       # SonarCloud's "previous version" new-code period needs recorded version boundaries to
       # anchor to. Without /v: the scanner reports the version as "not provided", so the period
@@ -337,12 +466,23 @@ jobs:
       # analysis is still uploaded and the gate is still evaluated either way, so turning a
       # repository on is a variable away once its findings are triaged.
       - name: Begin SonarQube
-        if: ${{ env.SONAR_TOKEN != '' }}
+        if: ${{ env.SONAR_TOKEN != '' && steps.sonar.outputs.available == 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_BLOCKING_GATE: ${{ vars.SONAR_BLOCKING_GATE }}
+          SONAR_COVERAGE_EXCLUSIONS_EXTRA: ${{ vars.SONAR_COVERAGE_EXCLUSIONS_EXTRA }}
         shell: pwsh
         run: |
+          # A file that cannot be executed rather than one nobody has got round to testing --
+          # a windowed entry point, say -- is excluded per repository through the
+          # SONAR_COVERAGE_EXCLUSIONS_EXTRA variable, so this workflow stays identical
+          # everywhere instead of accumulating one repository's paths for all the others to carry.
+          $coverageExclusions = '**/*Test*.cs,**/*.Tests.cs,**/*.Tests/**/*,**/obj/**/*,**/*.dll,**/NativeExports.cs'
+          if (-not [string]::IsNullOrWhiteSpace($env:SONAR_COVERAGE_EXCLUSIONS_EXTRA)) {
+            $coverageExclusions += ',' + $env:SONAR_COVERAGE_EXCLUSIONS_EXTRA.Trim()
+            Write-Host "Excluding additionally from coverage: $($env:SONAR_COVERAGE_EXCLUSIONS_EXTRA.Trim())"
+          }
+
           $sonarArgs = @(
             'begin'
             '/k:${{ github.repository_owner }}_${{ github.event.repository.name }}'
@@ -352,7 +492,7 @@ jobs:
             '/d:sonar.host.url=https://sonarcloud.io'
             '/d:sonar.projectBaseDir=${{ github.workspace }}'
             '/d:sonar.cs.vscoveragexml.reportsPaths=coverage/**/coverage.xml'
-            '/d:sonar.coverage.exclusions=**/*Test*.cs,**/*.Tests.cs,**/*.Tests/**/*,**/obj/**/*,**/*.dll,**/NativeExports.cs'
+            "/d:sonar.coverage.exclusions=$coverageExclusions"
             '/d:sonar.cs.vstest.reportsPaths=coverage/**/*.trx'
             '/d:sonar.exclusions=**/NativeExports.cs'
           )
@@ -391,20 +531,54 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: End SonarQube
-        if: env.SONAR_TOKEN != '' && steps.pipeline.outputs.build_skipped != 'true'
+        id: sonar_end
+        if: env.SONAR_TOKEN != '' && steps.sonar.outputs.available == 'true' && steps.pipeline.outputs.build_skipped != 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_BLOCKING_GATE: ${{ vars.SONAR_BLOCKING_GATE }}
         shell: pwsh
         run: |
           .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.token="$env:SONAR_TOKEN"
+          if ($LASTEXITCODE -eq 0) {
+            "analysed=true" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
 
-      # Gated by the step above, but only where the gate is blocking. With SONAR_BLOCKING_GATE
-      # set, `sonar.qualitygate.wait=true` makes a failed gate fail that step, and a step whose
-      # `if:` names no status function is implicitly gated on success, so a release cannot proceed
-      # past a gate the project did not pass. Without it the analysis is still published and the
-      # gate still evaluated, it just does not hold up the release.
+          # Whatever happens below, no gate came out of this run. The Release step reads this.
+          "analysed=false" >> $env:GITHUB_OUTPUT
+
+          # The upload failed. An outage that began after the probe looks exactly like this, and
+          # forgiving it is the same judgement the probe makes — but only when the server really is
+          # unreachable, so a malformed report, a bad token or a rejected analysis still fails here.
+          # Where the gate is blocking it is not forgiven on a run that could publish: with
+          # `sonar.qualitygate.wait=true` a failed gate is one of the ways this command exits
+          # non-zero. A pull request publishes nothing, so it is forgiven like any other.
+          if ($env:SONAR_BLOCKING_GATE -eq 'true' -and $env:GITHUB_EVENT_NAME -ne 'pull_request') { exit 1 }
+
+          try {
+            $response = Invoke-WebRequest -Uri "https://sonarcloud.io/api/server/version" -Method Get -TimeoutSec 20
+            Write-Host "::error title=SonarQube analysis failed::The upload failed while sonarcloud.io was answering $($response.StatusCode), so this is not an outage."
+            exit 1
+          } catch {
+            Write-Host "::warning title=SonarQube Cloud went away mid-run::The analysis upload failed and sonarcloud.io is unreachable, so no quality gate was produced. The build and tests still ran."
+            "### SonarQube Cloud went away mid-run" >> $env:GITHUB_STEP_SUMMARY
+            "" >> $env:GITHUB_STEP_SUMMARY
+            "The analysis upload failed and sonarcloud.io is unreachable. No quality gate was produced; the build and tests still ran." >> $env:GITHUB_STEP_SUMMARY
+          }
+
+      # Gated on the quality gate where the repository opted into a blocking one. With
+      # SONAR_BLOCKING_GATE set, `sonar.qualitygate.wait=true` makes a failed gate fail the step
+      # above, and a step whose `if:` names no status function is implicitly gated on success, so
+      # a gate the project did not pass already stops the release.
+      #
+      # What that implicit gating does not cover is a gate that never happened: an outage skips
+      # the analysis, and a skipped step is not a failed one. So the two Sonar outputs are named
+      # here explicitly. `available` is empty when there is no SONAR_TOKEN, which holds a release
+      # in a repository that asked for a blocking gate it has no way to produce -- the safe side
+      # of a contradictory configuration. Without the variable, none of this applies: the analysis
+      # is still published and the gate still evaluated, it just does not hold up the release.
       - name: Release
-        if: steps.pipeline.outputs.should_release == 'true'
+        if: steps.pipeline.outputs.should_release == 'true' && (vars.SONAR_BLOCKING_GATE != 'true' || (steps.sonar.outputs.available == 'true' && steps.sonar_end.outputs.analysed != 'false'))
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
