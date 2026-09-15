@@ -218,6 +218,76 @@ public sealed class TextElementTests
 	}
 
 	/// <summary>
+	/// A single word longer than twice the wrap width must be broken into as many lines as it
+	/// takes, not sliced once and left overflowing (ktsu-dev/TUI#114).
+	/// </summary>
+	[TestMethod]
+	public void WordWrapFullyBreaksAWordLongerThanTwiceTheWidth()
+	{
+		// Arrange
+		// Ten characters into a three-wide box needs four lines; the old code sliced once and
+		// emitted the seven-character remainder as a single oversized line.
+		TextElement element = CreateElement("abcdefghij", width: 3, height: 10);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.IsTrue(
+			provider.Writes.All(w => w.Text.Length <= 3),
+			$"No wrapped line may exceed the content width, but got [{string.Join(", ", provider.Writes.Select(w => w.Text))}]");
+		Assert.AreEqual(
+			"abcdefghij",
+			string.Concat(provider.Writes.Select(w => w.Text)),
+			"Breaking the word must not drop or reorder any of its characters");
+	}
+
+	/// <summary>
+	/// A word longer than the wrap width must still be broken when an earlier word is already
+	/// buffered on the current line (ktsu-dev/TUI#114).
+	/// </summary>
+	[TestMethod]
+	public void WordWrapBreaksAnOverlongWordThatFollowsAShortOne()
+	{
+		// Arrange
+		// The buffered "ab" is flushed first, which used to leave the overlong word to be carried
+		// whole into the next line and never broken at all.
+		TextElement element = CreateElement("ab abcdefghij", width: 3, height: 10);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.IsTrue(
+			provider.Writes.All(w => w.Text.Length <= 3),
+			$"No wrapped line may exceed the content width, but got [{string.Join(", ", provider.Writes.Select(w => w.Text))}]");
+	}
+
+	/// <summary>
+	/// A word that divides exactly into the wrap width must not leave a trailing empty line.
+	/// </summary>
+	[TestMethod]
+	public void WordWrapLeavesNoEmptyLineWhenAWordDividesExactly()
+	{
+		// Arrange
+		TextElement element = CreateElement("abcdef", width: 3, height: 10);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.AreEqual(2, provider.Writes.Count, "Six characters at width three is exactly two lines");
+		Assert.AreEqual("abc", provider.Writes[0].Text);
+		Assert.AreEqual("def", provider.Writes[1].Text);
+	}
+
+	/// <summary>
 	/// An element that is not visible must draw nothing.
 	/// </summary>
 	[TestMethod]

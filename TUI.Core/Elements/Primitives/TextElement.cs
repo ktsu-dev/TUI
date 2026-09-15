@@ -176,21 +176,25 @@ public class TextElement : UIElementBase
 			if (testLine.Length <= maxWidth)
 			{
 				currentLine = testLine;
+				continue;
 			}
-			else
+
+			// The word does not fit alongside what is already buffered, so flush that first.
+			if (!string.IsNullOrEmpty(currentLine))
 			{
-				if (!string.IsNullOrEmpty(currentLine))
-				{
-					lines.Add(currentLine);
-					currentLine = word;
-				}
-				else
-				{
-					// Word is longer than max width, break it
-					lines.Add(word[..maxWidth]);
-					currentLine = word.Length > maxWidth ? word[maxWidth..] : string.Empty;
-				}
+				lines.Add(currentLine);
 			}
+
+			// A word longer than max width has to be broken, and one slice is not enough:
+			// keep slicing until what is left actually fits, or the tail overflows the line.
+			string remainder = word;
+			while (remainder.Length > maxWidth)
+			{
+				lines.Add(remainder[..maxWidth]);
+				remainder = remainder[maxWidth..];
+			}
+
+			currentLine = remainder;
 		}
 
 		if (!string.IsNullOrEmpty(currentLine))
