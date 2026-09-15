@@ -42,7 +42,10 @@ Provider Abstraction (SpectreConsoleProvider)
 **Rendering flow:**
 1. `UIApplication` manages the main loop and input processing
 2. Elements are arranged via `ArrangeChildren()` which sets child `Position` and `Dimensions`
-3. `Invalidate()` marks elements dirty; only dirty elements re-render
+3. Each pass is a full clear followed by a full redraw: `UIApplication.Render()` clears the
+   console and every visible element draws again. `Invalidate()` marks an element as changed and
+   raises `Invalidated`, but it does not gate drawing — a full clear combined with a dirty-only
+   redraw erases static elements rather than preserving them (ktsu-dev/TUI#109)
 4. `UIContainerBase.Render()` renders itself then all visible children
 
 ## Code Patterns

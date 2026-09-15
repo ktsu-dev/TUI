@@ -54,7 +54,13 @@ public interface IUIElement
 	public Dimensions CalculateRequiredDimensions();
 
 	/// <summary>
-	/// Invalidates the element, marking it for re-rendering
+	/// Marks the element as changed since its last draw, notifies its parent, and raises the
+	/// invalidated event
 	/// </summary>
+	/// <remarks>
+	/// Rendering redraws every visible element on every pass, so this does not decide whether an
+	/// element draws. It is the signal a host can use to know that something changed and that a
+	/// render pass is worth running.
+	/// </remarks>
 	public void Invalidate();
 }
