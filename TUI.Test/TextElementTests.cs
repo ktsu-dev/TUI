@@ -282,7 +282,7 @@ public sealed class TextElementTests
 		element.Render(provider);
 
 		// Assert
-		Assert.AreEqual(2, provider.Writes.Count, "Six characters at width three is exactly two lines");
+		Assert.HasCount(2, provider.Writes, "Six characters at width three is exactly two lines");
 		Assert.AreEqual("abc", provider.Writes[0].Text);
 		Assert.AreEqual("def", provider.Writes[1].Text);
 	}
