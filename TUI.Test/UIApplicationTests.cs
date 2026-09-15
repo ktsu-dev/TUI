@@ -31,6 +31,12 @@ public sealed class UIApplicationTests
 	private static readonly string[] CancelThenNotify = ["cancel", "notify"];
 
 	/// <summary>
+	/// Gets or sets the test context MSTest injects, used for its cancellation token so a run
+	/// started by a test ends when the test run itself is cancelled.
+	/// </summary>
+	public TestContext TestContext { get; set; } = null!;
+
+	/// <summary>
 	/// Tests that an interrupt signal ends a run that is blocked waiting for a key, and leaves the
 	/// cursor visible. Ctrl+C used to terminate the process at the runtime level instead, skipping
 	/// the teardown that restores the cursor and leaving the user's terminal without one.
@@ -43,7 +49,7 @@ public sealed class UIApplicationTests
 		FakeInterruptSource interrupts = new();
 		UIApplication app = new(provider) { InterruptSource = interrupts };
 
-		Task run = app.RunAsync();
+		Task run = app.RunAsync(TestContext.CancellationToken);
 		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
 		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
 		Assert.IsFalse(provider.CursorVisible, "The application should hide the cursor while running");
@@ -69,7 +75,7 @@ public sealed class UIApplicationTests
 		FakeInterruptSource interrupts = new();
 		UIApplication app = new(provider) { InterruptSource = interrupts };
 
-		Task run = app.RunAsync();
+		Task run = app.RunAsync(TestContext.CancellationToken);
 		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
 		Assert.AreEqual(0, interrupts.DisposeCount, "The registration should stay live while the application runs");
 
@@ -118,7 +124,7 @@ public sealed class UIApplicationTests
 		FakeInterruptSource interrupts = new();
 		UIApplication app = new(provider) { InterruptSource = interrupts };
 
-		Task run = app.RunAsync();
+		Task run = app.RunAsync(TestContext.CancellationToken);
 		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
 
 		// Act
@@ -141,7 +147,7 @@ public sealed class UIApplicationTests
 		FakeInterruptSource interrupts = new();
 		UIApplication app = new(provider) { InterruptSource = interrupts };
 
-		Task run = app.RunAsync();
+		Task run = app.RunAsync(TestContext.CancellationToken);
 		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
 
 		// Act
@@ -191,7 +197,7 @@ public sealed class UIApplicationTests
 		ConsoleInterruptSource.OnSignal(() => order.Add("cancel"), () => order.Add("notify"));
 
 		// Assert
-		CollectionAssert.AreEqual(
+		Assert.AreSequenceEqual(
 			CancelThenNotify,
 			order,
 			"The default termination must be cancelled before the application is notified");
@@ -210,7 +216,7 @@ public sealed class UIApplicationTests
 		RecordingLogger logger = new();
 		UIApplication app = new(provider, logger) { InterruptSource = interrupts };
 
-		Task run = app.RunAsync();
+		Task run = app.RunAsync(TestContext.CancellationToken);
 		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
 
 		// Act
@@ -218,9 +224,10 @@ public sealed class UIApplicationTests
 		await AssertCompletesAsync(run, "An interrupt should end the run").ConfigureAwait(false);
 
 		// Assert
-		Assert.IsTrue(
-			logger.Messages.Any(m => m.Contains("Interrupt signal received", StringComparison.Ordinal)),
-			$"The interrupt should have been logged. Logged: {string.Join(" | ", logger.Messages)}");
+		Assert.Contains(
+			m => m.Contains("Interrupt signal received", StringComparison.Ordinal),
+			logger.Messages,
+			"The interrupt should have been logged");
 	}
 
 	/// <summary>
