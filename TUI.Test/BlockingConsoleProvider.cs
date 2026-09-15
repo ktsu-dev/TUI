@@ -29,11 +29,15 @@ internal sealed class BlockingConsoleProvider : IConsoleProvider
 	internal Task ReadStarted => readStarted.Task;
 
 	/// <summary>
+	/// Volatile because the application sets it from the thread running the app while the test
+	/// reads it, and one assertion reads it mid-run rather than after the run has completed.
+	/// </summary>
+	private volatile bool cursorVisible = true;
+
+	/// <summary>
 	/// Gets the last cursor visibility set through <see cref="SetCursorVisibility"/>.
 	/// </summary>
-	internal bool CursorVisible => Volatile.Read(ref cursorVisible);
-
-	private bool cursorVisible = true;
+	internal bool CursorVisible => cursorVisible;
 
 	/// <inheritdoc />
 	public Dimensions Dimensions { get; set; } = new(80, 24);
@@ -61,7 +65,7 @@ internal sealed class BlockingConsoleProvider : IConsoleProvider
 	}
 
 	/// <inheritdoc />
-	public void SetCursorVisibility(bool visible) => Volatile.Write(ref cursorVisible, visible);
+	public void SetCursorVisibility(bool visible) => cursorVisible = visible;
 
 	/// <inheritdoc />
 	public void SetCursorPosition(Position position)
