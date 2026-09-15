@@ -145,6 +145,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	}
 
 	/// <inheritdoc />
+	/// <remarks>
+	/// Each pass clears the console and redraws every visible element. Dirty tracking is not used
+	/// to skip elements — combining a full clear with a dirty-only redraw is what made static
+	/// elements disappear on the frame after their first draw (ktsu-dev/TUI#109).
+	/// </remarks>
 	public void Render()
 	{
 		if (RootElement == null)
@@ -163,7 +168,8 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				LogRenderingUI(_logger, null);
 			}
 
-			// Clear the console
+			// Clear the console, then redraw the whole tree below. The two halves belong
+			// together: a clear without a full redraw erases whatever the last pass drew.
 			ConsoleProvider.Clear();
 
 			// Set root element dimensions to console dimensions if not set

@@ -56,8 +56,13 @@ public abstract class UIElementBase : IUIElement
 	public IUIContainer? Parent { get; set; }
 
 	/// <summary>
-	/// Gets whether the element needs to be re-rendered
+	/// Gets whether the element has changed since it was last drawn
 	/// </summary>
+	/// <remarks>
+	/// This reports pending changes; it does not gate drawing. The library renders with a full
+	/// clear followed by a full redraw (see <see cref="Render"/>), so every visible element draws
+	/// on every pass regardless of this flag.
+	/// </remarks>
 	protected bool IsDirty { get; private set; } = true;
 
 	/// <summary>
@@ -71,6 +76,12 @@ public abstract class UIElementBase : IUIElement
 	public event EventHandler? Invalidated;
 
 	/// <inheritdoc />
+	/// <remarks>
+	/// Drawing is unconditional for a visible element. <see cref="ktsu.TUI.Core.Services.UIApplication.Render"/> clears
+	/// the whole console on every pass, so skipping a clean element would not leave its previous
+	/// output on screen — it would erase it. Gating on <see cref="IsDirty"/> here is what made
+	/// static elements vanish on the frame after their first draw (ktsu-dev/TUI#109).
+	/// </remarks>
 	public virtual void Render(IConsoleProvider provider)
 	{
 		if (!IsVisible)
@@ -78,11 +89,8 @@ public abstract class UIElementBase : IUIElement
 			return;
 		}
 
-		if (IsDirty)
-		{
-			OnRender(provider);
-			IsDirty = false;
-		}
+		OnRender(provider);
+		IsDirty = false;
 	}
 
 	/// <inheritdoc />
