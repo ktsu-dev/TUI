@@ -27,6 +27,25 @@ internal sealed class ConsoleInterruptSource : IInterruptSource
 	}
 
 	/// <summary>
+	/// Responds to an arriving signal, whichever mechanism delivered it
+	/// </summary>
+	/// <param name="cancelDefaultTermination">Cancels the runtime's default "terminate now" response</param>
+	/// <param name="onInterrupt">Notifies the application that it should shut down</param>
+	/// <remarks>
+	/// Both delivery mechanisms funnel through here because neither
+	/// <see cref="ConsoleCancelEventArgs"/> nor <see cref="PosixSignalContext"/> can be constructed
+	/// by a test, so the response to a signal is only assertable once it is separated from the
+	/// delivery of one.
+	/// </remarks>
+	internal static void OnSignal(Action cancelDefaultTermination, Action onInterrupt)
+	{
+		// Cancel first. Notifying can run arbitrary application code, and until the default
+		// response is cancelled the runtime is still entitled to kill the process underneath it.
+		cancelDefaultTermination();
+		onInterrupt();
+	}
+
+	/// <summary>
 	/// Holds the signal hooks for one <see cref="Register"/> call and unhooks them on disposal
 	/// </summary>
 	private sealed class Registration : IDisposable
@@ -37,13 +56,7 @@ internal sealed class ConsoleInterruptSource : IInterruptSource
 
 		internal Registration(Action onInterrupt)
 		{
-			_cancelKeyPress = (_, e) =>
-			{
-				// Cancel the runtime's default "terminate now" behaviour so the application
-				// shuts down through its normal path and gets to restore the terminal.
-				e.Cancel = true;
-				onInterrupt();
-			};
+			_cancelKeyPress = (_, e) => OnSignal(() => e.Cancel = true, onInterrupt);
 
 			Console.CancelKeyPress += _cancelKeyPress;
 			_sigTerm = TryRegisterSigTerm(onInterrupt);
@@ -66,11 +79,9 @@ internal sealed class ConsoleInterruptSource : IInterruptSource
 		{
 			try
 			{
-				return PosixSignalRegistration.Create(PosixSignal.SIGTERM, context =>
-				{
-					context.Cancel = true;
-					onInterrupt();
-				});
+				return PosixSignalRegistration.Create(
+					PosixSignal.SIGTERM,
+					context => OnSignal(() => context.Cancel = true, onInterrupt));
 			}
 			catch (PlatformNotSupportedException)
 			{

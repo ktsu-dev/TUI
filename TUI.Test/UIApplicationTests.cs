@@ -4,6 +4,7 @@ namespace ktsu.TUI.Test;
 
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -23,6 +24,11 @@ public sealed class UIApplicationTests
 	/// regression instead of reporting one.
 	/// </remarks>
 	private static readonly TimeSpan StepTimeout = TimeSpan.FromSeconds(10);
+
+	/// <summary>
+	/// The order a signal must be handled in: cancel the runtime's default response, then notify.
+	/// </summary>
+	private static readonly string[] CancelThenNotify = ["cancel", "notify"];
 
 	/// <summary>
 	/// Tests that an interrupt signal ends a run that is blocked waiting for a key, and leaves the
@@ -167,6 +173,57 @@ public sealed class UIApplicationTests
 	}
 
 	/// <summary>
+	/// Tests that a signal cancels the runtime's default termination before notifying the
+	/// application, and not the other way round.
+	/// </summary>
+	/// <remarks>
+	/// The order is the whole point. Notifying runs application shutdown code, and until the
+	/// default response is cancelled the runtime is still entitled to kill the process partway
+	/// through it — which is the failure this PR exists to stop.
+	/// </remarks>
+	[TestMethod]
+	public void ASignalCancelsDefaultTerminationBeforeNotifyingTheApplication()
+	{
+		// Arrange
+		List<string> order = [];
+
+		// Act
+		ConsoleInterruptSource.OnSignal(() => order.Add("cancel"), () => order.Add("notify"));
+
+		// Assert
+		CollectionAssert.AreEqual(
+			CancelThenNotify,
+			order,
+			"The default termination must be cancelled before the application is notified");
+	}
+
+	/// <summary>
+	/// Tests that taking an interrupt is logged, so an operator can tell why an application
+	/// exited rather than being left to guess.
+	/// </summary>
+	[TestMethod]
+	public async Task AnInterruptIsLogged()
+	{
+		// Arrange
+		BlockingConsoleProvider provider = new();
+		FakeInterruptSource interrupts = new();
+		RecordingLogger logger = new();
+		UIApplication app = new(provider, logger) { InterruptSource = interrupts };
+
+		Task run = app.RunAsync();
+		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
+
+		// Act
+		interrupts.RaiseInterrupt();
+		await AssertCompletesAsync(run, "An interrupt should end the run").ConfigureAwait(false);
+
+		// Assert
+		Assert.IsTrue(
+			logger.Messages.Any(m => m.Contains("Interrupt signal received", StringComparison.Ordinal)),
+			$"The interrupt should have been logged. Logged: {string.Join(" | ", logger.Messages)}");
+	}
+
+	/// <summary>
 	/// Tests that the real interrupt source rejects a missing callback rather than hooking a
 	/// signal it cannot act on.
 	/// </summary>
@@ -193,5 +250,44 @@ public sealed class UIApplicationTests
 
 		// Observed separately so a task that failed reports its own exception, not the timeout.
 		await task.ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// An <see cref="ILogger{TCategoryName}"/> that records the messages written to it, so a test
+	/// can assert what the application reported rather than only that it did not throw.
+	/// </summary>
+	private sealed class RecordingLogger : ILogger<UIApplication>
+	{
+		private readonly List<string> messages = [];
+
+		/// <summary>
+		/// Gets the messages logged so far, in call order.
+		/// </summary>
+		internal IEnumerable<string> Messages
+		{
+			get
+			{
+				lock (messages)
+				{
+					return [.. messages];
+				}
+			}
+		}
+
+		/// <inheritdoc />
+		public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+		/// <inheritdoc />
+		public bool IsEnabled(LogLevel logLevel) => true;
+
+		/// <inheritdoc />
+		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+		{
+			string message = formatter is null ? string.Empty : formatter(state, exception);
+			lock (messages)
+			{
+				messages.Add(message);
+			}
+		}
 	}
 }
