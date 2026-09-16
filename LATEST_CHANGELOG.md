@@ -2,6 +2,7 @@
 
 Changes since v1.0.0:
 
+- fix: reject unrecognized color names on TextStyle [minor] ([@Claude](https://github.com/Claude))
 - Gate Dependabot auto-merge on CI actually being green ([@Claude](https://github.com/Claude))
 - Merge main into fix/110-ctrl-c-exit-path ([@Claude](https://github.com/Claude))
 - test: use Assert.HasCount for the exact-division wrap assertion [patch] ([@Claude](https://github.com/Claude))
