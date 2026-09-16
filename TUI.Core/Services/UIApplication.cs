@@ -70,6 +70,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private static readonly Action<ILogger, Exception?> LogInterruptReceived =
 		LoggerMessage.Define(LogLevel.Information, new EventId(17, nameof(LogInterruptReceived)), "Interrupt signal received, shutting down");
 
+	private static readonly Action<ILogger, int, int, Exception?> LogConsoleResized =
+		LoggerMessage.Define<int, int>(LogLevel.Debug, new EventId(18, nameof(LogConsoleResized)), "Console resized to {Width}x{Height}, re-arranging the layout");
+
 	/// <summary>
 	/// Gets the source of process interrupt signals that shuts the application down
 	/// </summary>
@@ -77,6 +80,23 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// Defaults to the real console and process signals. Tests substitute a source they can raise.
 	/// </remarks>
 	internal IInterruptSource InterruptSource { get; init; } = new ConsoleInterruptSource();
+
+	/// <summary>
+	/// Gets how often the input loop wakes to re-check the terminal size while it is waiting for
+	/// a key
+	/// </summary>
+	/// <remarks>
+	/// A resize delivers no input, so a loop that only wakes on a keypress cannot notice one.
+	/// Reading <see cref="IConsoleProvider.Dimensions"/> is cheap and nothing is drawn unless the
+	/// size actually changed, so this is a size comparison ten times a second rather than a
+	/// redraw. Tests shorten it so a resize is picked up without waiting out a real frame.
+	/// </remarks>
+	internal TimeSpan ResizePollInterval { get; init; } = TimeSpan.FromMilliseconds(100);
+
+	/// <summary>
+	/// The terminal size the current layout was computed for, or null before the first render
+	/// </summary>
+	private Models.Dimensions? _observedConsoleDimensions;
 
 	/// <inheritdoc />
 	public IUIElement? RootElement { get; set; }
@@ -181,6 +201,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// Each pass clears the console and redraws every visible element. Dirty tracking is not used
 	/// to skip elements — combining a full clear with a dirty-only redraw is what made static
 	/// elements disappear on the frame after their first draw (ktsu-dev/TUI#109).
+	/// <para>
+	/// Each pass also re-checks the terminal size, so a window the user resized mid-run is laid
+	/// out at its new size on the next frame rather than staying pinned to the size at launch
+	/// (ktsu-dev/TUI#111).
+	/// </para>
 	/// </remarks>
 	public void Render()
 	{
@@ -204,11 +229,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			// together: a clear without a full redraw erases whatever the last pass drew.
 			ConsoleProvider.Clear();
 
-			// Set root element dimensions to console dimensions if not set
-			if (RootElement.Dimensions.IsEmpty)
-			{
-				RootElement.Dimensions = ConsoleProvider.Dimensions;
-			}
+			// Size the layout to the terminal before drawing it, so a resize since the last pass
+			// is reflected in this one.
+			SyncRootToConsole(RootElement);
 
 			// Render the root element
 			RootElement.Render(ConsoleProvider);
@@ -236,6 +259,73 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		}
 	}
 
+	/// <summary>
+	/// Brings the root element's size in line with the terminal, re-arranging the tree when it changes
+	/// </summary>
+	/// <param name="root">The root element to size</param>
+	/// <remarks>
+	/// The size used to be taken once, on the first pass that found the root unsized, and never
+	/// looked at again — so resizing the window left every layout pinned to the size at launch
+	/// (ktsu-dev/TUI#111).
+	/// </remarks>
+	private void SyncRootToConsole(IUIElement root)
+	{
+		Models.Dimensions console = ConsoleProvider.Dimensions;
+		bool resized = _observedConsoleDimensions is Models.Dimensions observed && observed != console;
+		_observedConsoleDimensions = console;
+
+		// Adopt the terminal size when the root has none of its own, and again whenever the
+		// terminal is resized. In between, a size the host assigned to the root is left alone — a
+		// resize is the one thing that overrides it, since the old size no longer fits the window.
+		if (!resized && !root.Dimensions.IsEmpty)
+		{
+			return;
+		}
+
+		if (resized && _logger != null)
+		{
+			LogConsoleResized(_logger, console.Width, console.Height, null);
+		}
+
+		root.Dimensions = console;
+
+		// Assigning Dimensions only invalidates; it does not re-run layout. Walk the tree so every
+		// container re-arranges inside its new size, not just the root.
+		ArrangeTree(root);
+	}
+
+	/// <summary>
+	/// Re-arranges <paramref name="element"/> and every container beneath it, parents first
+	/// </summary>
+	/// <param name="element">The element to arrange</param>
+	/// <remarks>
+	/// A container's <see cref="IUIContainer.ArrangeChildren"/> sizes and positions its own
+	/// children but does not reach theirs, so arranging only the root would relayout the top level
+	/// and leave everything under it at the old size. Parents are arranged first because a child
+	/// container can only lay its own children out once it knows its new size.
+	/// </remarks>
+	private static void ArrangeTree(IUIElement element)
+	{
+		if (element is not IUIContainer container)
+		{
+			return;
+		}
+
+		container.ArrangeChildren();
+
+		foreach (IUIElement child in container.Children)
+		{
+			ArrangeTree(child);
+		}
+	}
+
+	/// <summary>
+	/// Gets whether the terminal has changed size since the last render pass
+	/// </summary>
+	/// <returns>True when a redraw is needed to pick the new size up</returns>
+	private bool HasConsoleResized() =>
+		RootElement != null && ConsoleProvider.Dimensions != _observedConsoleDimensions;
+
 	/// <inheritdoc />
 	public async Task ProcessInputAsync(CancellationToken cancellationToken = default)
 	{
@@ -244,16 +334,49 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			LogStartingInputProcessing(_logger, null);
 		}
 
+		// One read is carried across iterations. The resize poll below wakes the loop without a
+		// keypress, and starting a fresh read each time it woke would leave several reads racing
+		// for the next key.
+		Task<Models.InputResult>? pendingRead = null;
+
 		while (!cancellationToken.IsCancellationRequested && IsRunning)
 		{
 			try
 			{
-				// Abandon the read when cancellation is requested. A provider parked in
-				// Console.ReadKey does not observe the token, so awaiting it directly would keep
-				// the loop alive until the user pressed an unrelated key after asking to exit.
-				Models.InputResult input = await ConsoleProvider.ReadInputAsync()
-					.WaitAsync(cancellationToken)
-					.ConfigureAwait(false);
+				pendingRead ??= ConsoleProvider.ReadInputAsync();
+
+				if (!pendingRead.IsCompleted)
+				{
+					// Wake on a timer as well as on input. A resize produces no input at all, so a
+					// loop that only wakes for a key cannot notice one. Cancelling the delay is
+					// also what lets a shutdown request end a run blocked on the keyboard: a
+					// provider parked in Console.ReadKey does not observe the token itself.
+					Task idle = Task.Delay(ResizePollInterval, cancellationToken);
+					await Task.WhenAny(pendingRead, idle).ConfigureAwait(false);
+
+					if (cancellationToken.IsCancellationRequested)
+					{
+						break;
+					}
+
+					if (!pendingRead.IsCompleted)
+					{
+						// The timer won the race, so no key arrived. Redraw only if the terminal
+						// changed size while we waited, and go back to the same pending read.
+						if (HasConsoleResized())
+						{
+							Render();
+						}
+
+						continue;
+					}
+				}
+
+				// Cleared before the await so a read that failed is not retried forever by the
+				// recoverable-error branches below.
+				Task<Models.InputResult> completedRead = pendingRead;
+				pendingRead = null;
+				Models.InputResult input = await completedRead.ConfigureAwait(false);
 
 				if (_logger != null)
 				{
