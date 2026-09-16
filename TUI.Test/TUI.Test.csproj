@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TUI.Core\TUI.Core.csproj" />
+    <!-- TUI.App already grants InternalsVisibleTo ktsu.TUI.Test; this is the reference that
+         makes the demos it exposes actually reachable from a test. -->
+    <ProjectReference Include="..\TUI.App\TUI.App.csproj" />
     <PackageReference Include="Moq" />
   </ItemGroup>
 
