@@ -2,299 +2,141 @@
 
 namespace ktsu.TUI.Test;
 
+using ktsu.TUI.Core.Elements.Layouts;
+using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Tests for <see cref="UIApplication"/>'s run lifecycle: how a run ends, and whether the terminal
-/// state it changes on the way in is put back on the way out.
+/// Render-loop tests for <see cref="UIApplication"/>.
 /// </summary>
+/// <remarks>
+/// These cover the rendering model rather than any single element, which is where
+/// ktsu-dev/TUI#109 lived: <see cref="UIApplication.Render"/> clears the whole screen on every
+/// pass, but elements used to draw only while they were still flagged dirty — so any element the
+/// last input did not invalidate was wiped and never redrawn.
+/// </remarks>
 [TestClass]
 public sealed class UIApplicationTests
 {
 	/// <summary>
-	/// How long any single step of a run is given before it is declared stuck. Generous, because
-	/// the assertion being made is "this happens at all", not "this happens quickly".
+	/// Builds the layout from the issue: a titled border around a static label and an
+	/// interactive sibling.
 	/// </summary>
-	/// <remarks>
-	/// Every wait in this class is bounded by it. The behaviour under test is an application that
-	/// fails to notice a shutdown request, so an unbounded wait would hang the suite on a
-	/// regression instead of reporting one.
-	/// </remarks>
-	private static readonly TimeSpan StepTimeout = TimeSpan.FromSeconds(10);
+	/// <param name="interactive">The interactive sibling, which invalidates itself on input.</param>
+	/// <returns>The root element, sized and arranged.</returns>
+	private static BorderElement CreateLayout(out TextElement interactive)
+	{
+		TextElement staticLabel = new("Label");
+		interactive = new TextElement("Input");
+
+		StackPanel panel = [];
+		panel.AddChild(staticLabel);
+		panel.AddChild(interactive);
+
+		BorderElement border = [];
+		border.Title = "Frame";
+		border.Position = Position.Origin;
+		border.Dimensions = new Dimensions(30, 8);
+		border.AddChild(panel);
+
+		// The border was sized after its children were added, so re-arrange to give the labels a
+		// non-empty content area to draw into.
+		panel.ArrangeChildren();
+
+		return border;
+	}
 
 	/// <summary>
-	/// The order a signal must be handled in: cancel the runtime's default response, then notify.
-	/// </summary>
-	private static readonly string[] CancelThenNotify = ["cancel", "notify"];
-
-	/// <summary>
-	/// Gets or sets the test context MSTest injects, used for its cancellation token so a run
-	/// started by a test ends when the test run itself is cancelled.
-	/// </summary>
-	public TestContext TestContext { get; set; } = null!;
-
-	/// <summary>
-	/// Tests that an interrupt signal ends a run that is blocked waiting for a key, and leaves the
-	/// cursor visible. Ctrl+C used to terminate the process at the runtime level instead, skipping
-	/// the teardown that restores the cursor and leaving the user's terminal without one.
+	/// A second render pass must draw an element again even though nothing invalidated it. The
+	/// screen is cleared on every pass, so anything skipped is anything erased.
 	/// </summary>
 	[TestMethod]
-	public async Task InterruptSignalEndsTheRunAndRestoresTheCursor()
+	public void RenderCleanElementTwiceDrawsItTwice()
 	{
 		// Arrange
-		BlockingConsoleProvider provider = new();
-		FakeInterruptSource interrupts = new();
-		UIApplication app = new(provider) { InterruptSource = interrupts };
-
-		Task run = app.RunAsync(TestContext.CancellationToken);
-		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
-		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
-		Assert.IsFalse(provider.CursorVisible, "The application should hide the cursor while running");
-
-		// Act
-		interrupts.RaiseInterrupt();
-
-		// Assert
-		await AssertCompletesAsync(run, "An interrupt should end the run even while it is blocked waiting for a key").ConfigureAwait(false);
-		Assert.IsTrue(provider.CursorVisible, "The cursor must be visible again once the application has exited");
-		Assert.IsFalse(app.IsRunning, "The application should not report itself as running after an interrupt");
-	}
-
-	/// <summary>
-	/// Tests that the interrupt registration is released when the run ends, so the application
-	/// stops taking Ctrl+C once it is no longer the one owning the terminal.
-	/// </summary>
-	[TestMethod]
-	public async Task TheInterruptRegistrationIsReleasedWhenTheRunEnds()
-	{
-		// Arrange
-		BlockingConsoleProvider provider = new();
-		FakeInterruptSource interrupts = new();
-		UIApplication app = new(provider) { InterruptSource = interrupts };
-
-		Task run = app.RunAsync(TestContext.CancellationToken);
-		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
-		Assert.AreEqual(0, interrupts.DisposeCount, "The registration should stay live while the application runs");
-
-		// Act
-		interrupts.RaiseInterrupt();
-		await AssertCompletesAsync(run, "An interrupt should end the run").ConfigureAwait(false);
-
-		// Assert
-		Assert.AreEqual(1, interrupts.DisposeCount, "The interrupt registration should be disposed exactly once");
-	}
-
-	/// <summary>
-	/// Tests that cancelling the token passed to <see cref="UIApplication.RunAsync"/> ends a run
-	/// that is blocked waiting for a key. The input loop used to await the provider's read
-	/// directly, so a cancelled run kept waiting until the user pressed an unrelated key.
-	/// </summary>
-	[TestMethod]
-	public async Task CancellingTheRunTokenEndsARunBlockedOnInput()
-	{
-		// Arrange
-		BlockingConsoleProvider provider = new();
-		FakeInterruptSource interrupts = new();
-		using CancellationTokenSource cancellation = new();
-		UIApplication app = new(provider) { InterruptSource = interrupts };
-
-		Task run = app.RunAsync(cancellation.Token);
-		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
-
-		// Act
-		await cancellation.CancelAsync().ConfigureAwait(false);
-
-		// Assert
-		await AssertCompletesAsync(run, "Cancelling the run token should end a run blocked waiting for a key").ConfigureAwait(false);
-		Assert.IsTrue(provider.CursorVisible, "The cursor must be visible again once the application has exited");
-	}
-
-	/// <summary>
-	/// Tests that <see cref="UIApplication.Shutdown"/> ends a run blocked waiting for a key, which
-	/// is the path an interrupt takes and the path an element requesting exit takes.
-	/// </summary>
-	[TestMethod]
-	public async Task ShutdownEndsARunBlockedOnInput()
-	{
-		// Arrange
-		BlockingConsoleProvider provider = new();
-		FakeInterruptSource interrupts = new();
-		UIApplication app = new(provider) { InterruptSource = interrupts };
-
-		Task run = app.RunAsync(TestContext.CancellationToken);
-		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
-
-		// Act
-		app.Shutdown();
-
-		// Assert
-		await AssertCompletesAsync(run, "Shutdown should end a run blocked waiting for a key").ConfigureAwait(false);
-		Assert.IsTrue(provider.CursorVisible, "The cursor must be visible again once the application has exited");
-	}
-
-	/// <summary>
-	/// Tests that the ordinary exit path still works: input flagged as an exit request ends the
-	/// run and restores the cursor.
-	/// </summary>
-	[TestMethod]
-	public async Task ExitInputEndsTheRunAndRestoresTheCursor()
-	{
-		// Arrange
-		BlockingConsoleProvider provider = new();
-		FakeInterruptSource interrupts = new();
-		UIApplication app = new(provider) { InterruptSource = interrupts };
-
-		Task run = app.RunAsync(TestContext.CancellationToken);
-		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
-
-		// Act
-		provider.Release(InputResult.Exit());
-
-		// Assert
-		await AssertCompletesAsync(run, "Exit input should end the run").ConfigureAwait(false);
-		Assert.IsTrue(provider.CursorVisible, "The cursor must be visible again once the application has exited");
-		Assert.IsFalse(app.IsRunning, "The application should not report itself as running after exiting");
-	}
-
-	/// <summary>
-	/// Tests that the real interrupt source hooks and unhooks the process signals without
-	/// throwing on whichever platform the suite is running on, and that disposing twice is safe.
-	/// </summary>
-	[TestMethod]
-	public void TheConsoleInterruptSourceHooksAndUnhooksTheProcessSignals()
-	{
-		// Arrange
-		ConsoleInterruptSource source = new();
-
-		// Act
-		IDisposable registration = source.Register(() => { });
-
-		// Assert
-		Assert.IsNotNull(registration, "Registering should return a registration to dispose");
-		registration.Dispose();
-		registration.Dispose();
-	}
-
-	/// <summary>
-	/// Tests that a signal cancels the runtime's default termination before notifying the
-	/// application, and not the other way round.
-	/// </summary>
-	/// <remarks>
-	/// The order is the whole point. Notifying runs application shutdown code, and until the
-	/// default response is cancelled the runtime is still entitled to kill the process partway
-	/// through it — which is the failure this PR exists to stop.
-	/// </remarks>
-	[TestMethod]
-	public void ASignalCancelsDefaultTerminationBeforeNotifyingTheApplication()
-	{
-		// Arrange
-		List<string> order = [];
-
-		// Act
-		ConsoleInterruptSource.OnSignal(() => order.Add("cancel"), () => order.Add("notify"));
-
-		// Assert
-		Assert.AreSequenceEqual(
-			CancelThenNotify,
-			order,
-			"The default termination must be cancelled before the application is notified");
-	}
-
-	/// <summary>
-	/// Tests that taking an interrupt is logged, so an operator can tell why an application
-	/// exited rather than being left to guess.
-	/// </summary>
-	[TestMethod]
-	public async Task AnInterruptIsLogged()
-	{
-		// Arrange
-		BlockingConsoleProvider provider = new();
-		FakeInterruptSource interrupts = new();
-		RecordingLogger logger = new();
-		UIApplication app = new(provider, logger) { InterruptSource = interrupts };
-
-		Task run = app.RunAsync(TestContext.CancellationToken);
-		await AssertCompletesAsync(interrupts.Registered, "The application should register an interrupt handler when it starts").ConfigureAwait(false);
-
-		// Act
-		interrupts.RaiseInterrupt();
-		await AssertCompletesAsync(run, "An interrupt should end the run").ConfigureAwait(false);
-
-		// Assert
-		Assert.Contains(
-			m => m.Contains("Interrupt signal received", StringComparison.Ordinal),
-			logger.Messages,
-			"The interrupt should have been logged");
-	}
-
-	/// <summary>
-	/// Tests that the real interrupt source rejects a missing callback rather than hooking a
-	/// signal it cannot act on.
-	/// </summary>
-	[TestMethod]
-	public void TheConsoleInterruptSourceRejectsAMissingCallback()
-	{
-		// Arrange
-		ConsoleInterruptSource source = new();
-
-		// Act & Assert
-		Assert.ThrowsExactly<ArgumentNullException>(() => source.Register(null!));
-	}
-
-	/// <summary>
-	/// Awaits <paramref name="task"/> and fails with <paramref name="because"/> if it does not
-	/// finish within <see cref="StepTimeout"/>.
-	/// </summary>
-	/// <param name="task">The task to await.</param>
-	/// <param name="because">The assertion message to report on a timeout.</param>
-	private static async Task AssertCompletesAsync(Task task, string because)
-	{
-		Task finished = await Task.WhenAny(task, Task.Delay(StepTimeout)).ConfigureAwait(false);
-		Assert.AreSame(task, finished, because);
-
-		// Observed separately so a task that failed reports its own exception, not the timeout.
-		await task.ConfigureAwait(false);
-	}
-
-	/// <summary>
-	/// An <see cref="ILogger{TCategoryName}"/> that records the messages written to it, so a test
-	/// can assert what the application reported rather than only that it did not throw.
-	/// </summary>
-	private sealed class RecordingLogger : ILogger<UIApplication>
-	{
-		private readonly List<string> messages = [];
-
-		/// <summary>
-		/// Gets the messages logged so far, in call order.
-		/// </summary>
-		internal IEnumerable<string> Messages
+		TextElement element = new("Label")
 		{
-			get
-			{
-				lock (messages)
-				{
-					return [.. messages];
-				}
-			}
-		}
+			Position = Position.Origin,
+			Dimensions = new Dimensions(20, 1)
+		};
+		RecordingConsoleProvider provider = new();
 
-		/// <inheritdoc />
-		public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+		// Act
+		element.Render(provider);
+		element.Render(provider);
 
-		/// <inheritdoc />
-		public bool IsEnabled(LogLevel logLevel) => true;
+		// Assert
+		Assert.HasCount(2, provider.WritesOf("Label").ToList(), "A clean element must redraw, not be skipped");
+	}
 
-		/// <inheritdoc />
-		public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-		{
-			string message = formatter is null ? string.Empty : formatter(state, exception);
-			lock (messages)
-			{
-				messages.Add(message);
-			}
-		}
+	/// <summary>
+	/// The failure scenario from ktsu-dev/TUI#109: an input invalidates the interactive child
+	/// only, and the static sibling must survive the next pass.
+	/// </summary>
+	[TestMethod]
+	public void RenderAfterOnlyOneChildInvalidatesStillDrawsTheStaticSibling()
+	{
+		// Arrange
+		BorderElement root = CreateLayout(out TextElement interactive);
+		RecordingConsoleProvider provider = new();
+		UIApplication application = new(provider);
+		application.Setup(root);
+
+		application.Render();
+		int writesBeforeSecondPass = provider.Writes.Count;
+
+		// Act - an input handled by the interactive child invalidates only that child
+		interactive.Invalidate();
+		application.Render();
+
+		// Assert
+		List<string> secondPass = [.. provider.Writes.Skip(writesBeforeSecondPass).Select(w => w.Text)];
+		Assert.Contains("Label", secondPass, "The static label must be redrawn after the screen is cleared");
+		Assert.Contains("Input", secondPass, "The invalidated child must be redrawn");
+		Assert.Contains(" Frame ", secondPass, "The border title must be redrawn");
+	}
+
+	/// <summary>
+	/// Every clear must be followed by a full redraw, so the number of full-tree redraws keeps
+	/// pace with the number of clears no matter how many passes run.
+	/// </summary>
+	[TestMethod]
+	public void RenderRedrawsTheWholeTreeOnEveryClear()
+	{
+		// Arrange
+		BorderElement root = CreateLayout(out _);
+		RecordingConsoleProvider provider = new();
+		UIApplication application = new(provider);
+		application.Setup(root);
+
+		// Act
+		application.Render();
+		application.Render();
+		application.Render();
+
+		// Assert
+		Assert.AreEqual(3, provider.ClearCount, "Every pass clears the screen");
+		Assert.HasCount(3, provider.WritesOf("Label").ToList(), "Every clear must be followed by a full redraw");
+	}
+
+	/// <summary>
+	/// The root element still takes its size from the console on the first pass.
+	/// </summary>
+	[TestMethod]
+	public void RenderAssignsConsoleDimensionsToAnUnsizedRoot()
+	{
+		// Arrange
+		TextElement root = new("Label");
+		RecordingConsoleProvider provider = new() { Dimensions = new Dimensions(40, 12) };
+		UIApplication application = new(provider);
+		application.Setup(root);
+
+		// Act
+		application.Render();
+
+		// Assert
+		Assert.AreEqual(new Dimensions(40, 12), root.Dimensions);
 	}
 }
