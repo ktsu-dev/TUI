@@ -28,7 +28,7 @@ public class InteractiveDemoInputTests
 
 		Assert.AreEqual(1, demo.Counter);
 		Assert.AreEqual("1", demo.CounterText.Text);
-		StringAssert.Contains(demo.StatusText.Text, "Counter incremented!");
+		Assert.Contains("Counter incremented!", demo.StatusText.Text, StringComparison.Ordinal);
 	}
 
 	[TestMethod]
@@ -40,7 +40,7 @@ public class InteractiveDemoInputTests
 
 		Assert.AreEqual(-1, demo.Counter);
 		Assert.AreEqual("-1", demo.CounterText.Text);
-		StringAssert.Contains(demo.StatusText.Text, "Counter decremented!");
+		Assert.Contains("Counter decremented!", demo.StatusText.Text, StringComparison.Ordinal);
 	}
 
 	[TestMethod]
@@ -52,7 +52,7 @@ public class InteractiveDemoInputTests
 
 		Assert.AreEqual(10, demo.Counter);
 		Assert.AreEqual("10", demo.CounterText.Text);
-		StringAssert.Contains(demo.StatusText.Text, "Added +10 to counter!");
+		Assert.Contains("Added +10 to counter!", demo.StatusText.Text, StringComparison.Ordinal);
 	}
 
 	[TestMethod]
@@ -65,7 +65,7 @@ public class InteractiveDemoInputTests
 
 		Assert.AreEqual(0, demo.Counter);
 		Assert.AreEqual("0", demo.CounterText.Text);
-		StringAssert.Contains(demo.StatusText.Text, "Counter reset to 0!");
+		Assert.Contains("Counter reset to 0!", demo.StatusText.Text, StringComparison.Ordinal);
 	}
 
 	[TestMethod]
@@ -78,7 +78,7 @@ public class InteractiveDemoInputTests
 
 		Assert.IsTrue(PressKey(demo, ConsoleKey.T));
 		Assert.AreEqual("Yellow", demo.CounterText.Style.Foreground);
-		StringAssert.Contains(demo.StatusText.Text, "Theme toggled!");
+		Assert.Contains("Theme toggled!", demo.StatusText.Text, StringComparison.Ordinal);
 
 		Assert.IsTrue(PressKey(demo, ConsoleKey.T));
 		Assert.AreEqual("Cyan", demo.CounterText.Style.Foreground);
@@ -116,7 +116,7 @@ public class InteractiveDemoInputTests
 		Assert.IsFalse(PressKey(demo, ConsoleKey.X));
 
 		Assert.AreEqual(0, demo.Counter);
-		StringAssert.Contains(demo.StatusText.Text, "Unknown key: X");
+		Assert.Contains("Unknown key: X", demo.StatusText.Text, StringComparison.Ordinal);
 	}
 
 	[TestMethod]
@@ -150,12 +150,12 @@ public class InteractiveDemoInputTests
 		// against each other rather than each being checked on its own.
 		InteractiveDemo demo = new();
 
-		Assert.AreNotEqual(0, InteractiveDemo.Controls.Count);
+		Assert.IsNotEmpty(InteractiveDemo.Controls);
 
 		foreach (InteractiveDemo.Control control in InteractiveDemo.Controls)
 		{
-			StringAssert.Contains(InteractiveDemo.InstructionsText, control.Label);
-			StringAssert.Contains(InteractiveDemo.InstructionsText, control.Description);
+			Assert.Contains(control.Label, InteractiveDemo.InstructionsText, StringComparison.Ordinal);
+			Assert.Contains(control.Description, InteractiveDemo.InstructionsText, StringComparison.Ordinal);
 
 			foreach (ConsoleKey key in control.Keys)
 			{
