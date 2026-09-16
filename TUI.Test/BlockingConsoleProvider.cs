@@ -39,14 +39,40 @@ internal sealed class BlockingConsoleProvider : IConsoleProvider
 	/// </summary>
 	internal bool CursorVisible => cursorVisible;
 
-	/// <inheritdoc />
-	public Dimensions Dimensions { get; set; } = new(80, 24);
+	private readonly Lock dimensionsLock = new();
+	private int clearCount;
 
 	/// <inheritdoc />
-	public void Clear()
+	/// <remarks>
+	/// Guarded because a resize test writes it from the test thread while the application reads it
+	/// from the thread running the loop — which is exactly the situation the resize poll exists for.
+	/// </remarks>
+	public Dimensions Dimensions
 	{
-		// Nothing to record: these tests assert on lifecycle, not on drawn output.
-	}
+		get
+		{
+			lock (dimensionsLock)
+			{
+				return field;
+			}
+		}
+
+		set
+		{
+			lock (dimensionsLock)
+			{
+				field = value;
+			}
+		}
+	} = new(80, 24);
+
+	/// <summary>
+	/// Gets the number of times <see cref="Clear"/> was called, which is once per render pass.
+	/// </summary>
+	internal int ClearCount => Volatile.Read(ref clearCount);
+
+	/// <inheritdoc />
+	public void Clear() => Interlocked.Increment(ref clearCount);
 
 	/// <inheritdoc />
 	public void Render(IUIElement element, Position position) => element?.Render(this);

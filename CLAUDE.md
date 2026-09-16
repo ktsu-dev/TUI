@@ -41,12 +41,20 @@ Provider Abstraction (SpectreConsoleProvider)
 
 **Rendering flow:**
 1. `UIApplication` manages the main loop and input processing
-2. Elements are arranged via `ArrangeChildren()` which sets child `Position` and `Dimensions`
+2. Elements are arranged via `ArrangeChildren()` which sets child `Position` and `Dimensions`.
+   It reaches one level only — a container arranges its own children, not theirs — so anything
+   that resizes a subtree has to walk it
 3. Each pass is a full clear followed by a full redraw: `UIApplication.Render()` clears the
    console and every visible element draws again. `Invalidate()` marks an element as changed and
    raises `Invalidated`, but it does not gate drawing — a full clear combined with a dirty-only
    redraw erases static elements rather than preserving them (ktsu-dev/TUI#109)
-4. `UIContainerBase.Render()` renders itself then all visible children
+4. Each pass also re-reads `ConsoleProvider.Dimensions`. When the terminal has changed size the
+   root takes the new size and the whole tree is re-arranged, so a resized window is laid out on
+   the next frame instead of staying pinned to the size at launch (ktsu-dev/TUI#111). The input
+   loop wakes on a timer (`UIApplication.ResizePollInterval`) as well as on input, because a
+   resize delivers no keypress to wake it — each tick compares the size and draws only when it
+   changed
+5. `UIContainerBase.Render()` renders itself then all visible children
 
 ## Code Patterns
 
