@@ -144,8 +144,9 @@ public sealed class UIApplicationResizeTests
 		app.Render();
 
 		// Assert
-		Assert.IsTrue(
-			logger.Messages.Any(m => m.Contains($"{ResizedSize.Width}x{ResizedSize.Height}", StringComparison.Ordinal)),
+		Assert.Contains(
+			m => m.Contains($"{ResizedSize.Width}x{ResizedSize.Height}", StringComparison.Ordinal),
+			logger.Messages,
 			$"The new terminal size should be reported, but the log held: {string.Join(" | ", logger.Messages)}");
 	}
 
