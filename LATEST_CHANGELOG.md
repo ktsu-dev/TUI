@@ -2,8 +2,13 @@
 
 Changes since v1.0.0:
 
+- Merge main into fix/110-ctrl-c-exit-path ([@Claude](https://github.com/Claude))
 - test: use Assert.HasCount for the exact-division wrap assertion [patch] ([@Claude](https://github.com/Claude))
 - fix: break words longer than twice the wrap width [patch] ([@Claude](https://github.com/Claude))
+- test: adopt the assertion APIs the MSTest analyzers ask for [patch] ([@Claude](https://github.com/Claude))
+- test: cover the signal response and the interrupt log line [patch] ([@Claude](https://github.com/Claude))
+- refactor: use a volatile field for the test double's cursor state [patch] ([@Claude](https://github.com/Claude))
+- fix: exit through the normal shutdown path on Ctrl+C [patch] ([@Claude](https://github.com/Claude))
 - fix: redraw the whole tree on every render pass [minor] ([@matt-edmondson](https://github.com/matt-edmondson))
 - ci: adopt the consolidated .NET workflow [patch] ([@Claude](https://github.com/Claude))
 - [patch] Fix NotImplementedException on the default render path ([@Claude](https://github.com/Claude))
