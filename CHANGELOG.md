@@ -2,6 +2,8 @@
 
 Changes since v1.0.0:
 
+- test: assert the resize log line with Assert.Contains [patch] ([@Claude](https://github.com/Claude))
+- fix: re-check the terminal size on every render pass [patch] ([@Claude](https://github.com/Claude))
 - fix: reject unrecognized color names on TextStyle [minor] ([@Claude](https://github.com/Claude))
 - Gate Dependabot auto-merge on CI actually being green ([@Claude](https://github.com/Claude))
 - Merge main into fix/110-ctrl-c-exit-path ([@Claude](https://github.com/Claude))
