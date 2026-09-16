@@ -2,6 +2,8 @@
 
 Changes since v1.0.0:
 
+- test: adopt the assertion APIs the MSTest analyzers ask for [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- fix: wire the interactive demo's advertised keys to its handler [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - test: assert the resize log line with Assert.Contains [patch] ([@Claude](https://github.com/Claude))
 - fix: re-check the terminal size on every render pass [patch] ([@Claude](https://github.com/Claude))
 - fix: reject unrecognized color names on TextStyle [minor] ([@Claude](https://github.com/Claude))
