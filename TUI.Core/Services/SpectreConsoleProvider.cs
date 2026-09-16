@@ -74,7 +74,9 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		{
 			ConsoleKeyInfo keyInfo = Console.ReadKey(true);
 
-			// Handle special cases
+			// Handle special cases. Ctrl+C normally arrives as an interrupt signal rather than as
+			// a key, and UIApplication handles it there; this branch only fires for a host that
+			// has set Console.TreatControlCAsInput.
 			if (keyInfo.Key == ConsoleKey.Escape ||
 				(keyInfo.Key == ConsoleKey.C && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)))
 			{

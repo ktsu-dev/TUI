@@ -67,6 +67,17 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private static readonly Action<ILogger, string, Exception?> LogUIApplicationSetup =
 		LoggerMessage.Define<string>(LogLevel.Information, new EventId(16, nameof(LogUIApplicationSetup)), "UI application setup with root element of type {ElementType}");
 
+	private static readonly Action<ILogger, Exception?> LogInterruptReceived =
+		LoggerMessage.Define(LogLevel.Information, new EventId(17, nameof(LogInterruptReceived)), "Interrupt signal received, shutting down");
+
+	/// <summary>
+	/// Gets the source of process interrupt signals that shuts the application down
+	/// </summary>
+	/// <remarks>
+	/// Defaults to the real console and process signals. Tests substitute a source they can raise.
+	/// </remarks>
+	internal IInterruptSource InterruptSource { get; init; } = new ConsoleInterruptSource();
+
 	/// <inheritdoc />
 	public IUIElement? RootElement { get; set; }
 
@@ -90,6 +101,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 		IsRunning = true;
 		_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		IDisposable? interruptRegistration = null;
 
 		try
 		{
@@ -97,6 +109,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			{
 				LogStartingApplication(_logger, null);
 			}
+
+			// Take Ctrl+C and SIGTERM for the duration of the run. Both otherwise end the process
+			// outright, skipping the finally below that puts the cursor back.
+			interruptRegistration = InterruptSource.Register(OnInterrupt);
 
 			// Initialize console
 			ConsoleProvider.Clear();
@@ -125,6 +141,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		}
 		finally
 		{
+			// Stop taking signals before restoring the terminal, so a second Ctrl+C arriving
+			// during teardown gets the runtime's default behaviour rather than a second shutdown.
+			interruptRegistration?.Dispose();
 			IsRunning = false;
 			ConsoleProvider.SetCursorVisibility(true);
 			if (_logger != null)
@@ -132,6 +151,19 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				LogApplicationStopped(_logger, null);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Handles an interrupt signal by shutting the application down through its normal path
+	/// </summary>
+	private void OnInterrupt()
+	{
+		if (_logger != null)
+		{
+			LogInterruptReceived(_logger, null);
+		}
+
+		Shutdown();
 	}
 
 	/// <inheritdoc />
@@ -216,7 +248,12 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		{
 			try
 			{
-				Models.InputResult input = await ConsoleProvider.ReadInputAsync().ConfigureAwait(false);
+				// Abandon the read when cancellation is requested. A provider parked in
+				// Console.ReadKey does not observe the token, so awaiting it directly would keep
+				// the loop alive until the user pressed an unrelated key after asking to exit.
+				Models.InputResult input = await ConsoleProvider.ReadInputAsync()
+					.WaitAsync(cancellationToken)
+					.ConfigureAwait(false);
 
 				if (_logger != null)
 				{
