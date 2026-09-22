@@ -6,7 +6,7 @@ using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
 
-namespace ktsu.TUI.CLI;
+namespace ktsu.TUI.Cli;
 
 /// <summary>
 /// A sample CLI application demonstrating the TUI library
