@@ -1,7 +1,9 @@
-## v1.1.0 (minor)
+## v2.0.0 (major)
 
 Changes since v1.0.0:
 
+- Rename TUI.CLI to TUI.Cli for PascalCase consistency ([@Claude](https://github.com/Claude))
+- [major] Retire .Core from the published package ID ([@Claude](https://github.com/Claude))
 - test: adopt the assertion APIs the MSTest analyzers ask for [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - fix: wire the interactive demo's advertised keys to its handler [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - test: assert the resize log line with Assert.Contains [patch] ([@Claude](https://github.com/Claude))
