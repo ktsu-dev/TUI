@@ -317,4 +317,38 @@ public sealed class BorderElementTests
 		// Assert
 		Assert.IsFalse(result, "HandleInput should return false when there is no child");
 	}
+
+	/// <summary>
+	/// Tests that the border is counted once: a border around "abc" needs one column and row on
+	/// each side of the text and no more (ktsu-dev/TUI#132)
+	/// </summary>
+	[TestMethod]
+	public void BorderElementRequiredDimensionsAddOneCellOfBorderOnEachSide()
+	{
+		// Arrange
+		BorderElement borderElement = new()
+		{ Child = new TextElement("abc") };
+
+		// Act
+		Dimensions required = borderElement.CalculateRequiredDimensions();
+
+		// Assert
+		Assert.AreEqual(new Dimensions(5, 3), required);
+	}
+
+	/// <summary>
+	/// Tests that an empty border needs exactly the 2x2 its corners occupy (ktsu-dev/TUI#132)
+	/// </summary>
+	[TestMethod]
+	public void BorderElementWithNoChildRequiresTwoByTwo()
+	{
+		// Arrange
+		BorderElement borderElement = [];
+
+		// Act
+		Dimensions required = borderElement.CalculateRequiredDimensions();
+
+		// Assert
+		Assert.AreEqual(new Dimensions(2, 2), required);
+	}
 }

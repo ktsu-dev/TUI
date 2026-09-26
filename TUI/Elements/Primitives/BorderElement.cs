@@ -181,19 +181,10 @@ public class BorderElement : UIContainerBase
 	}
 
 	/// <inheritdoc />
-	protected override Dimensions OnCalculateRequiredDimensionsForChildren()
-	{
-		if (Children.Count == 0)
-		{
-			return new Dimensions(2, 2); // Minimum size for border
-		}
-
-		Dimensions childDimensions = Children.First().CalculateRequiredDimensions();
-		return new Dimensions(
-			Math.Max(2, childDimensions.Width + 2), // +2 for left and right border
-			Math.Max(2, childDimensions.Height + 2)  // +2 for top and bottom border
-		);
-	}
+	// The border itself is reserved by the Padding(1) set in the constructor, which the base
+	// class adds to this result, so only the child's own size belongs here (ktsu-dev/TUI#132)
+	protected override Dimensions OnCalculateRequiredDimensionsForChildren() =>
+		Children.Count == 0 ? Dimensions.Empty : Children.First().CalculateRequiredDimensions();
 
 	private static BorderCharacters GetBorderCharacters(BorderStyle style)
 	{
