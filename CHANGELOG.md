@@ -2,6 +2,9 @@
 
 Changes since v1.0.0:
 
+- refactor: flatten SplitIntoLines with SelectMany [patch] ([@Claude](https://github.com/Claude))
+- fix: break TextElement on embedded newlines and clip lines to its width [patch] ([@Claude](https://github.com/Claude))
+- fix: count BorderElement's border once when measuring [patch] ([@Claude](https://github.com/Claude))
 - Rename TUI.CLI to TUI.Cli for PascalCase consistency ([@Claude](https://github.com/Claude))
 - [major] Retire .Core from the published package ID ([@Claude](https://github.com/Claude))
 - test: adopt the assertion APIs the MSTest analyzers ask for [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
