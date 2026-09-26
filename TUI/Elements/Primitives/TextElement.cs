@@ -186,20 +186,12 @@ public class TextElement : UIElementBase
 			return paragraphs;
 		}
 
-		List<string> lines = [];
-		foreach (string paragraph in paragraphs)
+		// A blank paragraph wraps to no lines at all, so keep its row as one empty line
+		return [.. paragraphs.SelectMany(paragraph =>
 		{
 			string[] wrapped = WrapText(paragraph, wrapWidth);
-			if (wrapped.Length == 0)
-			{
-				lines.Add(string.Empty);
-				continue;
-			}
-
-			lines.AddRange(wrapped);
-		}
-
-		return [.. lines];
+			return wrapped.Length == 0 ? [string.Empty] : wrapped;
+		})];
 	}
 
 	private static string[] WrapText(string text, int maxWidth)
