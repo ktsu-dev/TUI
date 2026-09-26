@@ -2,6 +2,7 @@
 
 namespace ktsu.TUI.Test;
 
+using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -321,5 +322,124 @@ public sealed class TextElementTests
 
 		// Assert
 		Assert.IsLessThanOrEqualTo(2, provider.Writes.Count);
+	}
+
+	/// <summary>
+	/// An embedded line break must be measured as a second line, not as a character of the first
+	/// (ktsu-dev/TUI#135).
+	/// </summary>
+	/// <param name="text">The text under test, with a line break in each supported style.</param>
+	[TestMethod]
+	[DataRow("ab\ncd")]
+	[DataRow("ab\r\ncd")]
+	[DataRow("ab\rcd")]
+	public void EmbeddedLineBreakIsMeasuredAsTwoLines(string text)
+	{
+		// Arrange
+		TextElement element = new(text);
+
+		// Act
+		Dimensions required = element.CalculateRequiredDimensions();
+
+		// Assert
+		Assert.AreEqual(new Dimensions(2, 2), required);
+	}
+
+	/// <summary>
+	/// An embedded line break must be drawn as two writes on consecutive rows, and the break
+	/// itself must never reach the console (ktsu-dev/TUI#135).
+	/// </summary>
+	[TestMethod]
+	public void EmbeddedLineBreakRendersOnConsecutiveRows()
+	{
+		// Arrange
+		TextElement element = CreateElement("ab\r\ncd", width: 10, height: 3);
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.HasCount(2, provider.Writes);
+		Assert.AreEqual(new Position(0, 0), provider.WritesOf("ab").Single().Position);
+		Assert.AreEqual(new Position(0, 1), provider.WritesOf("cd").Single().Position);
+	}
+
+	/// <summary>
+	/// A blank line in the text must keep its row when word wrapping is on (ktsu-dev/TUI#135).
+	/// </summary>
+	[TestMethod]
+	public void WordWrapKeepsABlankLineBetweenParagraphs()
+	{
+		// Arrange
+		TextElement element = CreateElement("ab\n\ncd", width: 10, height: 3);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.AreEqual(0, provider.WritesOf("ab").Single().Position.Y);
+		Assert.AreEqual(2, provider.WritesOf("cd").Single().Position.Y);
+	}
+
+	/// <summary>
+	/// A line wider than the content area must be clipped to it, whichever way it is aligned, so
+	/// that it never draws over a neighbour or past the screen edge (ktsu-dev/TUI#134).
+	/// </summary>
+	/// <param name="alignment">The horizontal alignment under test.</param>
+	[TestMethod]
+	[DataRow(HorizontalAlignment.Left)]
+	[DataRow(HorizontalAlignment.Center)]
+	[DataRow(HorizontalAlignment.Right)]
+	public void LineWiderThanTheContentAreaIsClippedToIt(HorizontalAlignment alignment)
+	{
+		// Arrange
+		TextElement element = new()
+		{
+			Text = "abcdef",
+			Position = new Position(4, 0),
+			Dimensions = new Dimensions(3, 1),
+			HorizontalAlignment = alignment,
+		};
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		RecordingConsoleProvider.Write write = provider.Writes.Single();
+		Assert.AreEqual("abc", write.Text);
+		Assert.AreEqual(4, write.Position.X);
+	}
+
+	/// <summary>
+	/// The reported case: the second of two texts in a six-wide horizontal panel is given two
+	/// columns and must draw only those two (ktsu-dev/TUI#134).
+	/// </summary>
+	[TestMethod]
+	public void TextInAHorizontalPanelDoesNotDrawPastItsAllottedWidth()
+	{
+		// Arrange
+		StackPanel panel = new()
+		{
+			Orientation = Orientation.Horizontal,
+			Position = Position.Origin,
+			Dimensions = new Dimensions(6, 1),
+		};
+		panel.AddChild(new TextElement("abcd"));
+		panel.AddChild(new TextElement("xyz"));
+		panel.ArrangeChildren();
+		RecordingConsoleProvider provider = new() { Dimensions = new Dimensions(6, 1) };
+
+		// Act
+		panel.Render(provider);
+
+		// Assert
+		Assert.IsTrue(
+			provider.Writes.All(w => w.Position.X + w.Text.Length <= 6),
+			"No write may extend past the six-column console");
+		Assert.ContainsSingle(provider.WritesOf("xy"));
 	}
 }

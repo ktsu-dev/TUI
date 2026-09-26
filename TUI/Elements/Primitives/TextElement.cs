@@ -99,7 +99,7 @@ public class TextElement : UIElementBase
 			return;
 		}
 
-		string[] lines = WordWrap ? WrapText(Text, contentArea.Width) : [Text];
+		string[] lines = SplitIntoLines(Text, WordWrap ? contentArea.Width : 0);
 
 		for (int i = 0; i < lines.Length && i < contentArea.Height; i++)
 		{
@@ -111,6 +111,19 @@ public class TextElement : UIElementBase
 
 			int x = CalculateHorizontalPosition(line, contentArea.Width, contentPosition.X);
 			int y = CalculateVerticalPosition(lines.Length, contentArea.Height, contentPosition.Y) + i;
+
+			// Clip after the alignment offset, so nothing is drawn past the right edge of the
+			// content area whichever way the line is aligned (ktsu-dev/TUI#134)
+			int visibleWidth = contentPosition.X + contentArea.Width - x;
+			if (visibleWidth <= 0)
+			{
+				continue;
+			}
+
+			if (line.Length > visibleWidth)
+			{
+				line = line[..visibleWidth];
+			}
 
 			provider.WriteAt(line, new Position(x, y), Style);
 		}
@@ -126,9 +139,9 @@ public class TextElement : UIElementBase
 				: Dimensions.Empty;
 		}
 
-		string[] lines = WordWrap && Dimensions.Width > 0
-			? WrapText(Text, Math.Max(1, Dimensions.Width - Padding.Horizontal))
-			: [Text];
+		string[] lines = SplitIntoLines(
+			Text,
+			WordWrap && Dimensions.Width > 0 ? Math.Max(1, Dimensions.Width - Padding.Horizontal) : 0);
 
 		int maxWidth = lines.Max(line => line.Length);
 		int height = lines.Length;
@@ -156,6 +169,29 @@ public class TextElement : UIElementBase
 			VerticalAlignment.Top => baseY,
 			_ => baseY
 		};
+	}
+
+	/// <summary>
+	/// Breaks text into the lines that are measured and drawn: one per embedded line break, each
+	/// then wrapped to <paramref name="wrapWidth"/> when it is positive (ktsu-dev/TUI#135)
+	/// </summary>
+	/// <param name="text">The text to break</param>
+	/// <param name="wrapWidth">The width to wrap each line to, or 0 to leave lines unwrapped</param>
+	/// <returns>The lines, in order; a blank line in the text stays as an empty line</returns>
+	private static string[] SplitIntoLines(string text, int wrapWidth)
+	{
+		string[] paragraphs = text.Split(["\r\n", "\n", "\r"], StringSplitOptions.None);
+		if (wrapWidth <= 0)
+		{
+			return paragraphs;
+		}
+
+		// A blank paragraph wraps to no lines at all, so keep its row as one empty line
+		return [.. paragraphs.SelectMany(paragraph =>
+		{
+			string[] wrapped = WrapText(paragraph, wrapWidth);
+			return wrapped.Length == 0 ? [string.Empty] : wrapped;
+		})];
 	}
 
 	private static string[] WrapText(string text, int maxWidth)
