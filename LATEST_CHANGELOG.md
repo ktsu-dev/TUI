@@ -2,6 +2,7 @@
 
 Changes since v1.0.0:
 
+- fix: give StackPanel children that no longer fit no space, so they stop rendering [patch] ([@Claude](https://github.com/Claude))
 - fix: shift Spectre cursor positions to 1-based and clip WriteAt to the screen [patch] ([@Claude](https://github.com/Claude))
 - refactor: flatten SplitIntoLines with SelectMany [patch] ([@Claude](https://github.com/Claude))
 - fix: break TextElement on embedded newlines and clip lines to its width [patch] ([@Claude](https://github.com/Claude))
