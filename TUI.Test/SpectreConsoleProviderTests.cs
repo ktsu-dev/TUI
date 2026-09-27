@@ -1,0 +1,115 @@
+// Copyright (c) 2023-2026 ktsu-dev contributors
+
+namespace ktsu.TUI.Test;
+
+using ktsu.TUI.Core.Models;
+using ktsu.TUI.Core.Services;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Spectre.Console;
+
+/// <summary>
+/// Tests for the ANSI that <see cref="SpectreConsoleProvider"/> writes, captured from a Spectre
+/// console over a <see cref="StringWriter"/> rather than the test runner's terminal.
+/// </summary>
+[TestClass]
+public sealed class SpectreConsoleProviderTests
+{
+	private const int Width = 10;
+	private const int Height = 5;
+
+	private static (SpectreConsoleProvider Provider, StringWriter Output) CreateProvider()
+	{
+		StringWriter output = new();
+		IAnsiConsole console = AnsiConsole.Create(new AnsiConsoleSettings
+		{
+			Ansi = AnsiSupport.Yes,
+			ColorSystem = ColorSystemSupport.NoColors,
+			Interactive = InteractionSupport.No,
+			Out = new AnsiConsoleOutput(output),
+		});
+		console.Profile.Width = Width;
+		console.Profile.Height = Height;
+		return (new SpectreConsoleProvider(console), output);
+	}
+
+	/// <summary>
+	/// Tests that 0-based positions become 1-based ANSI cursor positions, so the first row and
+	/// column stay distinct from the second and the last row and column are reachable
+	/// (ktsu-dev/TUI#138).
+	/// </summary>
+	[TestMethod]
+	public void WriteAtTranslatesToOneBasedCursorPositions()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("A", new Position(0, 0));
+		provider.WriteAt("B", new Position(0, 1));
+		provider.WriteAt("C", new Position(1, 0));
+		provider.WriteAt("D", new Position(Width - 1, Height - 1));
+
+		Assert.AreEqual("\u001b[1;1HA\u001b[2;1HB\u001b[1;2HC\u001b[5;10HD", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that text on a row outside the screen is not written at all, rather than at the
+	/// cursor position the previous write left behind (ktsu-dev/TUI#139).
+	/// </summary>
+	/// <param name="y">The off-screen row.</param>
+	[TestMethod]
+	[DataRow(-1)]
+	[DataRow(Height)]
+	[DataRow(7)]
+	public void WriteAtSkipsOffScreenRows(int y)
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("AB", new Position(2, 1));
+		provider.WriteAt("XYZ", new Position(3, y));
+
+		Assert.AreEqual("\u001b[2;3HAB", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that text lying wholly left or right of the screen is not written.
+	/// </summary>
+	/// <param name="x">The start column.</param>
+	[TestMethod]
+	[DataRow(-3)]
+	[DataRow(-10)]
+	[DataRow(Width)]
+	[DataRow(Width + 4)]
+	public void WriteAtSkipsTextEntirelyOutsideTheColumns(int x)
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("XYZ", new Position(x, 0));
+
+		Assert.AreEqual(string.Empty, output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that text starting left of the screen is clipped to the columns that are visible.
+	/// </summary>
+	[TestMethod]
+	public void WriteAtClipsTextStartingLeftOfTheScreen()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("abcdef", new Position(-2, 3));
+
+		Assert.AreEqual("\u001b[4;1Hcdef", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that text running past the right edge is clipped instead of wrapping onto the next row.
+	/// </summary>
+	[TestMethod]
+	public void WriteAtClipsTextOverflowingTheRightEdge()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("abcdef", new Position(7, 2));
+
+		Assert.AreEqual("\u001b[3;8Habc", output.ToString());
+	}
+}

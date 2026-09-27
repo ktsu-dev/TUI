@@ -54,16 +54,25 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 			return;
 		}
 
-		SetCursorPosition(position);
+		// Clip to the screen before moving the cursor. SetCursorPosition ignores an off-screen
+		// position, so writing anyway would put the text wherever the last write left the cursor,
+		// and text running past the right edge would wrap onto the next line (ktsu-dev/TUI#139).
+		string visibleText = ClipToScreen(text, position, out Position visiblePosition);
+		if (visibleText.Length == 0)
+		{
+			return;
+		}
+
+		SetCursorPosition(visiblePosition);
 
 		if (style.HasValue)
 		{
-			Markup markup = CreateStyledMarkup(text, style.Value);
+			Markup markup = CreateStyledMarkup(visibleText, style.Value);
 			_console.Write(markup);
 		}
 		else
 		{
-			_console.Write(text);
+			_console.Write(visibleText);
 		}
 	}
 
@@ -91,7 +100,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	/// <inheritdoc />
 	public void SetCursorVisibility(bool visible)
 	{
-		_console.Cursor.SetPosition(Console.CursorLeft, Console.CursorTop);
+		_console.Cursor.SetPosition(Console.CursorLeft + 1, Console.CursorTop + 1);
 		Console.CursorVisible = visible;
 	}
 
@@ -101,8 +110,32 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		if (position.X >= 0 && position.Y >= 0 &&
 			position.X < Dimensions.Width && position.Y < Dimensions.Height)
 		{
-			_console.Cursor.SetPosition(position.X, position.Y);
+			// Spectre writes the ANSI CUP sequence without translating, and CUP is 1-based, so a
+			// 0-based position has to be shifted or row 0 and row 1 collapse (ktsu-dev/TUI#138).
+			_console.Cursor.SetPosition(position.X + 1, position.Y + 1);
 		}
+	}
+
+	private string ClipToScreen(string text, Position position, out Position visiblePosition)
+	{
+		visiblePosition = position;
+		Dimensions dimensions = Dimensions;
+		if (position.Y < 0 || position.Y >= dimensions.Height)
+		{
+			return string.Empty;
+		}
+
+		long start = position.X;
+		long end = start + text.Length;
+		long visibleStart = Math.Max(start, 0);
+		long visibleEnd = Math.Min(end, dimensions.Width);
+		if (visibleStart >= visibleEnd)
+		{
+			return string.Empty;
+		}
+
+		visiblePosition = new Position((int)visibleStart, position.Y);
+		return text.Substring((int)(visibleStart - start), (int)(visibleEnd - visibleStart));
 	}
 
 	private static Position GetCursorPosition() => new(Console.CursorLeft, Console.CursorTop);
