@@ -353,4 +353,70 @@ public sealed class StackPanelTests
 		// Assert
 		Assert.AreEqual(orientation, stackPanel.Orientation);
 	}
+
+	/// <summary>
+	/// Tests that a child pushed out of a vertical panel by a shrink is not drawn at the position
+	/// an earlier, taller arrange gave it (ktsu-dev/TUI#140).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelShrinkStopsRenderingVerticalChildrenThatNoLongerFit()
+	{
+		TextElement a = new("a"), b = new("b"), c = new("c");
+		StackPanel panel = new() { Dimensions = new Dimensions(10, 3) };
+		panel.Add(a);
+		panel.Add(b);
+		panel.Add(c);
+		panel.ArrangeChildren();
+
+		panel.Dimensions = new Dimensions(10, 2);
+		panel.ArrangeChildren();
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.ContainsSingle(provider.WritesOf("a"));
+		Assert.ContainsSingle(provider.WritesOf("b"));
+		Assert.IsEmpty(provider.WritesOf("c"), "c no longer fits in two rows, so it should not be drawn");
+	}
+
+	/// <summary>
+	/// Tests that a child pushed out of a horizontal panel by a shrink is not drawn either.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelShrinkStopsRenderingHorizontalChildrenThatNoLongerFit()
+	{
+		TextElement a = new("aa"), b = new("bb"), c = new("cc");
+		StackPanel panel = new(Orientation.Horizontal) { Dimensions = new Dimensions(6, 1) };
+		panel.Add(a);
+		panel.Add(b);
+		panel.Add(c);
+		panel.ArrangeChildren();
+
+		panel.Dimensions = new Dimensions(4, 1);
+		panel.ArrangeChildren();
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.ContainsSingle(provider.WritesOf("aa"));
+		Assert.ContainsSingle(provider.WritesOf("bb"));
+		Assert.IsEmpty(provider.WritesOf("cc"), "cc no longer fits in four columns, so it should not be drawn");
+	}
+
+	/// <summary>
+	/// Tests that shrinking a panel to an empty content area stops every child being drawn.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelShrinkToEmptyStopsRenderingAllChildren()
+	{
+		StackPanel panel = new() { Dimensions = new Dimensions(10, 2) };
+		panel.Add(new TextElement("a"));
+		panel.Add(new TextElement("b"));
+		panel.ArrangeChildren();
+
+		panel.Dimensions = new Dimensions(10, 0);
+		panel.ArrangeChildren();
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.IsEmpty(provider.Writes, "a panel with no content area should draw none of its children");
+	}
 }

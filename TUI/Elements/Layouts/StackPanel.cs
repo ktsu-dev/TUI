@@ -69,8 +69,19 @@ public class StackPanel : UIContainerBase
 		Dimensions contentArea = GetContentArea();
 		Position contentPosition = GetContentPosition();
 
-		if (contentArea.IsEmpty || Children.Count == 0)
+		if (Children.Count == 0)
 		{
+			return;
+		}
+
+		// A child left out of this pass would keep the geometry of an earlier, larger arrange, and
+		// Render draws every visible child, so it would be drawn outside the panel. Children that
+		// get no space are therefore given none (ktsu-dev/TUI#140).
+		List<IUIElement> unplaced = [.. GetVisibleChildren()];
+
+		if (contentArea.IsEmpty)
+		{
+			CollapseAll(unplaced);
 			return;
 		}
 
@@ -78,6 +89,7 @@ public class StackPanel : UIContainerBase
 
 		foreach (IUIElement child in GetVisibleChildren())
 		{
+			unplaced.Remove(child);
 			Dimensions childDimensions = child.CalculateRequiredDimensions();
 
 			if (Orientation == Orientation.Vertical)
@@ -114,6 +126,16 @@ public class StackPanel : UIContainerBase
 					break;
 				}
 			}
+		}
+
+		CollapseAll(unplaced);
+	}
+
+	private static void CollapseAll(IEnumerable<IUIElement> children)
+	{
+		foreach (IUIElement child in children)
+		{
+			child.Dimensions = Dimensions.Empty;
 		}
 	}
 
