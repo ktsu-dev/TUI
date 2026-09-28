@@ -33,14 +33,18 @@ Changes since v1.0.0:
 - docs: scope build badge to the default branch ([@matt-edmondson](https://github.com/matt-edmondson))
 - docs: correct README, DESCRIPTION and TAGS metadata ([@matt-edmondson](https://github.com/matt-edmondson))
 - Fix build errors from ktsu.Sdk analyzer updates (KTSU0002 InternalsVisibleTo, KTSU0007 Polyfill PrivateAssets) [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - Sync .editorconfig ([@KtsuTools](https://github.com/KtsuTools))
 - Sync global.json ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - chore: update ktsu.Sdk to 2.21.1 [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - chore: remove unused SourceLink package references ([@matt-edmondson](https://github.com/matt-edmondson))
 - chore: remove unused central package and SourceLink refs ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - Update permissions and enhance SonarCloud scanner command with exclusions ([@matt-edmondson](https://github.com/matt-edmondson))
 - Remove legacy build scripts ([@matt-edmondson](https://github.com/matt-edmondson))
 - Refactor null checks to use Ensure.NotNull for consistency ([@matt-edmondson](https://github.com/matt-edmondson))
+- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
 - Add step to ensure NuGet cache directory exists in workflow ([@matt-edmondson](https://github.com/matt-edmondson))
 - migrate to dotnet 10 ([@matt-edmondson](https://github.com/matt-edmondson))
 - Update configuration files and scripts for improved build and test processes ([@matt-edmondson](https://github.com/matt-edmondson))
@@ -123,8 +127,10 @@ Changes since v1.0.44:
 Changes since v1.0.43:
 
 - Fix build errors from ktsu.Sdk analyzer updates (KTSU0002 InternalsVisibleTo, KTSU0007 Polyfill PrivateAssets) [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 - Sync .editorconfig ([@KtsuTools](https://github.com/KtsuTools))
 - Sync global.json ([@KtsuTools](https://github.com/KtsuTools))
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 
 ## v1.0.43 (patch)
 
@@ -351,12 +357,13 @@ Changes since v1.0.9:
 
 Changes since v1.0.8:
 
-- Bump Polyfill from 9.9.0 to 9.10.0 ([@dependabot[bot]](https://github.com/dependabot[bot]))
 - Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 
 ## v1.0.9-pre.1 (prerelease)
 
-No significant changes detected since v1.0.9.
+Changes since v1.0.8:
+
+- Sync .github\workflows\dotnet.yml ([@KtsuTools](https://github.com/KtsuTools))
 
 ## v1.0.8 (patch)
 
@@ -372,7 +379,11 @@ Changes since v1.0.6:
 
 ## v1.0.7-pre.1 (prerelease)
 
-No significant changes detected since v1.0.7.
+Changes since v1.0.6:
+
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
+- Sync .github\workflows\dotnet.yml ([@ktsu[bot]](https://github.com/ktsu[bot]))
 
 ## v1.0.6 (patch)
 
@@ -479,13 +490,16 @@ Changes since v1.0.5-pre.1:
 
 ## v1.0.5-pre.1 (prerelease)
 
-No significant changes detected since v1.0.5.
+Changes since v1.0.4:
+
+- Bump the ktsu group with 3 updates ([@dependabot[bot]](https://github.com/dependabot[bot]))
 
 ## v1.0.4 (patch)
 
 Changes since v1.0.3:
 
 - Refactor null checks to use Ensure.NotNull for consistency ([@matt-edmondson](https://github.com/matt-edmondson))
+- Remove .github\workflows\project.yml ([@matt-edmondson](https://github.com/matt-edmondson))
 
 ## v1.0.3 (patch)
 
@@ -520,7 +534,9 @@ Changes since v1.0.2-pre.1:
 
 ## v1.0.2-pre.1 (prerelease)
 
-No significant changes detected since v1.0.2.
+Changes since v1.0.1:
+
+- Update: - MSTest.TestAdapter to 3.9.1 - MSTest.TestFramework to 3.9.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
 
 ## v1.0.1 (patch)
 
@@ -531,7 +547,9 @@ Changes since v1.0.0:
 
 ## v1.0.1-pre.1 (prerelease)
 
-No significant changes detected since v1.0.1.
+Changes since v1.0.0:
+
+- Refactor project files to use standard Microsoft SDKs, update package references for central management, and resolve naming conflicts in Padding model. Added Microsoft.Extensions.DependencyInjection.Abstractions package version to Directory.Packages.props. ([@matt-edmondson](https://github.com/matt-edmondson))
 
 ## v1.0.0 (major)
 
