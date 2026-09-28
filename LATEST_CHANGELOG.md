@@ -2,6 +2,8 @@
 
 Changes since v1.0.0:
 
+- test: cover the width-independent fallbacks of the width-aware measure [patch] ([@Claude](https://github.com/Claude))
+- fix: measure a vertical StackPanel child against the panel's width, so wrapped text gets every line [minor] ([@Claude](https://github.com/Claude))
 - fix: give StackPanel children that no longer fit no space, so they stop rendering [patch] ([@Claude](https://github.com/Claude))
 - fix: shift Spectre cursor positions to 1-based and clip WriteAt to the screen [patch] ([@Claude](https://github.com/Claude))
 - refactor: flatten SplitIntoLines with SelectMany [patch] ([@Claude](https://github.com/Claude))
