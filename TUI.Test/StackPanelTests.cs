@@ -481,4 +481,88 @@ public sealed class StackPanelTests
 		Assert.AreEqual(new Position(1, 1), Assert.ContainsSingle(provider.WritesOf("bbbb")).Position);
 		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("next")).Position);
 	}
+	/// <summary>
+	/// Tests that measuring a vertical panel with no width, as a parent that does not know one does,
+	/// leaves wrapped text unwrapped rather than guessing a width.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelRequiredDimensionsWithoutAWidthMeasureWrappedTextUnwrapped()
+	{
+		StackPanel panel = [new TextElement("hello world") { WordWrap = true }];
+
+		Assert.AreEqual(new Dimensions(11, 1), panel.CalculateRequiredDimensions());
+		Assert.AreEqual(new Dimensions(5, 2), panel.CalculateRequiredDimensions(5));
+	}
+
+	/// <summary>
+	/// Tests that elements whose size does not depend on their width, including ones that implement
+	/// IUIElement directly, are measured and placed the same as before the width-aware measure.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalMeasuresWidthIndependentElementsAtTheirOwnSize()
+	{
+		FixedSizeElement direct = new(new Dimensions(3, 2));
+		TextElement next = new("next");
+		StackPanel panel = [direct, next];
+		panel.Dimensions = new Dimensions(10, 10);
+		panel.ArrangeChildren();
+
+		FixedSizeElementBase derived = new() { Dimensions = new Dimensions(4, 3) };
+
+		Assert.AreEqual(direct.Size, ((IUIElement)direct).CalculateRequiredDimensions(1));
+		Assert.AreEqual(new Dimensions(3, 2), direct.Dimensions);
+		Assert.AreEqual(new Position(0, 2), next.Position);
+		Assert.AreEqual(derived.CalculateRequiredDimensions(), derived.CalculateRequiredDimensions(1));
+	}
+
+	/// <summary>
+	/// Tests that a container that does not use the available width, such as BorderElement, measures
+	/// the same with or without one.
+	/// </summary>
+	[TestMethod]
+	public void ContainerWithoutAWidthAwareLayoutMeasuresTheSameWithAWidth()
+	{
+		BorderElement border = [new TextElement("abc")];
+
+		Assert.AreEqual(border.CalculateRequiredDimensions(), border.CalculateRequiredDimensions(2));
+	}
+
+	/// <summary>
+	/// A UIElementBase whose size is whatever it was given, and which does not override the
+	/// width-aware measure.
+	/// </summary>
+	private sealed class FixedSizeElementBase : ktsu.TUI.Core.Elements.UIElementBase
+	{
+		protected override void OnRender(IConsoleProvider provider)
+		{
+		}
+	}
+
+	/// <summary>
+	/// An IUIElement implemented directly, relying on the interface's default width-aware measure.
+	/// </summary>
+	private sealed class FixedSizeElement(Dimensions size) : IUIElement
+	{
+		public Dimensions Size { get; } = size;
+
+		public Position Position { get; set; }
+
+		public Dimensions Dimensions { get; set; }
+
+		public bool IsVisible { get; set; } = true;
+
+		public IUIContainer? Parent { get; set; }
+
+		public event EventHandler? Invalidated;
+
+		public void Render(IConsoleProvider provider)
+		{
+		}
+
+		public bool HandleInput(InputResult input) => false;
+
+		public Dimensions CalculateRequiredDimensions() => Size;
+
+		public void Invalidate() => Invalidated?.Invoke(this, EventArgs.Empty);
+	}
 }
