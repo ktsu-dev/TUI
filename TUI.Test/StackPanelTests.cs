@@ -419,4 +419,66 @@ public sealed class StackPanelTests
 
 		Assert.IsEmpty(provider.Writes, "a panel with no content area should draw none of its children");
 	}
+	/// <summary>
+	/// Tests that a word-wrapped TextElement in a vertical panel is given one row per wrapped line,
+	/// not the single row its unwrapped text needs (ktsu-dev/TUI#131).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalGivesAWrappedTextElementARowPerWrappedLine()
+	{
+		// Children are added before the panel has a size, and it is then arranged once, as
+		// UIApplication does for its root. Arranging a second time would hide the bug, because the
+		// first pass leaves the text with a width it then wraps against.
+		TextElement text = new("hello world foo") { WordWrap = true };
+		StackPanel panel = [text];
+		panel.Dimensions = new Dimensions(5, 10);
+		panel.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(new Dimensions(5, 3), text.Dimensions);
+		Assert.AreEqual(new Position(0, 0), Assert.ContainsSingle(provider.WritesOf("hello")).Position);
+		Assert.AreEqual(new Position(0, 1), Assert.ContainsSingle(provider.WritesOf("world")).Position);
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("foo")).Position);
+	}
+
+	/// <summary>
+	/// Tests that the child after a wrapped TextElement starts below all of its wrapped lines.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalPlacesTheNextChildBelowAWrappedTextElement()
+	{
+		StackPanel panel = [new TextElement("hello world") { WordWrap = true }, new TextElement("next")];
+		panel.Dimensions = new Dimensions(5, 10);
+		panel.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("next")).Position);
+	}
+
+	/// <summary>
+	/// Tests that a vertical panel inside a vertical panel passes its width down, so wrapped text in
+	/// the inner panel is measured against the width it will actually get.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelNestedVerticalPanelsWrapTextToTheInnerContentWidth()
+	{
+		StackPanel inner = new() { Padding = new Padding(1, 0, 0, 0) };
+		inner.Add(new TextElement("aaaa bbbb") { WordWrap = true });
+		StackPanel outer = [inner, new TextElement("next")];
+		outer.Dimensions = new Dimensions(5, 10);
+		outer.ArrangeChildren();
+		inner.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		outer.Render(provider);
+
+		Assert.AreEqual(new Dimensions(5, 2), inner.Dimensions);
+		Assert.AreEqual(new Position(1, 0), Assert.ContainsSingle(provider.WritesOf("aaaa")).Position);
+		Assert.AreEqual(new Position(1, 1), Assert.ContainsSingle(provider.WritesOf("bbbb")).Position);
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("next")).Position);
+	}
 }

@@ -100,10 +100,26 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 		return requiredDimensions.WithPadding(Padding);
 	}
 
+	/// <inheritdoc />
+	protected override Dimensions OnCalculateRequiredDimensions(int availableWidth)
+	{
+		Dimensions requiredDimensions = OnCalculateRequiredDimensionsForChildren(Math.Max(0, availableWidth - Padding.Horizontal));
+		return requiredDimensions.WithPadding(Padding);
+	}
+
 	/// <summary>
 	/// When overridden in a derived class, arranges the child elements within the container
 	/// </summary>
 	protected abstract void OnArrangeChildren();
+
+	/// <summary>
+	/// When overridden in a derived class, calculates the required dimensions based on children when
+	/// the content area can be at most <paramref name="availableWidth"/> columns wide. The default
+	/// ignores the width.
+	/// </summary>
+	/// <param name="availableWidth">The width of the content area (without container padding)</param>
+	/// <returns>The calculated dimensions for children (without container padding)</returns>
+	protected virtual Dimensions OnCalculateRequiredDimensionsForChildren(int availableWidth) => OnCalculateRequiredDimensionsForChildren();
 
 	/// <summary>
 	/// When overridden in a derived class, calculates the required dimensions based on children

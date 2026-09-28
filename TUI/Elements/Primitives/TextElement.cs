@@ -130,7 +130,15 @@ public class TextElement : UIElementBase
 	}
 
 	/// <inheritdoc />
-	protected override Dimensions OnCalculateRequiredDimensions()
+	protected override Dimensions OnCalculateRequiredDimensions() => OnCalculateRequiredDimensions(Dimensions.Width);
+
+	/// <inheritdoc />
+	/// <remarks>
+	/// Wrapped text is measured against <paramref name="availableWidth"/> rather than the element's
+	/// current width, which is still zero before its first arrange and would report the unwrapped
+	/// text as a single line (ktsu-dev/TUI#131).
+	/// </remarks>
+	protected override Dimensions OnCalculateRequiredDimensions(int availableWidth)
 	{
 		if (string.IsNullOrEmpty(Text))
 		{
@@ -141,7 +149,7 @@ public class TextElement : UIElementBase
 
 		string[] lines = SplitIntoLines(
 			Text,
-			WordWrap && Dimensions.Width > 0 ? Math.Max(1, Dimensions.Width - Padding.Horizontal) : 0);
+			WordWrap && availableWidth > 0 ? Math.Max(1, availableWidth - Padding.Horizontal) : 0);
 
 		int maxWidth = lines.Max(line => line.Length);
 		int height = lines.Length;

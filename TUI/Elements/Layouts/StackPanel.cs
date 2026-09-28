@@ -90,7 +90,12 @@ public class StackPanel : UIContainerBase
 		foreach (IUIElement child in GetVisibleChildren())
 		{
 			unplaced.Remove(child);
-			Dimensions childDimensions = child.CalculateRequiredDimensions();
+
+			// A vertical child's width is known before its height, so it is measured against that
+			// width. Word-wrapped text needs this to report one row per wrapped line (ktsu-dev/TUI#131).
+			Dimensions childDimensions = Orientation == Orientation.Vertical
+				? child.CalculateRequiredDimensions(contentArea.Width)
+				: child.CalculateRequiredDimensions();
 
 			if (Orientation == Orientation.Vertical)
 			{
@@ -140,7 +145,12 @@ public class StackPanel : UIContainerBase
 	}
 
 	/// <inheritdoc />
-	protected override Dimensions OnCalculateRequiredDimensionsForChildren()
+	protected override Dimensions OnCalculateRequiredDimensionsForChildren() => CalculateRequiredDimensionsForChildren(availableWidth: null);
+
+	/// <inheritdoc />
+	protected override Dimensions OnCalculateRequiredDimensionsForChildren(int availableWidth) => CalculateRequiredDimensionsForChildren(availableWidth);
+
+	private Dimensions CalculateRequiredDimensionsForChildren(int? availableWidth)
 	{
 		if (Children.Count == 0)
 		{
@@ -157,7 +167,9 @@ public class StackPanel : UIContainerBase
 
 		foreach (IUIElement? child in visibleChildren)
 		{
-			Dimensions childDimensions = child.CalculateRequiredDimensions();
+			Dimensions childDimensions = Orientation == Orientation.Vertical && availableWidth is int width
+				? child.CalculateRequiredDimensions(width)
+				: child.CalculateRequiredDimensions();
 
 			if (Orientation == Orientation.Vertical)
 			{
