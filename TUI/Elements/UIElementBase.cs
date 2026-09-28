@@ -100,6 +100,9 @@ public abstract class UIElementBase : IUIElement
 	public virtual Dimensions CalculateRequiredDimensions() => OnCalculateRequiredDimensions();
 
 	/// <inheritdoc />
+	public virtual Dimensions CalculateRequiredDimensions(int availableWidth) => OnCalculateRequiredDimensions(availableWidth);
+
+	/// <inheritdoc />
 	public void Invalidate()
 	{
 		IsDirty = true;
@@ -125,6 +128,14 @@ public abstract class UIElementBase : IUIElement
 	/// </summary>
 	/// <returns>The calculated dimensions</returns>
 	protected virtual Dimensions OnCalculateRequiredDimensions() => Dimensions;
+
+	/// <summary>
+	/// When overridden in a derived class, calculates the required dimensions when the element can
+	/// be at most <paramref name="availableWidth"/> columns wide
+	/// </summary>
+	/// <param name="availableWidth">The width the element will be given</param>
+	/// <returns>The calculated dimensions</returns>
+	protected virtual Dimensions OnCalculateRequiredDimensions(int availableWidth) => OnCalculateRequiredDimensions();
 
 	/// <summary>
 	/// Gets the content area (dimensions minus padding)

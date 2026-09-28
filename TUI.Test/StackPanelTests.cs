@@ -419,4 +419,150 @@ public sealed class StackPanelTests
 
 		Assert.IsEmpty(provider.Writes, "a panel with no content area should draw none of its children");
 	}
+	/// <summary>
+	/// Tests that a word-wrapped TextElement in a vertical panel is given one row per wrapped line,
+	/// not the single row its unwrapped text needs (ktsu-dev/TUI#131).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalGivesAWrappedTextElementARowPerWrappedLine()
+	{
+		// Children are added before the panel has a size, and it is then arranged once, as
+		// UIApplication does for its root. Arranging a second time would hide the bug, because the
+		// first pass leaves the text with a width it then wraps against.
+		TextElement text = new("hello world foo") { WordWrap = true };
+		StackPanel panel = [text];
+		panel.Dimensions = new Dimensions(5, 10);
+		panel.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(new Dimensions(5, 3), text.Dimensions);
+		Assert.AreEqual(new Position(0, 0), Assert.ContainsSingle(provider.WritesOf("hello")).Position);
+		Assert.AreEqual(new Position(0, 1), Assert.ContainsSingle(provider.WritesOf("world")).Position);
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("foo")).Position);
+	}
+
+	/// <summary>
+	/// Tests that the child after a wrapped TextElement starts below all of its wrapped lines.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalPlacesTheNextChildBelowAWrappedTextElement()
+	{
+		StackPanel panel = [new TextElement("hello world") { WordWrap = true }, new TextElement("next")];
+		panel.Dimensions = new Dimensions(5, 10);
+		panel.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("next")).Position);
+	}
+
+	/// <summary>
+	/// Tests that a vertical panel inside a vertical panel passes its width down, so wrapped text in
+	/// the inner panel is measured against the width it will actually get.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelNestedVerticalPanelsWrapTextToTheInnerContentWidth()
+	{
+		StackPanel inner = new() { Padding = new Padding(1, 0, 0, 0) };
+		inner.Add(new TextElement("aaaa bbbb") { WordWrap = true });
+		StackPanel outer = [inner, new TextElement("next")];
+		outer.Dimensions = new Dimensions(5, 10);
+		outer.ArrangeChildren();
+		inner.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		outer.Render(provider);
+
+		Assert.AreEqual(new Dimensions(5, 2), inner.Dimensions);
+		Assert.AreEqual(new Position(1, 0), Assert.ContainsSingle(provider.WritesOf("aaaa")).Position);
+		Assert.AreEqual(new Position(1, 1), Assert.ContainsSingle(provider.WritesOf("bbbb")).Position);
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("next")).Position);
+	}
+	/// <summary>
+	/// Tests that measuring a vertical panel with no width, as a parent that does not know one does,
+	/// leaves wrapped text unwrapped rather than guessing a width.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelRequiredDimensionsWithoutAWidthMeasureWrappedTextUnwrapped()
+	{
+		StackPanel panel = [new TextElement("hello world") { WordWrap = true }];
+
+		Assert.AreEqual(new Dimensions(11, 1), panel.CalculateRequiredDimensions());
+		Assert.AreEqual(new Dimensions(5, 2), panel.CalculateRequiredDimensions(5));
+	}
+
+	/// <summary>
+	/// Tests that elements whose size does not depend on their width, including ones that implement
+	/// IUIElement directly, are measured and placed the same as before the width-aware measure.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalMeasuresWidthIndependentElementsAtTheirOwnSize()
+	{
+		FixedSizeElement direct = new(new Dimensions(3, 2));
+		TextElement next = new("next");
+		StackPanel panel = [direct, next];
+		panel.Dimensions = new Dimensions(10, 10);
+		panel.ArrangeChildren();
+
+		FixedSizeElementBase derived = new() { Dimensions = new Dimensions(4, 3) };
+
+		Assert.AreEqual(direct.Size, ((IUIElement)direct).CalculateRequiredDimensions(1));
+		Assert.AreEqual(new Dimensions(3, 2), direct.Dimensions);
+		Assert.AreEqual(new Position(0, 2), next.Position);
+		Assert.AreEqual(derived.CalculateRequiredDimensions(), derived.CalculateRequiredDimensions(1));
+	}
+
+	/// <summary>
+	/// Tests that a container that does not use the available width, such as BorderElement, measures
+	/// the same with or without one.
+	/// </summary>
+	[TestMethod]
+	public void ContainerWithoutAWidthAwareLayoutMeasuresTheSameWithAWidth()
+	{
+		BorderElement border = [new TextElement("abc")];
+
+		Assert.AreEqual(border.CalculateRequiredDimensions(), border.CalculateRequiredDimensions(2));
+	}
+
+	/// <summary>
+	/// A UIElementBase whose size is whatever it was given, and which does not override the
+	/// width-aware measure.
+	/// </summary>
+	private sealed class FixedSizeElementBase : ktsu.TUI.Core.Elements.UIElementBase
+	{
+		protected override void OnRender(IConsoleProvider provider)
+		{
+		}
+	}
+
+	/// <summary>
+	/// An IUIElement implemented directly, relying on the interface's default width-aware measure.
+	/// </summary>
+	private sealed class FixedSizeElement(Dimensions size) : IUIElement
+	{
+		public Dimensions Size { get; } = size;
+
+		public Position Position { get; set; }
+
+		public Dimensions Dimensions { get; set; }
+
+		public bool IsVisible { get; set; } = true;
+
+		public IUIContainer? Parent { get; set; }
+
+		public event EventHandler? Invalidated;
+
+		public void Render(IConsoleProvider provider)
+		{
+		}
+
+		public bool HandleInput(InputResult input) => false;
+
+		public Dimensions CalculateRequiredDimensions() => Size;
+
+		public void Invalidate() => Invalidated?.Invoke(this, EventArgs.Empty);
+	}
 }

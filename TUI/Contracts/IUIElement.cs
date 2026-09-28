@@ -54,6 +54,19 @@ public interface IUIElement
 	public Dimensions CalculateRequiredDimensions();
 
 	/// <summary>
+	/// Calculates the required dimensions for the element when it can be at most
+	/// <paramref name="availableWidth"/> columns wide
+	/// </summary>
+	/// <remarks>
+	/// A layout calls this when it knows the width it will give a child but not yet its height, so an
+	/// element whose height depends on its width, such as word-wrapped text, can report the height it
+	/// needs at that width. The default ignores the width.
+	/// </remarks>
+	/// <param name="availableWidth">The width the element will be given</param>
+	/// <returns>The calculated dimensions</returns>
+	public Dimensions CalculateRequiredDimensions(int availableWidth) => CalculateRequiredDimensions();
+
+	/// <summary>
 	/// Marks the element as changed since its last draw, notifies its parent, and raises the
 	/// invalidated event
 	/// </summary>
