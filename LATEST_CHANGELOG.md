@@ -2,6 +2,7 @@
 
 Changes since v1.0.0:
 
+- Fix analyzer errors that fail the TUI.Cli release publish ([@Claude](https://github.com/Claude))
 - fix: measure a container's children from its content origin [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - fix: move a child out of its old container when it is added to another [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - Fix formatting in SampleCLI.cs flagged by IDE0055 ([@Claude](https://github.com/Claude))
