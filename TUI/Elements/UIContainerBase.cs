@@ -146,14 +146,17 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 			return Dimensions.Empty;
 		}
 
+		// Children sit at absolute screen positions, so measure them from the content origin; the
+		// container's own position and padding are not part of the content's size
+		Position origin = GetContentPosition();
 		int maxWidth = 0;
 		int maxHeight = 0;
 
 		foreach (IUIElement child in _children)
 		{
 			Dimensions childDimensions = child.CalculateRequiredDimensions();
-			int childRight = child.Position.X + childDimensions.Width;
-			int childBottom = child.Position.Y + childDimensions.Height;
+			int childRight = Math.Max(0, child.Position.X - origin.X + childDimensions.Width);
+			int childBottom = Math.Max(0, child.Position.Y - origin.Y + childDimensions.Height);
 
 			maxWidth = Math.Max(maxWidth, childRight);
 			maxHeight = Math.Max(maxHeight, childBottom);
