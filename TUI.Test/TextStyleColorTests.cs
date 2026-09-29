@@ -108,18 +108,42 @@ public sealed class TextStyleColorTests
 	/// Tests that a color with no known name survives a getter/setter round trip.
 	/// </summary>
 	/// <remarks>
-	/// The getter reports <see cref="Color.Name"/>, which for an unnamed color is a bare ARGB hex
-	/// string. Copying a style with <c>style with { Foreground = other.Foreground }</c> has to keep
-	/// working, so validation cannot reject what the getter itself produces.
+	/// Copying a style with <c>style with { Foreground = other.Foreground }</c> has to keep
+	/// working, so validation cannot reject what the getter itself produces. The low-alpha rows
+	/// used to fail because <see cref="Color.Name"/> drops leading zeros: alpha <c>0x0A</c> gave a
+	/// seven-digit name the setter rejected, and alpha <c>0x00</c> gave six digits the setter read
+	/// as an opaque color (ktsu-dev/TUI#142).
 	/// </remarks>
+	/// <param name="argb">The packed ARGB value of the color to round trip.</param>
 	[TestMethod]
-	public void UnnamedColorRoundTripsThroughTheStringProperty()
+	[DataRow(unchecked((int)0xFF010203))]
+	[DataRow(unchecked((int)0x80123456))]
+	[DataRow(0x10123456)]
+	[DataRow(0x0F123456)]
+	[DataRow(0x0A123456)]
+	[DataRow(0x01123456)]
+	[DataRow(0x00123456)]
+	[DataRow(0x00000001)]
+	[DataRow(0)]
+	public void UnnamedColorRoundTripsThroughTheStringProperty(int argb)
 	{
-		Color original = Color.FromArgb(1, 2, 3);
-		TextStyle source = new() { ForegroundColor = original };
+		Color original = Color.FromArgb(argb);
+		TextStyle source = new() { ForegroundColor = original, BackgroundColor = original };
 
-		TextStyle copy = new() { Foreground = source.Foreground };
+		TextStyle copy = new() { Foreground = source.Foreground, Background = source.Background };
 
 		Assert.AreEqual(original.ToArgb(), copy.ForegroundColor!.Value.ToArgb());
+		Assert.AreEqual(original.ToArgb(), copy.BackgroundColor!.Value.ToArgb());
+	}
+
+	/// <summary>
+	/// Tests that an unnamed color reads back as a fixed-width <c>#AARRGGBB</c> value.
+	/// </summary>
+	[TestMethod]
+	public void UnnamedColorReadsBackAsFixedWidthHex()
+	{
+		TextStyle style = new() { ForegroundColor = Color.FromArgb(0x0A, 0x12, 0x34, 0x56) };
+
+		Assert.AreEqual("#0A123456", style.Foreground);
 	}
 }
