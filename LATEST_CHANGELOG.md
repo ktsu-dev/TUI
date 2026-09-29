@@ -2,6 +2,7 @@
 
 Changes since v1.0.0:
 
+- Move CI onto the shared ci-shared.yml pipeline ([@Claude](https://github.com/Claude))
 - test: compare wrapped lines with Assert.AreSequenceEqual [patch] ([@Claude](https://github.com/Claude))
 - refactor: format TextStyle colours with a switch instead of a nested ternary [patch] ([@Claude](https://github.com/Claude))
 - fix: measure, align, wrap and clip TextElement text in terminal cells [patch] ([@Claude](https://github.com/Claude))
