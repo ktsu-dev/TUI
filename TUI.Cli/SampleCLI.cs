@@ -1,12 +1,11 @@
 // Copyright (c) 2023-2026 ktsu-dev contributors
 
-using ktsu.TUI.Core.Contracts;
+namespace ktsu.TUI.Cli;
+
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
-
-namespace ktsu.TUI.Cli;
 
 /// <summary>
 /// A sample CLI application demonstrating the TUI library
@@ -19,26 +18,26 @@ public static class SampleCLI
 	public static async Task Main()
 	{
 		// Create console provider
-		var consoleProvider = new SpectreConsoleProvider();
+		SpectreConsoleProvider consoleProvider = new();
 
 		// Create application
-		var app = new UIApplication(consoleProvider);
+		UIApplication app = new(consoleProvider);
 
 		// Create a demo UI
-		var rootPanel = CreateDemoUI();
+		StackPanel rootPanel = CreateDemoUI();
 		app.Setup(rootPanel);
 
 		// Run the application
 		Console.WriteLine("Starting TUI CLI Demo. Press ESC to exit.");
-		await app.RunAsync();
+		await app.RunAsync().ConfigureAwait(false);
 
 		Console.WriteLine("TUI CLI Demo finished.");
 	}
 
-	private static IUIElement CreateDemoUI()
+	private static StackPanel CreateDemoUI()
 	{
 		// Create main container
-		var mainPanel = new StackPanel
+		StackPanel mainPanel = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1,
@@ -46,7 +45,7 @@ public static class SampleCLI
 		};
 
 		// Add title
-		var title = new BorderElement
+		BorderElement title = new()
 		{
 			Title = "TUI Library CLI Demo",
 			TitleAlignment = HorizontalAlignment.Center,
@@ -61,7 +60,7 @@ public static class SampleCLI
 		};
 
 		// Add description
-		var description = new TextElement
+		TextElement description = new()
 		{
 			Text = "This demonstrates the TUI library's capabilities:\n" +
 				   "• Text rendering with styling\n" +
@@ -73,10 +72,10 @@ public static class SampleCLI
 		};
 
 		// Add instructions
-		var instructions = new BorderElement
+		BorderElement instructions = new()
 		{
 			Title = "Instructions",
-							BorderStyle = BorderStyle.SingleLine,
+			BorderStyle = BorderStyle.SingleLine,
 			Child = new TextElement
 			{
 				Text = "Press ESC to exit the application",
