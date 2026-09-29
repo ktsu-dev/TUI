@@ -515,9 +515,9 @@ public sealed class TextElementTests
 		element.Render(provider);
 
 		// Assert
-		CollectionAssert.AreEqual(
+		Assert.AreSequenceEqual(
 			ExpectedWrappedWideLines,
-			provider.Writes.Select(w => w.Text).ToArray());
+			provider.Writes.Select(w => w.Text));
 	}
 
 	/// <summary>
