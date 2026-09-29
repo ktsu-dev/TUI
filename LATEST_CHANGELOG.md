@@ -2,6 +2,10 @@
 
 Changes since v1.0.0:
 
+- test: compare wrapped lines with Assert.AreSequenceEqual [patch] ([@Claude](https://github.com/Claude))
+- refactor: format TextStyle colours with a switch instead of a nested ternary [patch] ([@Claude](https://github.com/Claude))
+- fix: measure, align, wrap and clip TextElement text in terminal cells [patch] ([@Claude](https://github.com/Claude))
+- fix: report unnamed TextStyle colours as fixed-width #AARRGGBB so they round trip [patch] ([@Claude](https://github.com/Claude))
 - test: cover the width-independent fallbacks of the width-aware measure [patch] ([@Claude](https://github.com/Claude))
 - fix: measure a vertical StackPanel child against the panel's width, so wrapped text gets every line [minor] ([@Claude](https://github.com/Claude))
 - fix: give StackPanel children that no longer fit no space, so they stop rendering [patch] ([@Claude](https://github.com/Claude))
