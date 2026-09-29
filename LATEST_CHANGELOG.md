@@ -2,6 +2,7 @@
 
 Changes since v1.0.0:
 
+- fix: measure a container's children from its content origin [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - fix: move a child out of its old container when it is added to another [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
 - Fix formatting in SampleCLI.cs flagged by IDE0055 ([@Claude](https://github.com/Claude))
 - Move CI onto the shared ci-shared.yml pipeline ([@Claude](https://github.com/Claude))
