@@ -23,6 +23,12 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 
 		if (!_children.Contains(child))
 		{
+			// An element lives in one container at a time, so adding it here moves it out of its old one
+			if (child.Parent is IUIContainer previous && !ReferenceEquals(previous, this))
+			{
+				previous.RemoveChild(child);
+			}
+
 			child.Parent = this;
 			_children.Add(child);
 			child.Invalidated += OnChildInvalidated;
@@ -38,7 +44,11 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 
 		if (_children.Remove(child))
 		{
-			child.Parent = null;
+			if (ReferenceEquals(child.Parent, this))
+			{
+				child.Parent = null;
+			}
+
 			child.Invalidated -= OnChildInvalidated;
 			ArrangeChildren();
 			Invalidate();
@@ -53,7 +63,11 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	{
 		foreach (IUIElement child in _children)
 		{
-			child.Parent = null;
+			if (ReferenceEquals(child.Parent, this))
+			{
+				child.Parent = null;
+			}
+
 			child.Invalidated -= OnChildInvalidated;
 		}
 
