@@ -2,6 +2,8 @@
 
 Changes since v1.0.0:
 
+- fix: move a child out of its old container when it is added to another [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- Fix formatting in SampleCLI.cs flagged by IDE0055 ([@Claude](https://github.com/Claude))
 - Move CI onto the shared ci-shared.yml pipeline ([@Claude](https://github.com/Claude))
 - test: compare wrapped lines with Assert.AreSequenceEqual [patch] ([@Claude](https://github.com/Claude))
 - refactor: format TextStyle colours with a switch instead of a nested ternary [patch] ([@Claude](https://github.com/Claude))
