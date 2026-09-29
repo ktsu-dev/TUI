@@ -442,4 +442,107 @@ public sealed class TextElementTests
 			"No write may extend past the six-column console");
 		Assert.ContainsSingle(provider.WritesOf("xy"));
 	}
+
+	private static readonly string[] ExpectedWrappedWideLines = ["日本", "語テ", "キス", "ト", "😀😀", "😀"];
+
+	/// <summary>
+	/// Wide text inside a border must be clipped to the content area by terminal cells, not by
+	/// chars: nine CJK ideographs are eighteen cells, so they used to run over the right border
+	/// (ktsu-dev/TUI#141).
+	/// </summary>
+	[TestMethod]
+	public void WideTextInABorderDoesNotDrawPastTheContentArea()
+	{
+		// Arrange
+		BorderElement border = [];
+		border.Position = Position.Origin;
+		border.Dimensions = new Dimensions(11, 3);
+		border.Child = new TextElement("日本語テキスト表示");
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		border.Render(provider);
+
+		// Assert
+		RecordingConsoleProvider.Write write = provider.WritesOf("日本語テ").Single();
+		Assert.AreEqual(1, write.Position.X);
+		Assert.AreEqual(8, CellWidth.Of(write.Text), "Only four two-cell ideographs fit in nine cells");
+		Assert.IsLessThanOrEqualTo(10, write.Position.X + CellWidth.Of(write.Text), "The text must stop before the right border");
+	}
+
+	/// <summary>
+	/// Clipping at an odd width must not split an emoji's surrogate pair, which used to leave a
+	/// lone high surrogate at the end of the write (ktsu-dev/TUI#141).
+	/// </summary>
+	[TestMethod]
+	public void ClippingNeverSplitsASurrogatePair()
+	{
+		// Arrange
+		TextElement element = new()
+		{
+			Text = "😀😀😀😀😀",
+			Position = Position.Origin,
+			Dimensions = new Dimensions(9, 1),
+		};
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		string written = provider.Writes.Single().Text;
+		Assert.IsFalse(char.IsSurrogate(written[^1]) && !char.IsLowSurrogate(written[^1]), $"'{written}' ends in a lone high surrogate");
+		Assert.IsLessThanOrEqualTo(9, CellWidth.Of(written));
+	}
+
+	/// <summary>
+	/// Wrapping must break wide text by cells and never inside a surrogate pair (ktsu-dev/TUI#141).
+	/// </summary>
+	[TestMethod]
+	public void WrappingBreaksWideTextByCells()
+	{
+		// Arrange
+		TextElement element = new()
+		{
+			Text = "日本語テキスト 😀😀😀",
+			WordWrap = true,
+			Position = Position.Origin,
+			Dimensions = new Dimensions(5, 10),
+		};
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.AreSequenceEqual(
+			ExpectedWrappedWideLines,
+			provider.Writes.Select(w => w.Text));
+	}
+
+	/// <summary>
+	/// Alignment and measurement count cells, so right-aligned wide text ends at the right edge and
+	/// the measured width of three ideographs is six (ktsu-dev/TUI#141).
+	/// </summary>
+	[TestMethod]
+	public void WideTextIsMeasuredAndAlignedInCells()
+	{
+		// Arrange
+		TextElement element = new()
+		{
+			Text = "日本語",
+			Position = Position.Origin,
+			Dimensions = new Dimensions(10, 1),
+			HorizontalAlignment = HorizontalAlignment.Right,
+		};
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+		Dimensions required = element.CalculateRequiredDimensions();
+
+		// Assert
+		Assert.AreEqual(6, required.Width);
+		Assert.AreEqual(4, provider.Writes.Single().Position.X);
+	}
 }
