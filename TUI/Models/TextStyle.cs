@@ -79,12 +79,12 @@ public readonly record struct TextStyle
 	/// alpha of zero yields six digits, which the setter reads as an opaque <c>RRGGBB</c>
 	/// (ktsu-dev/TUI#142).
 	/// </remarks>
-	private static string? FormatColor(Color? color) =>
-		color is not { } value
-			? null
-			: value.IsKnownColor
-				? value.Name
-				: $"#{value.ToArgb():X8}";
+	private static string? FormatColor(Color? color) => color switch
+	{
+		null => null,
+		{ IsKnownColor: true } known => known.Name,
+		{ } unnamed => $"#{unnamed.ToArgb():X8}",
+	};
 
 	/// <summary>
 	/// Converts a color string to a <see cref="Color"/>, rejecting values that name no color.
