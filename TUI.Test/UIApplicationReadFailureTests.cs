@@ -49,6 +49,25 @@ public sealed class UIApplicationReadFailureTests
 	}
 
 	/// <summary>
+	/// The other exception the loop treats as recoverable is bounded the same way.
+	/// </summary>
+	[TestMethod]
+	public async Task AReadThatAlwaysThrowsArgumentExceptionEndsTheRun()
+	{
+		FailingReadConsoleProvider provider = new(failures: int.MaxValue, () => new ArgumentException("Unreadable input."));
+		UIApplication app = new(provider) { InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "A read that always fails should end the run");
+		await Assert.ThrowsExactlyAsync<ArgumentException>(() => run).ConfigureAwait(false);
+		Assert.AreEqual(UIApplication.MaxConsecutiveReadFailures, provider.ReadCount);
+	}
+
+	/// <summary>
 	/// An occasional failed read is still tolerated: the run carries on and ends normally.
 	/// </summary>
 	[TestMethod]
@@ -71,7 +90,7 @@ public sealed class UIApplicationReadFailureTests
 	/// A provider whose first <c>failures</c> reads fail the way <c>Console.ReadKey</c> does with
 	/// redirected input, and whose next read is an exit key.
 	/// </summary>
-	private sealed class FailingReadConsoleProvider(int failures) : IConsoleProvider
+	private sealed class FailingReadConsoleProvider(int failures, Func<Exception>? failure = null) : IConsoleProvider
 	{
 		private int readCount;
 
@@ -91,7 +110,7 @@ public sealed class UIApplicationReadFailureTests
 		{
 			int count = Interlocked.Increment(ref readCount);
 			return count <= failures
-				? Task.FromException<InputResult>(new InvalidOperationException("Cannot read keys when console input has been redirected."))
+				? Task.FromException<InputResult>(failure?.Invoke() ?? new InvalidOperationException("Cannot read keys when console input has been redirected."))
 				: Task.FromResult(InputResult.Exit());
 		}
 
