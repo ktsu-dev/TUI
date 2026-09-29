@@ -50,7 +50,7 @@ public static class SampleCLI
 		{
 			Title = "TUI Library CLI Demo",
 			TitleAlignment = HorizontalAlignment.Center,
-							BorderStyle = BorderStyle.DoubleLine,
+			BorderStyle = BorderStyle.DoubleLine,
 			Child = new TextElement
 			{
 				Text = "Welcome to the TUI Library!",
@@ -64,11 +64,11 @@ public static class SampleCLI
 		var description = new TextElement
 		{
 			Text = "This demonstrates the TUI library's capabilities:\n" +
-			       "• Text rendering with styling\n" +
-			       "• Border elements with titles\n" +
-			       "• Layout containers (StackPanel)\n" +
-			       "• Padding and spacing\n" +
-			       "• Input handling",
+				   "• Text rendering with styling\n" +
+				   "• Border elements with titles\n" +
+				   "• Layout containers (StackPanel)\n" +
+				   "• Padding and spacing\n" +
+				   "• Input handling",
 			Style = new TextStyle { Foreground = "cyan" }
 		};
 
