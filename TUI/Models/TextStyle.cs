@@ -48,7 +48,7 @@ public readonly record struct TextStyle
 	/// <exception cref="ArgumentException">The value is neither a known color name nor a hex value.</exception>
 	public string? Foreground
 	{
-		get => ForegroundColor?.Name;
+		get => FormatColor(ForegroundColor);
 		init => ForegroundColor = ParseColor(value, nameof(Foreground));
 	}
 
@@ -60,9 +60,31 @@ public readonly record struct TextStyle
 	/// <exception cref="ArgumentException">The value is neither a known color name nor a hex value.</exception>
 	public string? Background
 	{
-		get => BackgroundColor?.Name;
+		get => FormatColor(BackgroundColor);
 		init => BackgroundColor = ParseColor(value, nameof(Background));
 	}
+
+	/// <summary>
+	/// Converts a <see cref="Color"/> to the string the <see cref="Foreground"/> and
+	/// <see cref="Background"/> getters report, which the setters accept back unchanged.
+	/// </summary>
+	/// <param name="color">The color to format.</param>
+	/// <returns>
+	/// The color's name when it is a known color, otherwise a fixed-width <c>#AARRGGBB</c> value,
+	/// or <see langword="null"/> when there is no color.
+	/// </returns>
+	/// <remarks>
+	/// <see cref="Color.Name"/> is not used for an unnamed color because it drops leading zeros:
+	/// an alpha below <c>0x10</c> yields seven digits or fewer, which the setter rejects, and an
+	/// alpha of zero yields six digits, which the setter reads as an opaque <c>RRGGBB</c>
+	/// (ktsu-dev/TUI#142).
+	/// </remarks>
+	private static string? FormatColor(Color? color) => color switch
+	{
+		null => null,
+		{ IsKnownColor: true } known => known.Name,
+		{ } unnamed => $"#{unnamed.ToArgb():X8}",
+	};
 
 	/// <summary>
 	/// Converts a color string to a <see cref="Color"/>, rejecting values that name no color.
@@ -95,8 +117,8 @@ public readonly record struct TextStyle
 
 	/// <summary>
 	/// Parses <c>#RRGGBB</c>, <c>#AARRGGBB</c>, <c>RRGGBB</c> and <c>AARRGGBB</c> color values.
-	/// The bare forms are what the <see cref="Foreground"/> and <see cref="Background"/> getters
-	/// emit for a color that has no known name, so a value read from one can be assigned back.
+	/// The <c>#AARRGGBB</c> form is what the <see cref="Foreground"/> and <see cref="Background"/>
+	/// getters emit for a color that has no known name, so a value read from one can be assigned back.
 	/// </summary>
 	/// <param name="value">The candidate hex value.</param>
 	/// <param name="color">The parsed color, when this method returns <see langword="true"/>.</param>
