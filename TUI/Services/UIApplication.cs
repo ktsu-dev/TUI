@@ -94,6 +94,16 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	internal TimeSpan ResizePollInterval { get; init; } = TimeSpan.FromMilliseconds(100);
 
 	/// <summary>
+	/// How many reads in a row may fail before the input loop gives up and ends the run
+	/// </summary>
+	/// <remarks>
+	/// An occasional failed read is tolerated, but a read that can never succeed, such as
+	/// <c>Console.ReadKey</c> with stdin redirected, would otherwise be retried in a tight loop
+	/// forever at full CPU (ktsu-dev/TUI#143).
+	/// </remarks>
+	internal const int MaxConsecutiveReadFailures = 10;
+
+	/// <summary>
 	/// The terminal size the current layout was computed for, or null before the first render
 	/// </summary>
 	private Models.Dimensions? _observedConsoleDimensions;
@@ -338,9 +348,13 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		// keypress, and starting a fresh read each time it woke would leave several reads racing
 		// for the next key.
 		Task<Models.InputResult>? pendingRead = null;
+		int consecutiveReadFailures = 0;
 
 		while (!cancellationToken.IsCancellationRequested && IsRunning)
 		{
+			// Tells the catch blocks below whether the failure came from reading or from handling
+			bool readSucceeded = false;
+
 			try
 			{
 				pendingRead ??= ConsoleProvider.ReadInputAsync();
@@ -377,6 +391,8 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				Task<Models.InputResult> completedRead = pendingRead;
 				pendingRead = null;
 				Models.InputResult input = await completedRead.ConfigureAwait(false);
+				readSucceeded = true;
+				consecutiveReadFailures = 0;
 
 				if (_logger != null)
 				{
@@ -419,6 +435,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 					LogInputProcessingError(_logger, ex);
 				}
 
+				if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+				{
+					throw;
+				}
+
 				// Continue processing for recoverable errors
 			}
 			catch (ArgumentException ex)
@@ -426,6 +447,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				if (_logger != null)
 				{
 					LogInputProcessingError(_logger, ex);
+				}
+
+				if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+				{
+					throw;
 				}
 
 				// Continue processing for recoverable errors
