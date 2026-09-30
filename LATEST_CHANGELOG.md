@@ -1,7 +1,8 @@
-## v2.0.1 (patch)
+## v2.0.2 (patch)
 
-Changes since v2.0.0:
+Changes since v2.0.1:
 
-- test: cover the ArgumentException read-failure path [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
-- fix: end the run after repeated failed reads instead of spinning forever [patch] ([@matt-edmondson](https://github.com/matt-edmondson))
+- refactor: move overlong-word slicing out of WrapText [patch] ([@Claude](https://github.com/Claude))
+- fix: keep indentation and spacing when TextElement wraps words [patch] ([@Claude](https://github.com/Claude))
+- fix: invalidate each ancestor once instead of 2^depth times [patch] ([@Claude](https://github.com/Claude))
 
