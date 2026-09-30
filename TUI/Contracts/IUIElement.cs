@@ -67,8 +67,8 @@ public interface IUIElement
 	public Dimensions CalculateRequiredDimensions(int availableWidth) => CalculateRequiredDimensions();
 
 	/// <summary>
-	/// Marks the element as changed since its last draw, notifies its parent, and raises the
-	/// invalidated event
+	/// Marks the element as changed since its last draw and raises the invalidated event, which is
+	/// how the containing parent hears about the change
 	/// </summary>
 	/// <remarks>
 	/// Rendering redraws every visible element on every pass, so this does not decide whether an
