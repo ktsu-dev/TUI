@@ -150,7 +150,11 @@ public class BorderElement : UIContainerBase
 		if (!string.IsNullOrEmpty(Title) && dimensions.Width > 4)
 		{
 			int maxTitleWidth = dimensions.Width - 4; // Leave space for border and padding
-			string displayTitle = Title.Length > maxTitleWidth ? Title[..maxTitleWidth] : Title;
+
+			// A line break written to the terminal would move the rest of the title off the top
+			// border row and over the left edge, so each break becomes a space (ktsu-dev/TUI#151).
+			string singleLineTitle = Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ');
+			string displayTitle = singleLineTitle.Length > maxTitleWidth ? singleLineTitle[..maxTitleWidth] : singleLineTitle;
 			string titleWithPadding = $" {displayTitle} ";
 
 			int titleX = TitleAlignment switch

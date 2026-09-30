@@ -206,4 +206,28 @@ public sealed class BorderElementRenderTests
 		// Assert
 		Assert.IsEmpty(provider.WritesOf(" Title "));
 	}
+
+	/// <summary>
+	/// A title containing a line break stays on the top border row: no write carries the break to
+	/// the terminal, and each break is drawn as a space (ktsu-dev/TUI#151).
+	/// </summary>
+	/// <param name="title">The title under test.</param>
+	[TestMethod]
+	[DataRow("ab\ncd")]
+	[DataRow("ab\rcd")]
+	[DataRow("ab\r\ncd")]
+	public void TitleWithALineBreakIsDrawnOnOneRow(string title)
+	{
+		// Arrange
+		BorderElement element = CreateElement(width: 12, height: 4);
+		element.Title = title;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.IsFalse(provider.Writes.Any(w => w.Text.Contains('\r') || w.Text.Contains('\n')), "A write carried a line break");
+		Assert.AreEqual(0, provider.WritesOf(" ab cd ").Single().Position.Y);
+	}
 }
