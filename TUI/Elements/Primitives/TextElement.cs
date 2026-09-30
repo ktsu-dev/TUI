@@ -207,20 +207,40 @@ public class TextElement : UIElementBase
 		})];
 	}
 
+	/// <summary>
+	/// Wraps one paragraph to <paramref name="maxWidth"/> cells. Spaces are kept as written,
+	/// including leading indentation and runs between words, and are dropped only where a line
+	/// breaks; a paragraph that already fits comes back unchanged (ktsu-dev/TUI#150).
+	/// </summary>
+	/// <param name="text">The paragraph to wrap, with no line breaks in it</param>
+	/// <param name="maxWidth">The width to wrap to, in cells</param>
+	/// <returns>The wrapped lines, in order</returns>
 	private static string[] WrapText(string text, int maxWidth)
 	{
-		if (maxWidth <= 0)
+		if (maxWidth <= 0 || MeasureCells(text) <= maxWidth)
 		{
 			return [text];
 		}
 
 		List<string> lines = [];
-		string[] words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 		string currentLine = string.Empty;
+		string pendingSpaces = string.Empty;
 
-		foreach (string word in words)
+		foreach (string word in SplitKeepingSpaces(text))
 		{
-			string testLine = string.IsNullOrEmpty(currentLine) ? word : $"{currentLine} {word}";
+			if (word[0] == ' ')
+			{
+				// Spaces at the start of a wrapped line are what was left over from the break
+				if (currentLine.Length > 0 || lines.Count == 0)
+				{
+					pendingSpaces = word;
+				}
+
+				continue;
+			}
+
+			string testLine = currentLine + pendingSpaces + word;
+			pendingSpaces = string.Empty;
 
 			if (MeasureCells(testLine) <= maxWidth)
 			{
@@ -260,6 +280,26 @@ public class TextElement : UIElementBase
 		}
 
 		return [.. lines];
+	}
+
+	/// <summary>
+	/// Splits text into alternating runs of spaces and runs of everything else, so that joining
+	/// the pieces gives back the original text
+	/// </summary>
+	/// <param name="text">The text to split</param>
+	/// <returns>The runs, in order; none is empty</returns>
+	private static IEnumerable<string> SplitKeepingSpaces(string text)
+	{
+		int start = 0;
+		for (int i = 1; i <= text.Length; i++)
+		{
+			bool runIsSpaces = text[start] == ' ';
+			if (i == text.Length || text[i] == ' ' != runIsSpaces)
+			{
+				yield return text[start..i];
+				start = i;
+			}
+		}
 	}
 
 	/// <summary>
