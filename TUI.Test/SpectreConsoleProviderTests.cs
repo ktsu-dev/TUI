@@ -114,6 +114,100 @@ public sealed class SpectreConsoleProviderTests
 	}
 
 	/// <summary>
+	/// Tests that a printable key keeps its typed character as well as its key and modifiers, so
+	/// Shift+1 can be told apart from 1 (ktsu-dev/TUI#152).
+	/// </summary>
+	/// <param name="keyChar">The character the key produced.</param>
+	/// <param name="key">The key that was pressed.</param>
+	/// <param name="shift">Whether Shift was held.</param>
+	[TestMethod]
+	[DataRow('!', ConsoleKey.D1, true)]
+	[DataRow('1', ConsoleKey.D1, false)]
+	[DataRow('A', ConsoleKey.A, true)]
+	[DataRow('a', ConsoleKey.A, false)]
+	[DataRow('?', ConsoleKey.Oem2, true)]
+	[DataRow('é', ConsoleKey.Oem1, false)]
+	public void ToInputResultKeepsThePrintableCharacter(char keyChar, ConsoleKey key, bool shift)
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo(keyChar, key, shift, alt: false, control: false));
+
+		Assert.AreEqual(InputType.Keyboard, result.Type);
+		Assert.AreEqual(key, result.Key);
+		Assert.AreEqual(shift ? ConsoleModifiers.Shift : default, result.Modifiers);
+		Assert.AreEqual(keyChar, result.Character);
+	}
+
+	/// <summary>
+	/// Tests that a key read from the console arrives with its typed character (ktsu-dev/TUI#152).
+	/// </summary>
+	/// <returns>A task that completes when the test has run.</returns>
+	[TestMethod]
+	public async Task ReadInputAsyncReturnsTheTypedCharacter()
+	{
+		SpectreConsoleProvider provider = new(console: null, () => new ConsoleKeyInfo('!', ConsoleKey.D1, shift: true, alt: false, control: false));
+
+		InputResult result = await provider.ReadInputAsync().ConfigureAwait(false);
+
+		Assert.AreEqual(ConsoleKey.D1, result.Key);
+		Assert.AreEqual('!', result.Character);
+	}
+
+	/// <summary>
+	/// Tests that a key with no printable character, such as an arrow or Enter, carries no
+	/// character.
+	/// </summary>
+	/// <param name="keyChar">The character the key produced.</param>
+	/// <param name="key">The key that was pressed.</param>
+	[TestMethod]
+	[DataRow('\0', ConsoleKey.UpArrow)]
+	[DataRow('\r', ConsoleKey.Enter)]
+	[DataRow('\t', ConsoleKey.Tab)]
+	[DataRow('\b', ConsoleKey.Backspace)]
+	public void ToInputResultLeavesTheCharacterUnsetForNonPrintableKeys(char keyChar, ConsoleKey key)
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo(keyChar, key, shift: false, alt: false, control: false));
+
+		Assert.AreEqual(InputType.Keyboard, result.Type);
+		Assert.AreEqual(key, result.Key);
+		Assert.IsNull(result.Character);
+	}
+
+	/// <summary>
+	/// Tests that Escape still asks the application to exit.
+	/// </summary>
+	[TestMethod]
+	public void ToInputResultTreatsEscapeAsExit()
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo('\u001b', ConsoleKey.Escape, shift: false, alt: false, control: false));
+
+		Assert.IsTrue(result.IsExit);
+	}
+
+	/// <summary>
+	/// Tests that Ctrl+C asks the application to exit, for a host that has set
+	/// <see cref="Console.TreatControlCAsInput"/>.
+	/// </summary>
+	[TestMethod]
+	public void ToInputResultTreatsControlCAsExit()
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo('\u0003', ConsoleKey.C, shift: false, alt: false, control: true));
+
+		Assert.IsTrue(result.IsExit);
+	}
+
+	/// <summary>
+	/// Tests that C without Ctrl is ordinary typed input, not an exit request.
+	/// </summary>
+	[TestMethod]
+	public void ToInputResultTreatsPlainCAsACharacter()
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo('c', ConsoleKey.C, shift: false, alt: false, control: false));
+
+		Assert.IsFalse(result.IsExit);
+		Assert.AreEqual('c', result.Character);
+	}
+
+	/// <summary>
 	/// Tests that showing or hiding the cursor writes the DECTCEM sequence to the injected console
 	/// and does not move the cursor (ktsu-dev/TUI#153).
 	/// </summary>
