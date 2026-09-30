@@ -167,4 +167,28 @@ public sealed class SpectreConsoleProviderTests
 
 		Assert.IsTrue(result.IsExit);
 	}
+
+	/// <summary>
+	/// Tests that Ctrl+C asks the application to exit, for a host that has set
+	/// <see cref="Console.TreatControlCAsInput"/>.
+	/// </summary>
+	[TestMethod]
+	public void ToInputResultTreatsControlCAsExit()
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo('\u0003', ConsoleKey.C, shift: false, alt: false, control: true));
+
+		Assert.IsTrue(result.IsExit);
+	}
+
+	/// <summary>
+	/// Tests that C without Ctrl is ordinary typed input, not an exit request.
+	/// </summary>
+	[TestMethod]
+	public void ToInputResultTreatsPlainCAsACharacter()
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo('c', ConsoleKey.C, shift: false, alt: false, control: false));
+
+		Assert.IsFalse(result.IsExit);
+		Assert.AreEqual('c', result.Character);
+	}
 }
