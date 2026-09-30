@@ -112,4 +112,59 @@ public sealed class SpectreConsoleProviderTests
 
 		Assert.AreEqual("\u001b[3;8Habc", output.ToString());
 	}
+
+	/// <summary>
+	/// Tests that a printable key keeps its typed character as well as its key and modifiers, so
+	/// Shift+1 can be told apart from 1 (ktsu-dev/TUI#152).
+	/// </summary>
+	/// <param name="keyChar">The character the key produced.</param>
+	/// <param name="key">The key that was pressed.</param>
+	/// <param name="shift">Whether Shift was held.</param>
+	[TestMethod]
+	[DataRow('!', ConsoleKey.D1, true)]
+	[DataRow('1', ConsoleKey.D1, false)]
+	[DataRow('A', ConsoleKey.A, true)]
+	[DataRow('a', ConsoleKey.A, false)]
+	[DataRow('?', ConsoleKey.Oem2, true)]
+	[DataRow('é', ConsoleKey.Oem1, false)]
+	public void ToInputResultKeepsThePrintableCharacter(char keyChar, ConsoleKey key, bool shift)
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo(keyChar, key, shift, alt: false, control: false));
+
+		Assert.AreEqual(InputType.Keyboard, result.Type);
+		Assert.AreEqual(key, result.Key);
+		Assert.AreEqual(shift ? ConsoleModifiers.Shift : default, result.Modifiers);
+		Assert.AreEqual(keyChar, result.Character);
+	}
+
+	/// <summary>
+	/// Tests that a key with no printable character, such as an arrow or Enter, carries no
+	/// character.
+	/// </summary>
+	/// <param name="keyChar">The character the key produced.</param>
+	/// <param name="key">The key that was pressed.</param>
+	[TestMethod]
+	[DataRow('\0', ConsoleKey.UpArrow)]
+	[DataRow('\r', ConsoleKey.Enter)]
+	[DataRow('\t', ConsoleKey.Tab)]
+	[DataRow('\b', ConsoleKey.Backspace)]
+	public void ToInputResultLeavesTheCharacterUnsetForNonPrintableKeys(char keyChar, ConsoleKey key)
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo(keyChar, key, shift: false, alt: false, control: false));
+
+		Assert.AreEqual(InputType.Keyboard, result.Type);
+		Assert.AreEqual(key, result.Key);
+		Assert.IsNull(result.Character);
+	}
+
+	/// <summary>
+	/// Tests that Escape still asks the application to exit.
+	/// </summary>
+	[TestMethod]
+	public void ToInputResultTreatsEscapeAsExit()
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo('\u001b', ConsoleKey.Escape, shift: false, alt: false, control: false));
+
+		Assert.IsTrue(result.IsExit);
+	}
 }

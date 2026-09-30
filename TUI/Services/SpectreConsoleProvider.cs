@@ -77,24 +77,32 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	}
 
 	/// <inheritdoc />
-	public async Task<InputResult> ReadInputAsync()
+	public async Task<InputResult> ReadInputAsync() =>
+		await Task.Run(() => ToInputResult(Console.ReadKey(true))).ConfigureAwait(false);
+
+	/// <summary>
+	/// Converts a key read from the console into an input result.
+	/// </summary>
+	/// <param name="keyInfo">The key that was read.</param>
+	/// <returns>The input result.</returns>
+	internal static InputResult ToInputResult(ConsoleKeyInfo keyInfo)
 	{
-		return await Task.Run(() =>
+		// Handle special cases. Ctrl+C normally arrives as an interrupt signal rather than as
+		// a key, and UIApplication handles it there; this branch only fires for a host that
+		// has set Console.TreatControlCAsInput.
+		if (keyInfo.Key == ConsoleKey.Escape ||
+			(keyInfo.Key == ConsoleKey.C && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)))
 		{
-			ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+			return InputResult.Exit();
+		}
 
-			// Handle special cases. Ctrl+C normally arrives as an interrupt signal rather than as
-			// a key, and UIApplication handles it there; this branch only fires for a host that
-			// has set Console.TreatControlCAsInput.
-			if (keyInfo.Key == ConsoleKey.Escape ||
-				(keyInfo.Key == ConsoleKey.C && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)))
-			{
-				return InputResult.Exit();
-			}
-
-			// Return keyboard input
-			return InputResult.FromKey(keyInfo.Key, keyInfo.Modifiers);
-		}).ConfigureAwait(false);
+		// Keep the typed character alongside the key. Only the character tells '!' from '1', and
+		// only it reflects Caps Lock and the keyboard layout, so text entry needs it
+		// (ktsu-dev/TUI#152). The key and modifiers stay, so key-based handlers are unaffected.
+		InputResult result = InputResult.FromKey(keyInfo.Key, keyInfo.Modifiers);
+		return keyInfo.KeyChar != '\0' && !char.IsControl(keyInfo.KeyChar)
+			? result with { Character = keyInfo.KeyChar }
+			: result;
 	}
 
 	/// <inheritdoc />
