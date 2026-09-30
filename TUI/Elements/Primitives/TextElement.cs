@@ -254,24 +254,7 @@ public class TextElement : UIElementBase
 				lines.Add(currentLine);
 			}
 
-			// A word longer than max width has to be broken, and one slice is not enough:
-			// keep slicing until what is left actually fits, or the tail overflows the line.
-			string remainder = word;
-			while (MeasureCells(remainder) > maxWidth)
-			{
-				string slice = TakeCells(remainder, maxWidth);
-				if (slice.Length == 0)
-				{
-					// A single character wider than the whole line still has to go somewhere,
-					// or the loop would never shrink the remainder.
-					slice = StringInfo.GetNextTextElement(remainder);
-				}
-
-				lines.Add(slice);
-				remainder = remainder[slice.Length..];
-			}
-
-			currentLine = remainder;
+			currentLine = BreakOverlongWord(word, maxWidth, lines);
 		}
 
 		if (!string.IsNullOrEmpty(currentLine))
@@ -280,6 +263,36 @@ public class TextElement : UIElementBase
 		}
 
 		return [.. lines];
+	}
+
+	/// <summary>
+	/// Adds full-width slices of a word longer than <paramref name="maxWidth"/> to
+	/// <paramref name="lines"/>, and returns the tail that fits, to start the next line with
+	/// </summary>
+	/// <param name="word">The word to break</param>
+	/// <param name="maxWidth">The width to break it to, in cells</param>
+	/// <param name="lines">The lines to add the full slices to</param>
+	/// <returns>What is left of the word once it fits</returns>
+	private static string BreakOverlongWord(string word, int maxWidth, List<string> lines)
+	{
+		// A word longer than max width has to be broken, and one slice is not enough:
+		// keep slicing until what is left actually fits, or the tail overflows the line.
+		string remainder = word;
+		while (MeasureCells(remainder) > maxWidth)
+		{
+			string slice = TakeCells(remainder, maxWidth);
+			if (slice.Length == 0)
+			{
+				// A single character wider than the whole line still has to go somewhere,
+				// or the loop would never shrink the remainder.
+				slice = StringInfo.GetNextTextElement(remainder);
+			}
+
+			lines.Add(slice);
+			remainder = remainder[slice.Length..];
+		}
+
+		return remainder;
 	}
 
 	/// <summary>
