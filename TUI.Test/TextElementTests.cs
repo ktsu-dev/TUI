@@ -288,6 +288,49 @@ public sealed class TextElementTests
 		Assert.AreEqual("def", provider.Writes[1].Text);
 	}
 
+	private static readonly string[] ExpectedIndentedWrappedLines = ["  key:  aa", "bb  cc"];
+
+	/// <summary>
+	/// Turning on word wrap must not change a line that already fits: indentation and runs of
+	/// spaces stay as written (ktsu-dev/TUI#150).
+	/// </summary>
+	[TestMethod]
+	public void WordWrapLeavesALineThatFitsUnchanged()
+	{
+		// Arrange
+		TextElement element = CreateElement("    indented  two", width: 40, height: 3);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.AreEqual("    indented  two", provider.Writes.Single().Text);
+		Assert.AreEqual(17, element.CalculateRequiredDimensions(40).Width);
+	}
+
+	/// <summary>
+	/// A paragraph that does wrap keeps its indentation and inner spacing, and loses spaces only
+	/// where a line breaks (ktsu-dev/TUI#150).
+	/// </summary>
+	[TestMethod]
+	public void WordWrapKeepsSpacesExceptAtBreakPoints()
+	{
+		// Arrange
+		TextElement element = CreateElement("  key:  aa   bb  cc", width: 10, height: 5);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.AreSequenceEqual(
+			ExpectedIndentedWrappedLines,
+			provider.Writes.Select(w => w.Text));
+	}
+
 	/// <summary>
 	/// An element that is not visible must draw nothing.
 	/// </summary>
