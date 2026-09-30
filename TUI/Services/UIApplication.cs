@@ -270,7 +270,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	}
 
 	/// <summary>
-	/// Brings the root element's size in line with the terminal, re-arranging the tree when it changes
+	/// Brings the root element's size in line with the terminal, then re-arranges the tree
 	/// </summary>
 	/// <param name="root">The root element to size</param>
 	/// <remarks>
@@ -287,20 +287,21 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		// Adopt the terminal size when the root has none of its own, and again whenever the
 		// terminal is resized. In between, a size the host assigned to the root is left alone — a
 		// resize is the one thing that overrides it, since the old size no longer fits the window.
-		if (!resized && !root.Dimensions.IsEmpty)
+		if (resized || root.Dimensions.IsEmpty)
 		{
-			return;
+			if (resized && _logger != null)
+			{
+				LogConsoleResized(_logger, console.Width, console.Height, null);
+			}
+
+			root.Dimensions = console;
 		}
 
-		if (resized && _logger != null)
-		{
-			LogConsoleResized(_logger, console.Width, console.Height, null);
-		}
-
-		root.Dimensions = console;
-
-		// Assigning Dimensions only invalidates; it does not re-run layout. Walk the tree so every
-		// container re-arranges inside its new size, not just the root.
+		// Arrange on every pass, not only when the size changed. Showing an element, changing
+		// text, or a size the host assigned all change the layout without a resize, and skipping
+		// the arrange left them drawn with stale geometry (ktsu-dev/TUI#133). The pass already
+		// clears and redraws everything, so an arrange is cheap beside it. Assigning Dimensions
+		// only invalidates, so the tree is walked to re-arrange every container, not just the root.
 		ArrangeTree(root);
 	}
 
