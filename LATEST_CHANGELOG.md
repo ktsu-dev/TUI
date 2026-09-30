@@ -1,8 +1,6 @@
-## v2.0.2 (patch)
+## v2.0.3 (patch)
 
-Changes since v2.0.1:
+Changes since v2.0.2:
 
-- refactor: move overlong-word slicing out of WrapText [patch] ([@Claude](https://github.com/Claude))
-- fix: keep indentation and spacing when TextElement wraps words [patch] ([@Claude](https://github.com/Claude))
-- fix: invalidate each ancestor once instead of 2^depth times [patch] ([@Claude](https://github.com/Claude))
+- fix: arrange the tree on every render pass, not only on a resize [patch] ([@Claude](https://github.com/Claude))
 
