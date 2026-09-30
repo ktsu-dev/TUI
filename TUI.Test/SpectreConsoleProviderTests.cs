@@ -138,6 +138,21 @@ public sealed class SpectreConsoleProviderTests
 	}
 
 	/// <summary>
+	/// Tests that a key read from the console arrives with its typed character (ktsu-dev/TUI#152).
+	/// </summary>
+	/// <returns>A task that completes when the test has run.</returns>
+	[TestMethod]
+	public async Task ReadInputAsyncReturnsTheTypedCharacter()
+	{
+		SpectreConsoleProvider provider = new(console: null, () => new ConsoleKeyInfo('!', ConsoleKey.D1, shift: true, alt: false, control: false));
+
+		InputResult result = await provider.ReadInputAsync().ConfigureAwait(false);
+
+		Assert.AreEqual(ConsoleKey.D1, result.Key);
+		Assert.AreEqual('!', result.Character);
+	}
+
+	/// <summary>
 	/// Tests that a key with no printable character, such as an arrow or Enter, carries no
 	/// character.
 	/// </summary>

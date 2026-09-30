@@ -16,6 +16,17 @@ using Spectre.Console;
 public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProvider
 {
 	private readonly IAnsiConsole _console = console ?? AnsiConsole.Console;
+	private readonly Func<ConsoleKeyInfo> _readKey = () => Console.ReadKey(true);
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SpectreConsoleProvider"/> class that reads keys
+	/// from <paramref name="readKey"/> instead of <see cref="Console.ReadKey(bool)"/>, so tests can
+	/// feed it input.
+	/// </summary>
+	/// <param name="console">The Spectre.Console instance to use</param>
+	/// <param name="readKey">Reads the next key.</param>
+	internal SpectreConsoleProvider(IAnsiConsole? console, Func<ConsoleKeyInfo> readKey)
+		: this(console) => _readKey = readKey;
 
 	/// <inheritdoc />
 	public Dimensions Dimensions => new(_console.Profile.Width, _console.Profile.Height);
@@ -78,7 +89,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 	/// <inheritdoc />
 	public async Task<InputResult> ReadInputAsync() =>
-		await Task.Run(() => ToInputResult(Console.ReadKey(true))).ConfigureAwait(false);
+		await Task.Run(() => ToInputResult(_readKey())).ConfigureAwait(false);
 
 	/// <summary>
 	/// Converts a key read from the console into an input result.
