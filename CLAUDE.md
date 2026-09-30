@@ -54,6 +54,8 @@ Provider Abstraction (SpectreConsoleProvider)
    loop wakes on a timer (`UIApplication.ResizePollInterval`) as well as on input, because a
    resize delivers no keypress to wake it — each tick compares the size and draws only when it
    changed
+   The tree is arranged on every pass, not only on a resize: showing an element, changing text, or
+   a size the host assigned to the root all change layout without one (ktsu-dev/TUI#133)
 5. `UIContainerBase.Render()` renders itself then all visible children
 
 ## Code Patterns
