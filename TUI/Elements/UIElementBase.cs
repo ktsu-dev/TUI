@@ -103,10 +103,14 @@ public abstract class UIElementBase : IUIElement
 	public virtual Dimensions CalculateRequiredDimensions(int availableWidth) => OnCalculateRequiredDimensions(availableWidth);
 
 	/// <inheritdoc />
+	/// <remarks>
+	/// The parent hears about this through <see cref="Invalidated"/>, which every container
+	/// subscribes to when it adopts a child. Calling the parent directly as well would reach it by
+	/// two routes, doubling the count at every level (ktsu-dev/TUI#148).
+	/// </remarks>
 	public void Invalidate()
 	{
 		IsDirty = true;
-		Parent?.Invalidate();
 		Invalidated?.Invoke(this, EventArgs.Empty);
 	}
 

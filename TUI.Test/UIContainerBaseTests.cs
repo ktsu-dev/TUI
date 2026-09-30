@@ -67,4 +67,54 @@ public sealed class UIContainerBaseTests
 
 		Assert.AreEqual(0, firstInvalidations);
 	}
+
+	/// <summary>
+	/// A change deep in the tree reaches the root once, not once per route at every level
+	/// (ktsu-dev/TUI#148)
+	/// </summary>
+	[TestMethod]
+	public void AChangeNestedManyLevelsDeepInvalidatesTheRootOnce()
+	{
+		StackPanel root = [];
+		StackPanel current = root;
+		for (int i = 0; i < 15; i++)
+		{
+			StackPanel next = [];
+			current.AddChild(next);
+			current = next;
+		}
+
+		TextElement leaf = new() { Text = "x" };
+		current.AddChild(leaf);
+
+		int count = 0;
+		root.Invalidated += (_, _) => count++;
+
+		leaf.Text = "y";
+
+		Assert.AreEqual(1, count);
+	}
+
+	/// <summary>
+	/// Each ancestor between the change and the root is invalidated exactly once
+	/// </summary>
+	[TestMethod]
+	public void AChangeInvalidatesEachAncestorOnce()
+	{
+		StackPanel root = [];
+		StackPanel middle = [];
+		TextElement leaf = new() { Text = "x" };
+		root.AddChild(middle);
+		middle.AddChild(leaf);
+
+		int rootCount = 0;
+		int middleCount = 0;
+		root.Invalidated += (_, _) => rootCount++;
+		middle.Invalidated += (_, _) => middleCount++;
+
+		leaf.Text = "y";
+
+		Assert.AreEqual(1, middleCount);
+		Assert.AreEqual(1, rootCount);
+	}
 }
