@@ -191,4 +191,22 @@ public sealed class SpectreConsoleProviderTests
 		Assert.IsFalse(result.IsExit);
 		Assert.AreEqual('c', result.Character);
 	}
+
+	/// <summary>
+	/// Tests that showing or hiding the cursor writes the DECTCEM sequence to the injected console
+	/// and does not move the cursor (ktsu-dev/TUI#153).
+	/// </summary>
+	/// <param name="visible">Whether the cursor is shown.</param>
+	/// <param name="expected">The sequence expected in the captured output.</param>
+	[TestMethod]
+	[DataRow(false, "\u001b[?25l")]
+	[DataRow(true, "\u001b[?25h")]
+	public void SetCursorVisibilityWritesToTheInjectedConsoleWithoutMovingTheCursor(bool visible, string expected)
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.SetCursorVisibility(visible);
+
+		Assert.AreEqual(expected, output.ToString());
+	}
 }

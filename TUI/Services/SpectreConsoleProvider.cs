@@ -106,11 +106,11 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	}
 
 	/// <inheritdoc />
-	public void SetCursorVisibility(bool visible)
-	{
-		_console.Cursor.SetPosition(Console.CursorLeft + 1, Console.CursorTop + 1);
-		Console.CursorVisible = visible;
-	}
+	/// <remarks>
+	/// Writes to the injected console rather than <see cref="Console"/>, and leaves the cursor where
+	/// it is (ktsu-dev/TUI#153).
+	/// </remarks>
+	public void SetCursorVisibility(bool visible) => _console.Cursor.Show(visible);
 
 	/// <inheritdoc />
 	public void SetCursorPosition(Position position)
