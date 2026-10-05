@@ -173,16 +173,17 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	{
 		List<string> parts = [];
 
-		if (style.ForegroundColor.HasValue)
+		// A terminal cannot blend, so a fully transparent color means "leave the terminal's own" and
+		// any other alpha is drawn opaque. Writing the RGB of Color.Transparent would paint white
+		// (ktsu-dev/TUI#155).
+		if (style.ForegroundColor is { A: > 0 } foreground)
 		{
-			System.Drawing.Color color = style.ForegroundColor.Value;
-			parts.Add($"#{color.R:X2}{color.G:X2}{color.B:X2}");
+			parts.Add($"#{foreground.R:X2}{foreground.G:X2}{foreground.B:X2}");
 		}
 
-		if (style.BackgroundColor.HasValue)
+		if (style.BackgroundColor is { A: > 0 } background)
 		{
-			System.Drawing.Color color = style.BackgroundColor.Value;
-			parts.Add($"on #{color.R:X2}{color.G:X2}{color.B:X2}");
+			parts.Add($"on #{background.R:X2}{background.G:X2}{background.B:X2}");
 		}
 
 		if (style.IsBold)
