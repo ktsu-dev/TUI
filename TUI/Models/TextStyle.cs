@@ -13,11 +13,19 @@ public readonly record struct TextStyle
 	/// <summary>
 	/// Gets or sets the foreground color
 	/// </summary>
+	/// <remarks>
+	/// A color with zero alpha, such as <see cref="Color.Transparent"/>, leaves the terminal's own
+	/// foreground. Terminals cannot blend, so any other alpha is drawn as if opaque.
+	/// </remarks>
 	public Color? ForegroundColor { get; init; }
 
 	/// <summary>
 	/// Gets or sets the background color
 	/// </summary>
+	/// <remarks>
+	/// A color with zero alpha, such as <see cref="Color.Transparent"/>, leaves the terminal's own
+	/// background. Terminals cannot blend, so any other alpha is drawn as if opaque.
+	/// </remarks>
 	public Color? BackgroundColor { get; init; }
 
 	/// <summary>

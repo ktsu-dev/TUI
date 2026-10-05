@@ -17,13 +17,14 @@ public sealed class SpectreConsoleProviderTests
 	private const int Width = 10;
 	private const int Height = 5;
 
-	private static (SpectreConsoleProvider Provider, StringWriter Output) CreateProvider()
+	private static (SpectreConsoleProvider Provider, StringWriter Output) CreateProvider(
+		ColorSystemSupport colorSystem = ColorSystemSupport.NoColors)
 	{
 		StringWriter output = new();
 		IAnsiConsole console = AnsiConsole.Create(new AnsiConsoleSettings
 		{
 			Ansi = AnsiSupport.Yes,
-			ColorSystem = ColorSystemSupport.NoColors,
+			ColorSystem = colorSystem,
 			Interactive = InteractionSupport.No,
 			Out = new AnsiConsoleOutput(output),
 		});
@@ -223,5 +224,63 @@ public sealed class SpectreConsoleProviderTests
 		provider.SetCursorVisibility(visible);
 
 		Assert.AreEqual(expected, output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that a fully transparent background is left to the terminal rather than painted as the
+	/// opaque color its RGB channels happen to hold (ktsu-dev/TUI#155).
+	/// </summary>
+	[TestMethod]
+	public void TransparentBackgroundNameWritesNoBackground()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider(ColorSystemSupport.TrueColor);
+
+		provider.WriteAt("Hi", new Position(0, 0), new TextStyle { Foreground = "Yellow", Background = "Transparent" });
+
+		Assert.AreEqual("\u001b[1;1H\u001b[38;2;255;255;0mHi\u001b[0m", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that a zero-alpha background color writes no background SGR parameter, whatever its
+	/// RGB channels (ktsu-dev/TUI#155).
+	/// </summary>
+	[TestMethod]
+	public void ZeroAlphaBackgroundColorWritesNoBackground()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider(ColorSystemSupport.TrueColor);
+
+		provider.WriteAt("Hi", new Position(0, 0), new TextStyle { BackgroundColor = System.Drawing.Color.FromArgb(0, 0, 0, 0), IsBold = true });
+
+		Assert.DoesNotContain("48;", output.ToString());
+		Assert.Contains("Hi", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that a transparent foreground writes no foreground SGR parameter, so the text keeps the
+	/// terminal's own color (ktsu-dev/TUI#155).
+	/// </summary>
+	[TestMethod]
+	public void TransparentForegroundWritesNoForeground()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider(ColorSystemSupport.TrueColor);
+
+		provider.WriteAt("Hi", new Position(0, 0), new TextStyle { Foreground = "Transparent", Background = "Blue" });
+
+		Assert.DoesNotContain("38;", output.ToString());
+		Assert.Contains("48;2;0;0;255", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that a partially transparent color is drawn as if opaque, since a terminal cannot blend
+	/// (ktsu-dev/TUI#155).
+	/// </summary>
+	[TestMethod]
+	public void PartiallyTransparentBackgroundIsDrawnOpaque()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider(ColorSystemSupport.TrueColor);
+
+		provider.WriteAt("Hi", new Position(0, 0), new TextStyle { BackgroundColor = System.Drawing.Color.FromArgb(128, 0, 0, 255) });
+
+		Assert.Contains("48;2;0;0;255", output.ToString());
 	}
 }
