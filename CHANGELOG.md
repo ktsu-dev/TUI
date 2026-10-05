@@ -1,8 +1,8 @@
-## v2.0.6-pre.1 (prerelease)
+## v2.0.6 (patch)
 
 Changes since v2.0.5:
 
-- Bump Polyfill from 11.4.1 to 11.4.3 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- [patch] Leave the terminal's color for a transparent foreground or background ([@Claude](https://github.com/Claude))
 
 ## v2.0.5 (patch)
 
