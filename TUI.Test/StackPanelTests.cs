@@ -510,9 +510,62 @@ public sealed class StackPanelTests
 		FixedSizeElementBase derived = new() { Dimensions = new Dimensions(4, 3) };
 
 		Assert.AreEqual(direct.Size, ((IUIElement)direct).CalculateRequiredDimensions(1));
-		Assert.AreEqual(new Dimensions(3, 2), direct.Dimensions);
+		// The height is the measured one; the width spans the panel (ktsu-dev/TUI#158)
+		Assert.AreEqual(new Dimensions(10, 2), direct.Dimensions);
 		Assert.AreEqual(new Position(0, 2), next.Position);
 		Assert.AreEqual(derived.CalculateRequiredDimensions(), derived.CalculateRequiredDimensions(1));
+	}
+
+	/// <summary>
+	/// A vertical stack gives each child the panel's full width, so a centered or right-aligned
+	/// child has room to align in (ktsu-dev/TUI#158).
+	/// </summary>
+	/// <param name="alignment">The horizontal alignment under test.</param>
+	/// <param name="expectedX">The column the text should be written at.</param>
+	[TestMethod]
+	[DataRow(HorizontalAlignment.Left, 0)]
+	[DataRow(HorizontalAlignment.Center, 19)]
+	[DataRow(HorizontalAlignment.Right, 38)]
+	public void StackPanelVerticalChildAlignsWithinThePanelWidth(HorizontalAlignment alignment, int expectedX)
+	{
+		// Arrange
+		TextElement text = new("hi") { HorizontalAlignment = alignment };
+		StackPanel panel = [text];
+		panel.Position = Position.Origin;
+		panel.Dimensions = new Dimensions(40, 10);
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		panel.ArrangeChildren();
+		panel.Render(provider);
+
+		// Assert
+		Assert.AreEqual(new Dimensions(40, 1), text.Dimensions);
+		Assert.AreEqual(expectedX, provider.WritesOf("hi").Single().Position.X);
+	}
+
+	/// <summary>
+	/// A horizontal stack gives each child the panel's full height and keeps the measured width on
+	/// the stacking axis, so the stacking offsets do not change (ktsu-dev/TUI#158).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelHorizontalChildSpansThePanelHeight()
+	{
+		// Arrange
+		TextElement first = new("abc");
+		TextElement second = new("de");
+		StackPanel panel = new(Orientation.Horizontal) { Spacing = 1 };
+		panel.AddChild(first);
+		panel.AddChild(second);
+		panel.Dimensions = new Dimensions(20, 5);
+
+		// Act
+		panel.ArrangeChildren();
+
+		// Assert
+		Assert.AreEqual(new Dimensions(3, 5), first.Dimensions);
+		Assert.AreEqual(new Dimensions(2, 5), second.Dimensions);
+		Assert.AreEqual(new Position(4, 0), second.Position);
 	}
 
 	/// <summary>

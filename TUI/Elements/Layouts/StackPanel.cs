@@ -99,10 +99,11 @@ public class StackPanel : UIContainerBase
 
 			if (Orientation == Orientation.Vertical)
 			{
-				// Vertical stacking
+				// Vertical stacking. The child spans the panel's width rather than its own measured
+				// width, so it has room to apply its own horizontal alignment (ktsu-dev/TUI#158).
 				child.Position = contentPosition.Offset(0, currentOffset);
 				child.Dimensions = new Dimensions(
-					Math.Min(childDimensions.Width, contentArea.Width),
+					contentArea.Width,
 					Math.Min(childDimensions.Height, contentArea.Height - currentOffset)
 				);
 
@@ -116,11 +117,11 @@ public class StackPanel : UIContainerBase
 			}
 			else
 			{
-				// Horizontal stacking
+				// Horizontal stacking. The child spans the panel's height, matching the vertical case.
 				child.Position = contentPosition.Offset(currentOffset, 0);
 				child.Dimensions = new Dimensions(
 					Math.Min(childDimensions.Width, contentArea.Width - currentOffset),
-					Math.Min(childDimensions.Height, contentArea.Height)
+					contentArea.Height
 				);
 
 				currentOffset += child.Dimensions.Width + Spacing;
