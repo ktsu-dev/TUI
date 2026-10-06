@@ -90,7 +90,7 @@ public sealed class UIApplicationResizeTests
 		UIApplication app = new(provider) { RootElement = root };
 		app.Render();
 		Assert.AreEqual(LaunchSize.WithoutPadding(root.Padding), panel.Dimensions, "The panel should start out filling the terminal, inside the border");
-		Assert.AreEqual(WideText.Length, leaf.Dimensions.Width, "The label should start out at its full width");
+		Assert.AreEqual(panel.Dimensions.Width, leaf.Dimensions.Width, "The label should start out spanning the panel");
 
 		// Act
 		provider.Dimensions = ResizedSize;
