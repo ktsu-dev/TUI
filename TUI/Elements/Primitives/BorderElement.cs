@@ -151,9 +151,7 @@ public class BorderElement : UIContainerBase
 		{
 			int maxTitleWidth = dimensions.Width - 4; // Leave space for border and padding
 
-			// A line break written to the terminal would move the rest of the title off the top
-			// border row and over the left edge, so each break becomes a space (ktsu-dev/TUI#151).
-			string singleLineTitle = Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ');
+			string singleLineTitle = GetSingleLineTitle();
 			string displayTitle = singleLineTitle.Length > maxTitleWidth ? singleLineTitle[..maxTitleWidth] : singleLineTitle;
 			string titleWithPadding = $" {displayTitle} ";
 
@@ -186,9 +184,24 @@ public class BorderElement : UIContainerBase
 
 	/// <inheritdoc />
 	// The border itself is reserved by the Padding(1) set in the constructor, which the base
-	// class adds to this result, so only the child's own size belongs here (ktsu-dev/TUI#132)
-	protected override Dimensions OnCalculateRequiredDimensionsForChildren() =>
-		Children.Count == 0 ? Dimensions.Empty : Children.First().CalculateRequiredDimensions();
+	// class adds to this result, so only the child's own size belongs here (ktsu-dev/TUI#132).
+	// A title is drawn as " title " between the corners, so the content area must be at least
+	// two wider than the title or a layout sizes the border too narrow to show it (ktsu-dev/TUI#157).
+	protected override Dimensions OnCalculateRequiredDimensionsForChildren()
+	{
+		Dimensions childDimensions = Children.Count == 0 ? Dimensions.Empty : Children.First().CalculateRequiredDimensions();
+		if (BorderStyle == BorderStyle.None || string.IsNullOrEmpty(Title))
+		{
+			return childDimensions;
+		}
+
+		return new Dimensions(Math.Max(childDimensions.Width, GetSingleLineTitle().Length + 2), childDimensions.Height);
+	}
+
+	// A line break written to the terminal would move the rest of the title off the top
+	// border row and over the left edge, so each break becomes a space (ktsu-dev/TUI#151).
+	private string GetSingleLineTitle() =>
+		Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ');
 
 	private static BorderCharacters GetBorderCharacters(BorderStyle style)
 	{
