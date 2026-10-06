@@ -2,6 +2,7 @@
 
 namespace ktsu.TUI.Test;
 
+using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -229,5 +230,45 @@ public sealed class BorderElementRenderTests
 		// Assert
 		Assert.IsFalse(provider.Writes.Any(w => w.Text.Contains('\r') || w.Text.Contains('\n')), "A write carried a line break");
 		Assert.AreEqual(0, provider.WritesOf(" ab cd ").Single().Position.Y);
+	}
+
+	/// <summary>
+	/// A border sized by a layout is measured wide enough for its title, so a title longer than
+	/// the content is drawn in full rather than cut short or dropped (ktsu-dev/TUI#157).
+	/// </summary>
+	[TestMethod]
+	public void TitleLongerThanTheContentIsDrawnInFullInsideAStackPanel()
+	{
+		// Arrange
+		StackPanel panel = new(Orientation.Horizontal) { Spacing = 1 };
+		panel.AddChild(new BorderElement { Title = "Single", Child = new TextElement { Text = "Content" } });
+		panel.AddChild(new BorderElement { Title = "Status", Child = new TextElement { Text = "OK" } });
+		panel.Position = Position.Origin;
+		panel.Dimensions = new Dimensions(80, 24);
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		panel.ArrangeChildren();
+		panel.Render(provider);
+
+		// Assert
+		Assert.ContainsSingle(provider.WritesOf(" Single "));
+		Assert.ContainsSingle(provider.WritesOf(" Status "));
+	}
+
+	/// <summary>
+	/// The measure reserves room for the title only when a title is drawn: an untitled border, and a
+	/// <see cref="BorderStyle.None"/> border, are still exactly as wide as their content.
+	/// </summary>
+	[TestMethod]
+	public void MeasuredWidthMakesRoomForTheTitleOnlyWhenOneIsDrawn()
+	{
+		BorderElement titled = new() { Title = "Status", Child = new TextElement { Text = "OK" } };
+		BorderElement untitled = new() { Child = new TextElement { Text = "OK" } };
+		BorderElement borderless = new(BorderStyle.None) { Title = "Status", Child = new TextElement { Text = "OK" } };
+
+		Assert.AreEqual(" Status ".Length + 2, titled.CalculateRequiredDimensions().Width);
+		Assert.AreEqual("OK".Length + 2, untitled.CalculateRequiredDimensions().Width);
+		Assert.AreEqual("OK".Length + 2, borderless.CalculateRequiredDimensions().Width);
 	}
 }
