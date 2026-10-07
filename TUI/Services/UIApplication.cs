@@ -108,8 +108,45 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// </summary>
 	private Models.Dimensions? _observedConsoleDimensions;
 
+	/// <summary>
+	/// 1 when an element changed since the last render pass began, and a pass should draw it even
+	/// though no key was pressed; 0 otherwise. An int so it can be set from any thread with
+	/// <see cref="Interlocked"/>.
+	/// </summary>
+	private int _redrawRequested;
+
+	/// <summary>
+	/// The managed thread ID running <see cref="Render"/>, or 0 when no pass is in progress
+	/// </summary>
+	private int _renderingThreadId;
+
 	/// <inheritdoc />
-	public IUIElement? RootElement { get; set; }
+	/// <remarks>
+	/// The application listens to the root's <see cref="IUIElement.Invalidated"/>, which every
+	/// element bubbles up to it, so a change made outside a keypress (a timer, a background task)
+	/// is drawn on the next poll of the input loop (ktsu-dev/TUI#154).
+	/// </remarks>
+	public IUIElement? RootElement
+	{
+		get;
+		set
+		{
+			if (ReferenceEquals(field, value))
+			{
+				return;
+			}
+
+			field?.Invalidated -= OnRootInvalidated;
+
+			field = value;
+
+			if (field != null)
+			{
+				field.Invalidated += OnRootInvalidated;
+				RequestRender();
+			}
+		}
+	}
 
 	/// <inheritdoc />
 	public IConsoleProvider ConsoleProvider { get; } = Ensure.NotNull(consoleProvider);
@@ -196,6 +233,35 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		Shutdown();
 	}
 
+	/// <summary>
+	/// Asks for a render pass without drawing from the calling thread
+	/// </summary>
+	/// <remarks>
+	/// Safe to call from any thread. The pass runs on the input loop's thread within one
+	/// <see cref="ResizePollInterval"/>, so it never races with a pass already drawing. Elements
+	/// that change through <see cref="IUIElement.Invalidate"/> request one for themselves; this is
+	/// for a host that changes what is shown some other way (ktsu-dev/TUI#154).
+	/// </remarks>
+	public void RequestRender() => Interlocked.Exchange(ref _redrawRequested, 1);
+
+	/// <summary>
+	/// Requests a render pass when anything in the tree changes
+	/// </summary>
+	/// <remarks>
+	/// Only flags the request: the event can fire on any thread, and drawing belongs to the input
+	/// loop. Invalidations a render pass raises on its own thread, such as the arrange assigning
+	/// sizes, are ignored, or every pass would request the next one.
+	/// </remarks>
+	/// <param name="sender">The element that changed</param>
+	/// <param name="e">Unused</param>
+	private void OnRootInvalidated(object? sender, EventArgs e)
+	{
+		if (Volatile.Read(ref _renderingThreadId) != Environment.CurrentManagedThreadId)
+		{
+			RequestRender();
+		}
+	}
+
 	/// <inheritdoc />
 	public void Shutdown()
 	{
@@ -227,6 +293,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			}
 			return;
 		}
+
+		// This pass draws whatever was requested before it began. A change made on another thread
+		// from here on requests the next one.
+		Interlocked.Exchange(ref _redrawRequested, 0);
+		Volatile.Write(ref _renderingThreadId, Environment.CurrentManagedThreadId);
 
 		try
 		{
@@ -266,6 +337,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			{
 				LogRenderError(_logger, ex);
 			}
+		}
+		finally
+		{
+			Volatile.Write(ref _renderingThreadId, 0);
 		}
 	}
 
@@ -377,8 +452,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 					if (!pendingRead.IsCompleted)
 					{
 						// The timer won the race, so no key arrived. Redraw only if the terminal
-						// changed size while we waited, and go back to the same pending read.
-						if (HasConsoleResized())
+						// changed size or an element changed while we waited, and go back to the
+						// same pending read.
+						if (Volatile.Read(ref _redrawRequested) == 1 || HasConsoleResized())
 						{
 							Render();
 						}
