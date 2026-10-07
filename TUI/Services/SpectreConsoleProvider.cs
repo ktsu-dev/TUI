@@ -163,22 +163,6 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		return text.Substring((int)(visibleStart - start), (int)(visibleEnd - visibleStart));
 	}
 
-	private static string ReplaceControlCharacters(string text)
-	{
-		if (!text.Any(char.IsControl))
-		{
-			return text;
-		}
-
-		return string.Create(text.Length, text, static (chars, source) =>
-		{
-			for (int i = 0; i < source.Length; i++)
-			{
-				chars[i] = char.IsControl(source[i]) ? TextElement.ControlCharacterPlaceholder : source[i];
-			}
-		});
-	}
-
 	private static Position GetCursorPosition() => new(Console.CursorLeft, Console.CursorTop);
 
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
@@ -229,5 +213,21 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		}
 
 		return string.Join(" ", parts);
+	}
+
+	private static string ReplaceControlCharacters(string text)
+	{
+		if (!text.Any(char.IsControl))
+		{
+			return text;
+		}
+
+		return string.Create(text.Length, text, static (chars, source) =>
+		{
+			for (int i = 0; i < source.Length; i++)
+			{
+				chars[i] = char.IsControl(source[i]) ? TextElement.ControlCharacterPlaceholder : source[i];
+			}
+		});
 	}
 }
