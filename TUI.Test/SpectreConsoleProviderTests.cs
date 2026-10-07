@@ -2,6 +2,7 @@
 
 namespace ktsu.TUI.Test;
 
+using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -112,6 +113,62 @@ public sealed class SpectreConsoleProviderTests
 		provider.WriteAt("abcdef", new Position(7, 2));
 
 		Assert.AreEqual("\u001b[3;8Habc", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that Render draws the element at the position it is given, not at the element's own
+	/// position, and takes no cursor move from <see cref="Console"/> (ktsu-dev/TUI#156).
+	/// </summary>
+	[TestMethod]
+	public void RenderDrawsTheElementAtTheGivenPosition()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+		TextElement text = new("Hi") { Dimensions = new Dimensions(5, 1) };
+
+		provider.Render(text, new Position(4, 2));
+
+		Assert.AreEqual("\u001b[3;5HHi", output.ToString());
+		Assert.AreEqual(Position.Origin, text.Position, "Drawing elsewhere must not move the element");
+	}
+
+	/// <summary>
+	/// Tests that Render shifts everything a container draws, its children included, by the same
+	/// amount (ktsu-dev/TUI#156).
+	/// </summary>
+	[TestMethod]
+	public void RenderShiftsAContainerAndItsChildrenTogether()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+		BorderElement border = [];
+		border.Position = new Position(1, 1);
+		border.Dimensions = new Dimensions(4, 3);
+		border.Child = new TextElement("ab");
+		border.ArrangeChildren();
+		(SpectreConsoleProvider expectedProvider, StringWriter expected) = CreateProvider();
+		border.Position = new Position(5, 2);
+		border.ArrangeChildren();
+		border.Render(expectedProvider);
+		border.Position = new Position(1, 1);
+		border.ArrangeChildren();
+
+		provider.Render(border, new Position(5, 2));
+
+		Assert.AreEqual(expected.ToString(), output.ToString());
+		StringAssert.Contains(output.ToString(), "\u001b[4;7Hab", "The child should be drawn inside the shifted border");
+	}
+
+	/// <summary>
+	/// Tests that rendering an element at the position it already has draws it there unchanged.
+	/// </summary>
+	[TestMethod]
+	public void RenderAtTheElementsOwnPositionDrawsItThere()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+		TextElement text = new("Hi") { Position = new Position(3, 1), Dimensions = new Dimensions(5, 1) };
+
+		provider.Render(text, new Position(3, 1));
+
+		Assert.AreEqual("\u001b[2;4HHi", output.ToString());
 	}
 
 	/// <summary>

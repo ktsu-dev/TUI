@@ -20,7 +20,8 @@ public interface IConsoleProvider
 	public void Clear();
 
 	/// <summary>
-	/// Renders a UI element at the specified position
+	/// Renders a UI element with its top-left corner at the specified position, wherever its own
+	/// <see cref="IUIElement.Position"/> places it
 	/// </summary>
 	/// <param name="element">The UI element to render</param>
 	/// <param name="position">The position to render at</param>

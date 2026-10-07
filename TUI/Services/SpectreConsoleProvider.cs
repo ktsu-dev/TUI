@@ -35,6 +35,12 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	public void Clear() => _console.Clear();
 
 	/// <inheritdoc />
+	/// <remarks>
+	/// Elements draw at their own <see cref="IUIElement.Position"/>, and every write moves the
+	/// cursor itself, so moving the cursor first used to have no effect and the element was drawn
+	/// where it already was. Its writes are shifted by the difference instead, which leaves the
+	/// element and its layout untouched (ktsu-dev/TUI#156).
+	/// </remarks>
 	public void Render(IUIElement element, Position position)
 	{
 		Ensure.NotNull(element);
@@ -44,17 +50,8 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 			return;
 		}
 
-		// Save current cursor position
-		Position originalPosition = GetCursorPosition();
-
-		// Set cursor to render position
-		SetCursorPosition(position);
-
-		// Let the element render itself
-		element.Render(this);
-
-		// Restore cursor position
-		SetCursorPosition(originalPosition);
+		Position offset = position - element.Position;
+		element.Render(offset == Position.Origin ? this : new OffsetConsoleProvider(this, offset));
 	}
 
 	/// <inheritdoc />
@@ -156,8 +153,6 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		visiblePosition = new Position((int)visibleStart, position.Y);
 		return text.Substring((int)(visibleStart - start), (int)(visibleEnd - visibleStart));
 	}
-
-	private static Position GetCursorPosition() => new(Console.CursorLeft, Console.CursorTop);
 
 	private static Markup CreateStyledMarkup(string text, TextStyle style)
 	{
