@@ -172,6 +172,20 @@ public sealed class SpectreConsoleProviderTests
 	}
 
 	/// <summary>
+	/// Tests that Render draws nothing for an element that is not visible.
+	/// </summary>
+	[TestMethod]
+	public void RenderDrawsNothingForAnInvisibleElement()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+		TextElement text = new("Hi") { Dimensions = new Dimensions(5, 1), IsVisible = false };
+
+		provider.Render(text, new Position(4, 2));
+
+		Assert.AreEqual(string.Empty, output.ToString());
+	}
+
+	/// <summary>
 	/// Tests that a printable key keeps its typed character as well as its key and modifiers, so
 	/// Shift+1 can be told apart from 1 (ktsu-dev/TUI#152).
 	/// </summary>
