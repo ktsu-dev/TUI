@@ -1,6 +1,4 @@
-## v2.0.8 (patch)
+## v2.0.8
 
-Changes since v2.0.7:
-
-- fix: draw changes made outside a keypress by redrawing when the tree invalidates [patch] ([@Claude](https://github.com/Claude))
+No significant changes detected since v2.0.8.
 
