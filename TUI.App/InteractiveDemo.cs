@@ -222,7 +222,7 @@ internal sealed class InteractiveDemo
 	/// <returns>True when the key was one of the advertised controls, false otherwise</returns>
 	/// <remarks>
 	/// Only <see cref="InputType.Keyboard"/> input is acted on, because that is all
-	/// <see cref="SpectreConsoleProvider.ReadInputAsync"/> produces — every key arrives as
+	/// <see cref="SpectreConsoleProvider.ReadInputAsync()"/> produces — every key arrives as
 	/// <see cref="InputResult.FromKey"/>, and Escape arrives as an exit that
 	/// <see cref="UIApplication.ProcessInputAsync"/> consumes before reaching any element.
 	/// </remarks>

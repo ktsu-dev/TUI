@@ -14,6 +14,11 @@ using Spectre.Console;
 [TestClass]
 public sealed class SpectreConsoleProviderTests
 {
+	/// <summary>
+	/// Gets or sets the test context MSTest injects.
+	/// </summary>
+	public TestContext TestContext { get; set; } = null!;
+
 	private const int Width = 10;
 	private const int Height = 5;
 
@@ -151,6 +156,52 @@ public sealed class SpectreConsoleProviderTests
 
 		Assert.AreEqual(ConsoleKey.D1, result.Key);
 		Assert.AreEqual('!', result.Character);
+	}
+
+	/// <summary>
+	/// Tests that a cancellable read waits for a key to be available and then reads it.
+	/// </summary>
+	/// <returns>A task that completes when the test has run.</returns>
+	[TestMethod]
+	public async Task CancellableReadInputAsyncReadsTheKeyOnceOneIsAvailable()
+	{
+		int polls = 0;
+		SpectreConsoleProvider provider = new(
+			console: null,
+			() => new ConsoleKeyInfo('a', ConsoleKey.A, shift: false, alt: false, control: false),
+			keyAvailable: () => Interlocked.Increment(ref polls) > 2);
+
+		InputResult result = await provider.ReadInputAsync(TestContext.CancellationToken).ConfigureAwait(false);
+
+		Assert.AreEqual(ConsoleKey.A, result.Key);
+	}
+
+	/// <summary>
+	/// Tests that cancelling a read that is waiting for a key ends it without reading one, so no
+	/// thread is left blocked in Console.ReadKey to take the next key (ktsu-dev/TUI#149).
+	/// </summary>
+	/// <returns>A task that completes when the test has run.</returns>
+	[TestMethod]
+	public async Task CancellingAReadThatIsWaitingEndsItWithoutReadingAKey()
+	{
+		int keysRead = 0;
+		SpectreConsoleProvider provider = new(
+			console: null,
+			() =>
+			{
+				Interlocked.Increment(ref keysRead);
+				return new ConsoleKeyInfo('a', ConsoleKey.A, shift: false, alt: false, control: false);
+			},
+			keyAvailable: () => false);
+		using CancellationTokenSource cancellation = new();
+
+		Task<InputResult> read = provider.ReadInputAsync(cancellation.Token);
+		await cancellation.CancelAsync().ConfigureAwait(false);
+
+		Task finished = await Task.WhenAny(read, Task.Delay(TimeSpan.FromSeconds(10), TestContext.CancellationToken)).ConfigureAwait(false);
+		Assert.AreSame(read, finished, "A cancelled read should end");
+		Assert.IsTrue(read.IsCanceled);
+		Assert.AreEqual(0, keysRead);
 	}
 
 	/// <summary>

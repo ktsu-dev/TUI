@@ -41,6 +41,19 @@ public interface IConsoleProvider
 	public Task<InputResult> ReadInputAsync();
 
 	/// <summary>
+	/// Reads input from the console, giving up once <paramref name="cancellationToken"/> is cancelled
+	/// </summary>
+	/// <param name="cancellationToken">Cancelled when the input is no longer wanted, such as when the
+	/// application shuts down</param>
+	/// <returns>The input result, or a cancelled task if the read was given up</returns>
+	/// <remarks>
+	/// A read that outlives the application takes the next key meant for the host or for a later
+	/// run, so a provider should end the read when the token is cancelled (ktsu-dev/TUI#149). The
+	/// default ignores the token and calls <see cref="ReadInputAsync()"/>.
+	/// </remarks>
+	public Task<InputResult> ReadInputAsync(CancellationToken cancellationToken) => ReadInputAsync();
+
+	/// <summary>
 	/// Sets the cursor visibility
 	/// </summary>
 	/// <param name="visible">Whether the cursor should be visible</param>
