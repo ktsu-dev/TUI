@@ -518,12 +518,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 					// Let the root element handle the input
 					bool handled = RootElement?.HandleInput(input) ?? false;
 
-					if (!handled)
+					if (!handled && _logger != null)
 					{
-						if (_logger != null)
-						{
-							LogInputNotHandled(_logger, null);
-						}
+						LogInputNotHandled(_logger, null);
 					}
 
 					// Re-render if needed (elements invalidate themselves when they change)
