@@ -1,6 +1,6 @@
-## v2.0.8-pre.1 (prerelease)
+## v2.0.8 (patch)
 
 Changes since v2.0.7:
 
-- Bump MSTest.Sdk from 4.4.1 to 4.5.1 ([@dependabot[bot]](https://github.com/dependabot[bot]))
+- fix: draw changes made outside a keypress by redrawing when the tree invalidates [patch] ([@Claude](https://github.com/Claude))
 
