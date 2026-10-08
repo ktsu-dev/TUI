@@ -47,7 +47,12 @@ Provider Abstraction (SpectreConsoleProvider)
 3. Each pass is a full clear followed by a full redraw: `UIApplication.Render()` clears the
    console and every visible element draws again. `Invalidate()` marks an element as changed and
    raises `Invalidated`, but it does not gate drawing — a full clear combined with a dirty-only
-   redraw erases static elements rather than preserving them (ktsu-dev/TUI#109)
+   redraw erases static elements rather than preserving them (ktsu-dev/TUI#109).
+   What `Invalidated` does drive is *whether* a pass happens: `UIApplication` subscribes to the
+   root's event and flags a redraw, which the input loop's poll tick draws, so a change made off
+   the loop thread (a timer, a background task) appears without a keypress. The handler only sets
+   a flag, never draws, and ignores invalidations a pass raises on its own thread while arranging.
+   `UIApplication.RequestRender()` sets the same flag for a host (ktsu-dev/TUI#154)
 4. Each pass also re-reads `ConsoleProvider.Dimensions`. When the terminal has changed size the
    root takes the new size and the whole tree is re-arranged, so a resized window is laid out on
    the next frame instead of staying pinned to the size at launch (ktsu-dev/TUI#111). The input
