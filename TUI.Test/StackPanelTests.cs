@@ -569,15 +569,93 @@ public sealed class StackPanelTests
 	}
 
 	/// <summary>
-	/// Tests that a container that does not use the available width, such as BorderElement, measures
-	/// the same with or without one.
+	/// Tests that a BorderElement passes the width it is measured against down to its child, less
+	/// the border, so word-wrapped text inside it reports a row per wrapped line (ktsu-dev/TUI#161).
 	/// </summary>
 	[TestMethod]
-	public void ContainerWithoutAWidthAwareLayoutMeasuresTheSameWithAWidth()
+	public void BorderElementMeasuresItsChildAgainstTheWidthInsideTheBorder()
 	{
-		BorderElement border = [new TextElement("abc")];
+		BorderElement border = [new TextElement("hello world foo") { WordWrap = true }];
 
-		Assert.AreEqual(border.CalculateRequiredDimensions(), border.CalculateRequiredDimensions(2));
+		Assert.AreEqual(new Dimensions(17, 3), border.CalculateRequiredDimensions());
+		Assert.AreEqual(new Dimensions(11, 4), border.CalculateRequiredDimensions(12));
+	}
+
+	/// <summary>
+	/// Tests that word-wrapped text inside a border inside a vertical panel is given, and draws,
+	/// every wrapped line rather than only the first (ktsu-dev/TUI#161).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalDrawsEveryWrappedLineOfTextInsideABorder()
+	{
+		TextElement text = new("hello world foo") { WordWrap = true };
+		BorderElement border = [text];
+		StackPanel panel = [border];
+		panel.Dimensions = new Dimensions(12, 10);
+		panel.ArrangeChildren();
+		border.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(new Dimensions(12, 4), border.Dimensions);
+		Assert.AreEqual(new Dimensions(10, 2), text.Dimensions);
+		Assert.AreEqual(new Position(1, 1), Assert.ContainsSingle(provider.WritesOf("hello")).Position);
+		Assert.AreEqual(new Position(1, 2), Assert.ContainsSingle(provider.WritesOf("world foo")).Position);
+	}
+
+	/// <summary>
+	/// Tests that a horizontal panel measures word-wrapped text against the width it has, so it
+	/// reports the wrapped height to a parent rather than one row (ktsu-dev/TUI#161).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelHorizontalRequiredDimensionsWrapTextToTheAvailableWidth()
+	{
+		StackPanel panel = new() { Orientation = Orientation.Horizontal };
+		panel.Add(new TextElement("hello world foo") { WordWrap = true });
+
+		Assert.AreEqual(new Dimensions(15, 1), panel.CalculateRequiredDimensions());
+		Assert.AreEqual(new Dimensions(5, 3), panel.CalculateRequiredDimensions(8));
+	}
+
+	/// <summary>
+	/// Tests that a horizontal panel measures each child against the width its earlier siblings and
+	/// the spacing leave, as it does when arranging them (ktsu-dev/TUI#161).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelHorizontalMeasuresEachChildAgainstTheRemainingWidth()
+	{
+		StackPanel panel = new() { Orientation = Orientation.Horizontal, Spacing = 1 };
+		panel.Add(new TextElement("abc"));
+		panel.Add(new TextElement("hello world") { WordWrap = true });
+
+		Assert.AreEqual(new Dimensions(9, 2), panel.CalculateRequiredDimensions(9));
+	}
+
+	/// <summary>
+	/// Tests that word-wrapped text inside a horizontal panel inside a vertical panel is given a row
+	/// per wrapped line and draws them all, with the next row placed below it (ktsu-dev/TUI#161).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalDrawsEveryWrappedLineOfTextInsideAHorizontalPanel()
+	{
+		StackPanel row = new() { Orientation = Orientation.Horizontal };
+		TextElement text = new("hello world foo") { WordWrap = true };
+		row.Add(text);
+		StackPanel panel = [row, new TextElement("next")];
+		panel.Dimensions = new Dimensions(8, 10);
+		panel.ArrangeChildren();
+		row.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(new Dimensions(8, 3), row.Dimensions);
+		Assert.AreEqual(new Dimensions(5, 3), text.Dimensions);
+		Assert.AreEqual(new Position(0, 0), Assert.ContainsSingle(provider.WritesOf("hello")).Position);
+		Assert.AreEqual(new Position(0, 1), Assert.ContainsSingle(provider.WritesOf("world")).Position);
+		Assert.AreEqual(new Position(0, 2), Assert.ContainsSingle(provider.WritesOf("foo")).Position);
+		Assert.AreEqual(new Position(0, 3), Assert.ContainsSingle(provider.WritesOf("next")).Position);
 	}
 
 	/// <summary>
