@@ -104,6 +104,18 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	internal const int MaxConsecutiveReadFailures = 10;
 
 	/// <summary>
+	/// A read still in progress when the last run ended, because its provider ignored the
+	/// cancellation. The next run waits on it rather than starting a second read to race it.
+	/// </summary>
+	private Task<Models.InputResult>? _pendingRead;
+
+	/// <summary>
+	/// How long the end of a run waits for its cancelled read to finish, so a provider that gives
+	/// reads up has done so by the time the run returns
+	/// </summary>
+	private static readonly TimeSpan PendingReadCancellationTimeout = TimeSpan.FromMilliseconds(250);
+
+	/// <summary>
 	/// The terminal size the current layout was computed for, or null before the first render
 	/// </summary>
 	private Models.Dimensions? _observedConsoleDimensions;
@@ -422,133 +434,172 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 		// One read is carried across iterations. The resize poll below wakes the loop without a
 		// keypress, and starting a fresh read each time it woke would leave several reads racing
-		// for the next key.
-		Task<Models.InputResult>? pendingRead = null;
+		// for the next key. It is carried across runs too: a provider that cannot give a read up
+		// is still waiting on it, and a second read would race it for every key (ktsu-dev/TUI#149).
+		Task<Models.InputResult>? pendingRead = _pendingRead;
+		_pendingRead = null;
 		int consecutiveReadFailures = 0;
 
-		while (!cancellationToken.IsCancellationRequested && IsRunning)
+		// Cancelled when the loop ends, however it ends, so a provider can give its read up instead
+		// of leaving it behind to take the next key meant for the host (ktsu-dev/TUI#149).
+		using CancellationTokenSource readCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+		try
 		{
-			// Tells the catch blocks below whether the failure came from reading or from handling
-			bool readSucceeded = false;
-
-			try
+			while (!cancellationToken.IsCancellationRequested && IsRunning)
 			{
-				pendingRead ??= ConsoleProvider.ReadInputAsync();
+				// Tells the catch blocks below whether the failure came from reading or from handling
+				bool readSucceeded = false;
 
-				if (!pendingRead.IsCompleted)
+				try
 				{
-					// Wake on a timer as well as on input. A resize produces no input at all, so a
-					// loop that only wakes for a key cannot notice one. Cancelling the delay is
-					// also what lets a shutdown request end a run blocked on the keyboard: a
-					// provider parked in Console.ReadKey does not observe the token itself.
-					Task idle = Task.Delay(ResizePollInterval, cancellationToken);
-					await Task.WhenAny(pendingRead, idle).ConfigureAwait(false);
-
-					if (cancellationToken.IsCancellationRequested)
-					{
-						break;
-					}
+					pendingRead ??= ConsoleProvider.ReadInputAsync(readCancellation.Token);
 
 					if (!pendingRead.IsCompleted)
 					{
-						// The timer won the race, so no key arrived. Redraw only if the terminal
-						// changed size or an element changed while we waited, and go back to the
-						// same pending read.
-						if (Volatile.Read(ref _redrawRequested) == 1 || HasConsoleResized())
+						// Wake on a timer as well as on input. A resize produces no input at all, so a
+						// loop that only wakes for a key cannot notice one. Cancelling the delay is
+						// also what lets a shutdown request end a run blocked on the keyboard: a
+						// provider parked in Console.ReadKey does not observe the token itself.
+						Task idle = Task.Delay(ResizePollInterval, cancellationToken);
+						await Task.WhenAny(pendingRead, idle).ConfigureAwait(false);
+
+						if (cancellationToken.IsCancellationRequested)
 						{
-							Render();
+							break;
 						}
 
+						if (!pendingRead.IsCompleted)
+						{
+							// The timer won the race, so no key arrived. Redraw only if the terminal
+							// changed size or an element changed while we waited, and go back to the
+							// same pending read.
+							if (Volatile.Read(ref _redrawRequested) == 1 || HasConsoleResized())
+							{
+								Render();
+							}
+
+							continue;
+						}
+					}
+
+					// Cleared before the await so a read that failed is not retried forever by the
+					// recoverable-error branches below.
+					Task<Models.InputResult> completedRead = pendingRead;
+					pendingRead = null;
+
+					if (completedRead.IsCanceled && !cancellationToken.IsCancellationRequested)
+					{
+						// A read carried over from an earlier run, which its provider gave up when
+						// that run ended. It holds no key, so start a fresh one.
 						continue;
 					}
-				}
 
-				// Cleared before the await so a read that failed is not retried forever by the
-				// recoverable-error branches below.
-				Task<Models.InputResult> completedRead = pendingRead;
-				pendingRead = null;
-				Models.InputResult input = await completedRead.ConfigureAwait(false);
-				readSucceeded = true;
-				consecutiveReadFailures = 0;
+					Models.InputResult input = await completedRead.ConfigureAwait(false);
+					readSucceeded = true;
+					consecutiveReadFailures = 0;
 
-				if (_logger != null)
-				{
-					LogReceivedInput(_logger, input.Type.ToString(), null);
-				}
-
-				// Handle global exit conditions
-				if (input.IsExit)
-				{
 					if (_logger != null)
 					{
-						LogExitInputReceived(_logger, null);
+						LogReceivedInput(_logger, input.Type.ToString(), null);
 					}
-					Shutdown();
-					break;
-				}
 
-				// Let the root element handle the input
-				bool handled = RootElement?.HandleInput(input) ?? false;
+					// Handle global exit conditions
+					if (input.IsExit)
+					{
+						if (_logger != null)
+						{
+							LogExitInputReceived(_logger, null);
+						}
+						Shutdown();
+						break;
+					}
 
-				if (!handled)
-				{
-					if (_logger != null)
+					// Let the root element handle the input
+					bool handled = RootElement?.HandleInput(input) ?? false;
+
+					if (!handled && _logger != null)
 					{
 						LogInputNotHandled(_logger, null);
 					}
-				}
 
-				// Re-render if needed (elements invalidate themselves when they change)
-				Render();
-			}
-			catch (OperationCanceledException)
-			{
-				break;
-			}
-			catch (InvalidOperationException ex)
-			{
-				if (_logger != null)
-				{
-					LogInputProcessingError(_logger, ex);
+					// Re-render if needed (elements invalidate themselves when they change)
+					Render();
 				}
-
-				if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+				catch (OperationCanceledException)
 				{
+					break;
+				}
+				catch (InvalidOperationException ex)
+				{
+					if (_logger != null)
+					{
+						LogInputProcessingError(_logger, ex);
+					}
+
+					if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+					{
+						throw;
+					}
+
+					// Continue processing for recoverable errors
+				}
+				catch (ArgumentException ex)
+				{
+					if (_logger != null)
+					{
+						LogInputProcessingError(_logger, ex);
+					}
+
+					if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+					{
+						throw;
+					}
+
+					// Continue processing for recoverable errors
+				}
+				catch (OutOfMemoryException)
+				{
+					// Critical error - rethrow
 					throw;
 				}
-
-				// Continue processing for recoverable errors
-			}
-			catch (ArgumentException ex)
-			{
-				if (_logger != null)
+				catch (StackOverflowException)
 				{
-					LogInputProcessingError(_logger, ex);
-				}
-
-				if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
-				{
+					// Critical error - rethrow
 					throw;
 				}
-
-				// Continue processing for recoverable errors
 			}
-			catch (OutOfMemoryException)
-			{
-				// Critical error - rethrow
-				throw;
-			}
-			catch (StackOverflowException)
-			{
-				// Critical error - rethrow
-				throw;
-			}
+		}
+		finally
+		{
+			await readCancellation.CancelAsync().ConfigureAwait(false);
+			_pendingRead = await AwaitEndOfReadAsync(pendingRead).ConfigureAwait(false);
 		}
 
 		if (_logger != null)
 		{
 			LogInputProcessingStopped(_logger, null);
 		}
+	}
+
+	/// <summary>
+	/// Gives a read the loop has just cancelled a moment to finish
+	/// </summary>
+	/// <param name="pendingRead">The read the loop was waiting on, if any</param>
+	/// <returns>The read if it is still in progress, for the next run to wait on; otherwise null</returns>
+	/// <remarks>
+	/// A read that completed with a key in the race against the shutdown is dropped, as a key
+	/// pressed while the application was closing would be.
+	/// </remarks>
+	private static async Task<Task<Models.InputResult>?> AwaitEndOfReadAsync(Task<Models.InputResult>? pendingRead)
+	{
+		if (pendingRead is null || pendingRead.IsCompleted)
+		{
+			return null;
+		}
+
+		await Task.WhenAny(pendingRead, Task.Delay(PendingReadCancellationTimeout)).ConfigureAwait(false);
+		return pendingRead.IsCompleted ? null : pendingRead;
 	}
 
 	/// <summary>

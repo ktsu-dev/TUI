@@ -18,6 +18,13 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 {
 	private readonly IAnsiConsole _console = console ?? AnsiConsole.Console;
 	private readonly Func<ConsoleKeyInfo> _readKey = () => Console.ReadKey(true);
+	private readonly Func<bool> _keyAvailable = () => Console.KeyAvailable;
+
+	/// <summary>
+	/// How often a cancellable read checks for a key. Short enough that typing does not feel
+	/// delayed, long enough that waiting for a key costs next to nothing.
+	/// </summary>
+	internal static readonly TimeSpan KeyPollInterval = TimeSpan.FromMilliseconds(15);
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="SpectreConsoleProvider"/> class that reads keys
@@ -27,7 +34,24 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	/// <param name="console">The Spectre.Console instance to use</param>
 	/// <param name="readKey">Reads the next key.</param>
 	internal SpectreConsoleProvider(IAnsiConsole? console, Func<ConsoleKeyInfo> readKey)
-		: this(console) => _readKey = readKey;
+		: this(console, readKey, keyAvailable: () => true)
+	{
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="SpectreConsoleProvider"/> class that reads keys
+	/// from <paramref name="readKey"/> and asks <paramref name="keyAvailable"/> whether one is
+	/// waiting, instead of using <see cref="Console"/>, so tests can feed it input.
+	/// </summary>
+	/// <param name="console">The Spectre.Console instance to use</param>
+	/// <param name="readKey">Reads the next key.</param>
+	/// <param name="keyAvailable">Reports whether a key is waiting to be read.</param>
+	internal SpectreConsoleProvider(IAnsiConsole? console, Func<ConsoleKeyInfo> readKey, Func<bool> keyAvailable)
+		: this(console)
+	{
+		_readKey = readKey;
+		_keyAvailable = keyAvailable;
+	}
 
 	/// <inheritdoc />
 	public Dimensions Dimensions => new(_console.Profile.Width, _console.Profile.Height);
@@ -93,6 +117,25 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 	/// <inheritdoc />
 	public async Task<InputResult> ReadInputAsync() =>
 		await Task.Run(() => ToInputResult(_readKey())).ConfigureAwait(false);
+
+	/// <inheritdoc />
+	/// <remarks>
+	/// <see cref="Console.ReadKey(bool)"/> cannot be interrupted, so this waits for
+	/// <see cref="Console.KeyAvailable"/> and reads only once a key is there. A cancelled read
+	/// therefore leaves no thread blocked in ReadKey to take the next key (ktsu-dev/TUI#149).
+	/// </remarks>
+	public Task<InputResult> ReadInputAsync(CancellationToken cancellationToken) =>
+		Task.Run(
+			async () =>
+			{
+				while (!_keyAvailable())
+				{
+					await Task.Delay(KeyPollInterval, cancellationToken).ConfigureAwait(false);
+				}
+
+				return ToInputResult(_readKey());
+			},
+			cancellationToken);
 
 	/// <summary>
 	/// Converts a key read from the console into an input result.
