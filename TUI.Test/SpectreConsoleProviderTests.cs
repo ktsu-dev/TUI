@@ -2,6 +2,7 @@
 
 namespace ktsu.TUI.Test;
 
+using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -282,5 +283,38 @@ public sealed class SpectreConsoleProviderTests
 		provider.WriteAt("Hi", new Position(0, 0), new TextStyle { BackgroundColor = System.Drawing.Color.FromArgb(128, 0, 0, 255) });
 
 		Assert.Contains("48;2;0;0;255", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that no control character from element text reaches the terminal, so text cannot
+	/// clear the screen or move the cursor itself (ktsu-dev/TUI#159).
+	/// </summary>
+	[TestMethod]
+	public void TextElementWritesNoControlCharactersToTheTerminal()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+		TextElement element = new("x\u001b[2Jy")
+		{
+			Position = Position.Origin,
+			Dimensions = new Dimensions(Width, 1),
+		};
+
+		element.Render(provider);
+
+		Assert.AreEqual("\u001b[1;1Hx\uFFFD[2Jy", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that the provider replaces control characters in text written to it directly, as well
+	/// as in text an element has already normalised (ktsu-dev/TUI#159).
+	/// </summary>
+	[TestMethod]
+	public void WriteAtReplacesControlCharacters()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("a\tb\u001bc\u009bd", new Position(0, 0));
+
+		Assert.AreEqual("\u001b[1;1Ha\uFFFDb\uFFFDc\uFFFDd", output.ToString());
 	}
 }

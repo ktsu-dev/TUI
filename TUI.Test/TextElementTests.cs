@@ -588,4 +588,78 @@ public sealed class TextElementTests
 		Assert.AreEqual(6, required.Width);
 		Assert.AreEqual(4, provider.Writes.Single().Position.X);
 	}
+
+	/// <summary>
+	/// A tab inside a border must be measured as the cells it moves the cursor across, and drawn as
+	/// those cells, so the text stops at the border. It used to count as one cell and reach the
+	/// terminal raw, which jumped to the next tab stop and overwrote the right border
+	/// (ktsu-dev/TUI#159).
+	/// </summary>
+	[TestMethod]
+	public void TabInABorderMeasuresToTheWidthItDraws()
+	{
+		// Arrange
+		BorderElement border = [];
+		border.Child = new TextElement("Name\tValue");
+		border.Position = Position.Origin;
+		border.Dimensions = border.CalculateRequiredDimensions();
+		border.ArrangeChildren();
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		border.Render(provider);
+
+		// Assert
+		Assert.AreEqual(new Dimensions(15, 3), border.Dimensions, "\"Name\" then a tab to column 8 then \"Value\" is 13 cells, plus the border");
+		RecordingConsoleProvider.Write write = provider.WritesOf("Name    Value").Single();
+		Assert.AreEqual(1, write.Position.X);
+		Assert.IsLessThanOrEqualTo(border.Dimensions.Width - 1, write.Position.X + CellWidth.Of(write.Text), "The text must stop before the right border");
+	}
+
+	/// <summary>
+	/// A tab must move to the next tab stop counted from the start of its own line, not from the
+	/// start of the text (ktsu-dev/TUI#159).
+	/// </summary>
+	[TestMethod]
+	public void TabsExpandToTheNextTabStopOnEachLine()
+	{
+		// Arrange
+		TextElement element = CreateElement("a\tb\nabcdefgh\tc\n\td");
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		string[] written = [.. provider.Writes.Select(write => write.Text)];
+		Assert.HasCount(3, written);
+		Assert.AreEqual("a       b", written[0]);
+		Assert.AreEqual("abcdefgh        c", written[1]);
+		Assert.AreEqual("        d", written[2]);
+	}
+
+	/// <summary>
+	/// An escape or other control character in the text must not be written, or the text could
+	/// clear the screen or move the cursor in the middle of a frame (ktsu-dev/TUI#159).
+	/// </summary>
+	/// <param name="text">The text holding a control character.</param>
+	/// <param name="drawn">What should be drawn instead.</param>
+	[TestMethod]
+	[DataRow("x\u001b[2Jy", "x\uFFFD[2Jy")]
+	[DataRow("bell\u0007", "bell\uFFFD")]
+	[DataRow("\u009b2J", "\uFFFD2J")]
+	[DataRow("del\u007f", "del\uFFFD")]
+	public void ControlCharactersAreDrawnAsAPlaceholder(string text, string drawn)
+	{
+		// Arrange
+		TextElement element = CreateElement(text);
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.AreEqual(drawn, provider.Writes.Single().Text);
+		Assert.AreEqual(new Dimensions(CellWidth.Of(drawn), 1), element.CalculateRequiredDimensions());
+	}
 }

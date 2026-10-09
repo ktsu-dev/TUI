@@ -3,6 +3,7 @@
 namespace ktsu.TUI.Core.Elements.Primitives;
 
 using System.Globalization;
+using System.Text;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Models;
 using Spectre.Console;
@@ -12,6 +13,18 @@ using Spectre.Console;
 /// </summary>
 public class TextElement : UIElementBase
 {
+	/// <summary>
+	/// The distance between tab stops, in cells. A tab in the text moves to the next multiple of
+	/// this, counted from the start of its line.
+	/// </summary>
+	public const int TabWidth = 8;
+
+	/// <summary>
+	/// What a control character in the text is drawn as, so it takes one visible cell instead of
+	/// reaching the terminal as a command.
+	/// </summary>
+	public const char ControlCharacterPlaceholder = '\uFFFD';
+
 	/// <summary>
 	/// Gets or sets the text to display
 	/// </summary>
@@ -186,14 +199,16 @@ public class TextElement : UIElementBase
 
 	/// <summary>
 	/// Breaks text into the lines that are measured and drawn: one per embedded line break, each
-	/// then wrapped to <paramref name="wrapWidth"/> when it is positive (ktsu-dev/TUI#135)
+	/// then wrapped to <paramref name="wrapWidth"/> when it is positive (ktsu-dev/TUI#135).
+	/// Tabs and other control characters are normalised first, so that what is measured is what
+	/// is drawn (ktsu-dev/TUI#159).
 	/// </summary>
 	/// <param name="text">The text to break</param>
 	/// <param name="wrapWidth">The width to wrap each line to, or 0 to leave lines unwrapped</param>
 	/// <returns>The lines, in order; a blank line in the text stays as an empty line</returns>
 	private static string[] SplitIntoLines(string text, int wrapWidth)
 	{
-		string[] paragraphs = text.Split(["\r\n", "\n", "\r"], StringSplitOptions.None);
+		string[] paragraphs = [.. text.Split(["\r\n", "\n", "\r"], StringSplitOptions.None).Select(NormalizeControlCharacters)];
 		if (wrapWidth <= 0)
 		{
 			return paragraphs;
@@ -205,6 +220,50 @@ public class TextElement : UIElementBase
 			string[] wrapped = WrapText(paragraph, wrapWidth);
 			return wrapped.Length == 0 ? [string.Empty] : wrapped;
 		})];
+	}
+
+	/// <summary>
+	/// Makes one line safe to measure and draw cell by cell. A tab becomes the spaces up to the
+	/// next tab stop, and any other control character becomes <see cref="ControlCharacterPlaceholder"/>.
+	/// Written raw, a tab jumps the terminal cursor past the cells it was measured as, and an
+	/// escape or other C0/C1 character lets the text move the cursor, recolour or clear the
+	/// screen (ktsu-dev/TUI#159).
+	/// </summary>
+	/// <param name="line">The line to normalise, with no line breaks in it</param>
+	/// <returns>The line with no control characters left in it</returns>
+	internal static string NormalizeControlCharacters(string line)
+	{
+		if (!line.Any(char.IsControl))
+		{
+			return line;
+		}
+
+		StringBuilder normalized = new(line.Length);
+		int cells = 0;
+		TextElementEnumerator elements = StringInfo.GetTextElementEnumerator(line);
+		while (elements.MoveNext())
+		{
+			// A control character is always a text element of its own
+			string element = elements.GetTextElement();
+			if (element == "\t")
+			{
+				int spaces = TabWidth - (cells % TabWidth);
+				normalized.Append(' ', spaces);
+				cells += spaces;
+			}
+			else if (element.Length == 1 && char.IsControl(element[0]))
+			{
+				normalized.Append(ControlCharacterPlaceholder);
+				cells++;
+			}
+			else
+			{
+				normalized.Append(element);
+				cells += element.GetCellWidth();
+			}
+		}
+
+		return normalized.ToString();
 	}
 
 	/// <summary>

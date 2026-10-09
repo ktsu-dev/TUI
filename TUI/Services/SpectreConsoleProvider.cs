@@ -3,6 +3,7 @@
 namespace ktsu.TUI.Core.Services;
 
 using ktsu.TUI.Core.Contracts;
+using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
 using Spectre.Console;
 
@@ -64,6 +65,11 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		{
 			return;
 		}
+
+		// Nothing written may command the terminal: a control character from the text would move
+		// the cursor, recolour or clear the screen. Elements normalise their own text, so this only
+		// catches text reaching the provider some other way (ktsu-dev/TUI#159).
+		text = ReplaceControlCharacters(text);
 
 		// Clip to the screen before moving the cursor. SetCursorPosition ignores an off-screen
 		// position, so writing anyway would put the text wherever the last write left the cursor,
@@ -207,5 +213,21 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		}
 
 		return string.Join(" ", parts);
+	}
+
+	private static string ReplaceControlCharacters(string text)
+	{
+		if (!text.Any(char.IsControl))
+		{
+			return text;
+		}
+
+		return string.Create(text.Length, text, static (chars, source) =>
+		{
+			for (int i = 0; i < source.Length; i++)
+			{
+				chars[i] = char.IsControl(source[i]) ? TextElement.ControlCharacterPlaceholder : source[i];
+			}
+		});
 	}
 }
