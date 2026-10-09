@@ -91,11 +91,12 @@ public class StackPanel : UIContainerBase
 		{
 			unplaced.Remove(child);
 
-			// A vertical child's width is known before its height, so it is measured against that
-			// width. Word-wrapped text needs this to report one row per wrapped line (ktsu-dev/TUI#131).
+			// A child is measured against the width it can have: the panel's width when stacking
+			// vertically, and the width not yet taken when stacking horizontally. Word-wrapped text
+			// needs this to report one row per wrapped line (ktsu-dev/TUI#131, ktsu-dev/TUI#161).
 			Dimensions childDimensions = Orientation == Orientation.Vertical
 				? child.CalculateRequiredDimensions(contentArea.Width)
-				: child.CalculateRequiredDimensions();
+				: child.CalculateRequiredDimensions(contentArea.Width - currentOffset);
 
 			if (Orientation == Orientation.Vertical)
 			{
@@ -165,12 +166,18 @@ public class StackPanel : UIContainerBase
 
 		IUIElement[] visibleChildren = [.. GetVisibleChildren()];
 		int totalSpacing = Math.Max(0, (visibleChildren.Length - 1) * Spacing);
+		int consumedWidth = 0;
 
 		foreach (IUIElement? child in visibleChildren)
 		{
-			Dimensions childDimensions = Orientation == Orientation.Vertical && availableWidth is int width
-				? child.CalculateRequiredDimensions(width)
-				: child.CalculateRequiredDimensions();
+			// A horizontal child gets the width its earlier siblings and the spacing between them
+			// leave, as it does when arranged (ktsu-dev/TUI#161).
+			Dimensions childDimensions = availableWidth switch
+			{
+				int width when Orientation == Orientation.Vertical => child.CalculateRequiredDimensions(width),
+				int width => child.CalculateRequiredDimensions(Math.Max(0, width - consumedWidth)),
+				_ => child.CalculateRequiredDimensions(),
+			};
 
 			if (Orientation == Orientation.Vertical)
 			{
@@ -180,6 +187,7 @@ public class StackPanel : UIContainerBase
 			else
 			{
 				totalWidth += childDimensions.Width;
+				consumedWidth += childDimensions.Width + Spacing;
 				maxHeight = Math.Max(maxHeight, childDimensions.Height);
 			}
 		}

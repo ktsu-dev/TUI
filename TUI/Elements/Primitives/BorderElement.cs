@@ -187,9 +187,18 @@ public class BorderElement : UIContainerBase
 	// class adds to this result, so only the child's own size belongs here (ktsu-dev/TUI#132).
 	// A title is drawn as " title " between the corners, so the content area must be at least
 	// two wider than the title or a layout sizes the border too narrow to show it (ktsu-dev/TUI#157).
-	protected override Dimensions OnCalculateRequiredDimensionsForChildren()
+	protected override Dimensions OnCalculateRequiredDimensionsForChildren() =>
+		WithRoomForTitle(Children.Count == 0 ? Dimensions.Empty : Children.First().CalculateRequiredDimensions());
+
+	/// <inheritdoc />
+	// The base class has already taken the border off availableWidth, so the child is measured
+	// against the width it will be arranged into. Without this a word-wrapped child is measured
+	// unwrapped and given a single row (ktsu-dev/TUI#161).
+	protected override Dimensions OnCalculateRequiredDimensionsForChildren(int availableWidth) =>
+		WithRoomForTitle(Children.Count == 0 ? Dimensions.Empty : Children.First().CalculateRequiredDimensions(availableWidth));
+
+	private Dimensions WithRoomForTitle(Dimensions childDimensions)
 	{
-		Dimensions childDimensions = Children.Count == 0 ? Dimensions.Empty : Children.First().CalculateRequiredDimensions();
 		if (BorderStyle == BorderStyle.None || string.IsNullOrEmpty(Title))
 		{
 			return childDimensions;
