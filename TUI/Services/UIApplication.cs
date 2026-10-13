@@ -4,6 +4,7 @@ namespace ktsu.TUI.Core.Services;
 
 using ktsu.TUI.Core.Contracts;
 using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Main UI application service that orchestrates the TUI
@@ -116,9 +117,20 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private static readonly TimeSpan PendingReadCancellationTimeout = TimeSpan.FromMilliseconds(250);
 
 	/// <summary>
-	/// The terminal size the current layout was computed for, or null before the first render
+	/// The terminal size the last render pass saw, or null before the first render
 	/// </summary>
 	private Models.Dimensions? _observedConsoleDimensions;
+
+	/// <summary>
+	/// The terminal size each root element was last laid out for
+	/// </summary>
+	/// <remarks>
+	/// Kept per root rather than once for the application, because a host can swap
+	/// <see cref="RootElement"/> between screens. A screen detached while the terminal was resized
+	/// was never told, and comparing against the size the current root saw would miss that it is
+	/// stale (ktsu-dev/TUI#162). Weak, so a screen the host lets go of is not kept alive here.
+	/// </remarks>
+	private readonly ConditionalWeakTable<IUIElement, object> _rootLaidOutAt = [];
 
 	/// <summary>
 	/// 1 when an element changed since the last render pass began, and a pass should draw it even
@@ -368,8 +380,12 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private void SyncRootToConsole(IUIElement root)
 	{
 		Models.Dimensions console = ConsoleProvider.Dimensions;
-		bool resized = _observedConsoleDimensions is Models.Dimensions observed && observed != console;
 		_observedConsoleDimensions = console;
+
+		// Resized from this root's point of view: the terminal is not the size it was when this
+		// root was last laid out. That includes a resize that happened while it was swapped out.
+		bool resized = _rootLaidOutAt.TryGetValue(root, out object? laidOutAt) && (Models.Dimensions)laidOutAt != console;
+		_rootLaidOutAt.AddOrUpdate(root, console);
 
 		// Adopt the terminal size when the root has none of its own, and again whenever the
 		// terminal is resized. In between, a size the host assigned to the root is left alone — a
