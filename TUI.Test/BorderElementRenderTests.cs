@@ -271,4 +271,48 @@ public sealed class BorderElementRenderTests
 		Assert.AreEqual("OK".Length + 2, untitled.CalculateRequiredDimensions().Width);
 		Assert.AreEqual("OK".Length + 2, borderless.CalculateRequiredDimensions().Width);
 	}
+
+	/// <summary>
+	/// A border holds one child, so a second one in a collection initializer is refused instead of
+	/// being left unplaced, undrawn and still taking input (ktsu-dev/TUI#163).
+	/// </summary>
+	[TestMethod]
+	public void ASecondChildIsRefused()
+	{
+		TextElement first = new("first");
+		TextElement second = new("second");
+
+		Assert.ThrowsExactly<InvalidOperationException>(() => new BorderElement { first, second });
+
+		BorderElement element = [first];
+		Assert.ThrowsExactly<InvalidOperationException>(() => element.AddChild(second));
+		Assert.AreSame(first, element.Child);
+		Assert.HasCount(1, element.Children);
+		Assert.IsNull(second.Parent);
+	}
+
+	/// <summary>
+	/// Re-adding the existing child and replacing it through <see cref="BorderElement.Child"/> both
+	/// still work, and only the current child is drawn.
+	/// </summary>
+	[TestMethod]
+	public void SettingChildReplacesTheOneThatIsDrawn()
+	{
+		TextElement first = new("first");
+		TextElement second = new("second");
+		BorderElement element = [first];
+		element.AddChild(first);
+
+		element.Child = second;
+		element.Position = Position.Origin;
+		element.Dimensions = new Dimensions(20, 3);
+		element.ArrangeChildren();
+		RecordingConsoleProvider provider = new();
+		element.Render(provider);
+
+		Assert.AreSame(second, element.Child);
+		Assert.IsNull(first.Parent);
+		Assert.IsEmpty(provider.WritesOf("first"));
+		Assert.ContainsSingle(provider.WritesOf("second"));
+	}
 }

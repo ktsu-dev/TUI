@@ -103,6 +103,25 @@ public class BorderElement : UIContainerBase
 	/// <param name="borderStyle">The border style</param>
 	public BorderElement(BorderStyle borderStyle) : this() => BorderStyle = borderStyle;
 
+	/// <summary>
+	/// Adds the border's one child. A border arranges and measures a single child, so adding a
+	/// second would leave it unplaced but still drawn and still taking input (ktsu-dev/TUI#163);
+	/// set <see cref="Child"/> to replace the existing one instead.
+	/// </summary>
+	/// <param name="child">The element to place inside the border</param>
+	/// <exception cref="InvalidOperationException">The border already has a different child</exception>
+	public override void AddChild(IUIElement child)
+	{
+		Ensure.NotNull(child);
+
+		if (Children.Count > 0 && !Children.Contains(child))
+		{
+			throw new InvalidOperationException("A BorderElement holds a single child. Set Child to replace it, or wrap several elements in a StackPanel.");
+		}
+
+		base.AddChild(child);
+	}
+
 	/// <inheritdoc />
 	protected override void OnRender(IConsoleProvider provider)
 	{
