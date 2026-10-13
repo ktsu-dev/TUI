@@ -117,4 +117,40 @@ public sealed class UIContainerBaseTests
 		Assert.AreEqual(1, middleCount);
 		Assert.AreEqual(1, rootCount);
 	}
+
+	/// <summary>
+	/// A container cannot be added to itself, and refusing it leaves its children and parent alone
+	/// </summary>
+	[TestMethod]
+	public void AddChildRefusesTheContainerItself()
+	{
+		StackPanel panel = [];
+
+		Assert.ThrowsExactly<ArgumentException>(() => panel.AddChild(panel));
+
+		Assert.IsEmpty(panel.Children);
+		Assert.IsNull(panel.Parent);
+	}
+
+	/// <summary>
+	/// A container cannot be added under one of its descendants, and refusing it changes nothing
+	/// </summary>
+	[TestMethod]
+	public void AddChildRefusesAnAncestor()
+	{
+		StackPanel grandparent = [];
+		StackPanel parent = [];
+		StackPanel grandchild = [];
+		grandparent.AddChild(parent);
+		parent.AddChild(grandchild);
+
+		Assert.ThrowsExactly<ArgumentException>(() => grandchild.AddChild(grandparent));
+
+		Assert.IsEmpty(grandchild.Children);
+		Assert.IsNull(grandparent.Parent);
+		Assert.AreSame(grandparent, parent.Parent);
+		Assert.AreSame(parent, grandchild.Parent);
+		Assert.HasCount(1, grandparent.Children);
+		Assert.HasCount(1, parent.Children);
+	}
 }

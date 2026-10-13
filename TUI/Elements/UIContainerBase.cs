@@ -21,6 +21,16 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	{
 		Ensure.NotNull(child);
 
+		// A container inside itself would make the Parent chain a cycle, and Invalidate walks that
+		// chain until the stack overflows, so refuse before touching any state
+		for (IUIElement? ancestor = this; ancestor is not null; ancestor = ancestor.Parent)
+		{
+			if (ReferenceEquals(ancestor, child))
+			{
+				throw new ArgumentException("An element cannot be added to itself or to one of its descendants.", nameof(child));
+			}
+		}
+
 		if (!_children.Contains(child))
 		{
 			// An element lives in one container at a time, so adding it here moves it out of its old one
