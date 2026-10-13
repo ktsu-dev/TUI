@@ -60,17 +60,50 @@ public class TextElement : UIElementBase
 	/// <summary>
 	/// Gets or sets the horizontal alignment
 	/// </summary>
-	public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Left;
+	public HorizontalAlignment HorizontalAlignment
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				Invalidate();
+			}
+		}
+	} = HorizontalAlignment.Left;
 
 	/// <summary>
 	/// Gets or sets the vertical alignment
 	/// </summary>
-	public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Top;
+	public VerticalAlignment VerticalAlignment
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				Invalidate();
+			}
+		}
+	} = VerticalAlignment.Top;
 
 	/// <summary>
 	/// Gets or sets whether text wrapping is enabled
 	/// </summary>
-	public bool WordWrap { get; set; }
+	public bool WordWrap
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				Invalidate();
+			}
+		}
+	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TextElement"/> class

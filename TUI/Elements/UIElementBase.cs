@@ -68,7 +68,19 @@ public abstract class UIElementBase : IUIElement
 	/// <summary>
 	/// Gets or sets the padding for this element
 	/// </summary>
-	public Padding Padding { get; set; } = Padding.None;
+	public Padding Padding
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				OnPaddingChanged();
+				Invalidate();
+			}
+		}
+	} = Padding.None;
 
 	/// <summary>
 	/// Event raised when the element is invalidated
@@ -112,6 +124,14 @@ public abstract class UIElementBase : IUIElement
 	{
 		IsDirty = true;
 		Invalidated?.Invoke(this, EventArgs.Empty);
+	}
+
+	/// <summary>
+	/// Called when <see cref="Padding"/> changes, before <see cref="Invalidated"/> is raised.
+	/// Containers override this to move their children into the new content area.
+	/// </summary>
+	protected virtual void OnPaddingChanged()
+	{
 	}
 
 	/// <summary>
