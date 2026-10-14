@@ -662,4 +662,36 @@ public sealed class TextElementTests
 		Assert.AreEqual(drawn, provider.Writes.Single().Text);
 		Assert.AreEqual(new Dimensions(CellWidth.Of(drawn), 1), element.CalculateRequiredDimensions());
 	}
+
+	/// <summary>
+	/// Each layout property raises Invalidated once when it changes and not when set to the same
+	/// value, so a change made off the render pass is redrawn (ktsu-dev/TUI#170)
+	/// </summary>
+	[TestMethod]
+	public void LayoutPropertiesInvalidateOnlyWhenTheyChange()
+	{
+		TextElement element = new("text");
+		int invalidations = 0;
+		element.Invalidated += (_, _) => invalidations++;
+
+		element.WordWrap = !element.WordWrap;
+		Assert.AreEqual(1, invalidations, nameof(TextElement.WordWrap));
+		element.WordWrap = element.WordWrap;
+		Assert.AreEqual(1, invalidations, nameof(TextElement.WordWrap) + " unchanged");
+
+		element.HorizontalAlignment = HorizontalAlignment.Right;
+		Assert.AreEqual(2, invalidations, nameof(TextElement.HorizontalAlignment));
+		element.HorizontalAlignment = HorizontalAlignment.Right;
+		Assert.AreEqual(2, invalidations, nameof(TextElement.HorizontalAlignment) + " unchanged");
+
+		element.VerticalAlignment = VerticalAlignment.Bottom;
+		Assert.AreEqual(3, invalidations, nameof(TextElement.VerticalAlignment));
+		element.VerticalAlignment = VerticalAlignment.Bottom;
+		Assert.AreEqual(3, invalidations, nameof(TextElement.VerticalAlignment) + " unchanged");
+
+		element.Padding = Padding.Uniform(1);
+		Assert.AreEqual(4, invalidations, nameof(TextElement.Padding));
+		element.Padding = Padding.Uniform(1);
+		Assert.AreEqual(4, invalidations, nameof(TextElement.Padding) + " unchanged");
+	}
 }
