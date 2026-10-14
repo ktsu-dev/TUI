@@ -164,9 +164,17 @@ public class TextElement : UIElementBase
 				: Dimensions.Empty;
 		}
 
-		string[] lines = SplitIntoLines(
-			Text,
-			WordWrap && availableWidth > 0 ? Math.Max(1, availableWidth - Padding.Horizontal) : 0);
+		int wrapWidth = WordWrap && availableWidth > 0 ? availableWidth - Padding.Horizontal : 0;
+
+		if (WordWrap && availableWidth > 0 && wrapWidth <= 0)
+		{
+			// The padding takes every column, so no text can be drawn. Wrapping to one column
+			// instead claimed a row per character for text that never appears, and took those rows
+			// from the siblings below (ktsu-dev/TUI#198).
+			return new Dimensions(Padding.Horizontal, Padding.Vertical);
+		}
+
+		string[] lines = SplitIntoLines(Text, wrapWidth);
 
 		int maxWidth = lines.Max(MeasureCells);
 		int height = lines.Length;

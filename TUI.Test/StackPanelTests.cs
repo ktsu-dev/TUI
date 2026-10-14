@@ -460,6 +460,30 @@ public sealed class StackPanelTests
 	}
 
 	/// <summary>
+	/// Tests that a wrapped TextElement whose horizontal padding leaves it no room for text claims
+	/// only its padding, so the child after it still gets its row. The wrap width used to be
+	/// clamped to one column, so the element claimed a row per character it could not draw and
+	/// pushed its sibling out of the panel (ktsu-dev/TUI#198).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelVerticalWrappedTextNarrowerThanItsPaddingLeavesRoomForTheNextChild()
+	{
+		TextElement squeezed = new("hello world") { WordWrap = true, Padding = new Padding(1, 0, 1, 0) };
+		TextElement after = new("after");
+		StackPanel panel = [squeezed, after];
+		panel.Dimensions = new Dimensions(2, 10);
+		panel.ArrangeChildren();
+
+		RecordingConsoleProvider provider = new();
+		panel.Render(provider);
+
+		Assert.AreEqual(0, squeezed.Dimensions.Height, "Text with no column to draw in should claim no rows");
+		Assert.AreEqual(new Position(0, 0), after.Position, "The next child should start where the squeezed text claimed nothing");
+		Assert.IsGreaterThan(0, after.Dimensions.Height, "The next child should keep its row");
+		Assert.IsNotEmpty(provider.Writes, "The next child should be drawn");
+	}
+
+	/// <summary>
 	/// Tests that a vertical panel inside a vertical panel passes its width down, so wrapped text in
 	/// the inner panel is measured against the width it will actually get.
 	/// </summary>
