@@ -18,6 +18,17 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private readonly ILogger<UIApplication>? _logger = logger;
 	private CancellationTokenSource? _cancellationTokenSource;
 
+	/// <summary>
+	/// Gets the token source linked to the caller's token for the run in progress, or null
+	/// between runs
+	/// </summary>
+	/// <remarks>
+	/// A linked source registers a callback on the caller's token, so it is disposed and cleared
+	/// when its run ends. Left behind, every run would leave another registration rooted on a
+	/// long-lived host token (ktsu-dev/TUI#199). Tests read it to check that.
+	/// </remarks>
+	internal CancellationTokenSource? RunCancellationSource => Volatile.Read(ref _cancellationTokenSource);
+
 	// Logger message delegates for improved performance
 	private static readonly Action<ILogger, Exception?> LogApplicationAlreadyRunning =
 		LoggerMessage.Define(LogLevel.Warning, new EventId(1, nameof(LogApplicationAlreadyRunning)), "Application is already running");
@@ -223,6 +234,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			// Stop taking signals before restoring the terminal, so a second Ctrl+C arriving
 			// during teardown gets the runtime's default behaviour rather than a second shutdown.
 			interruptRegistration?.Dispose();
+
+			// The linked source holds a registration on the caller's token until it is disposed,
+			// so a host that runs the UI more than once with a long-lived token would otherwise
+			// collect one per run (ktsu-dev/TUI#199).
+			Interlocked.Exchange(ref _cancellationTokenSource, null)?.Dispose();
 			IsRunning = false;
 			ConsoleProvider.SetCursorVisibility(true);
 			if (_logger != null)
@@ -281,7 +297,19 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		{
 			LogStoppingApplication(_logger, null);
 		}
-		_cancellationTokenSource?.Cancel();
+
+		// Read once: the run's teardown clears and disposes the source, and may do so between a
+		// null check and the call.
+		CancellationTokenSource? cancellation = Volatile.Read(ref _cancellationTokenSource);
+
+		try
+		{
+			cancellation?.Cancel();
+		}
+		catch (ObjectDisposedException)
+		{
+			// The run ended while this request was on its way, so there is nothing left to stop
+		}
 	}
 
 	/// <inheritdoc />
