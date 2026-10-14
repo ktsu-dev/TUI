@@ -89,6 +89,11 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	public virtual void ArrangeChildren() => OnArrangeChildren();
 
 	/// <inheritdoc />
+	// Padding decides the content area, so children arranged before the change would otherwise
+	// stay at the old rectangle and draw over the new padding (ktsu-dev/TUI#170)
+	protected override void OnPaddingChanged() => ArrangeChildren();
+
+	/// <inheritdoc />
 	public override void Render(IConsoleProvider provider)
 	{
 		// Render the container itself

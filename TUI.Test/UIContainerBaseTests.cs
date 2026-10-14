@@ -4,6 +4,7 @@ namespace ktsu.TUI.Test;
 
 using ktsu.TUI.Core.Elements.Layouts;
 using ktsu.TUI.Core.Elements.Primitives;
+using ktsu.TUI.Core.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -152,5 +153,28 @@ public sealed class UIContainerBaseTests
 		Assert.AreSame(parent, grandchild.Parent);
 		Assert.HasCount(1, grandparent.Children);
 		Assert.HasCount(1, parent.Children);
+	}
+
+	/// <summary>
+	/// Changing a container's padding after its children were arranged moves them into the new
+	/// content rectangle instead of leaving them over the padding (ktsu-dev/TUI#170)
+	/// </summary>
+	[TestMethod]
+	public void ChangingPaddingRearrangesChildren()
+	{
+		TextElement child = new("abc");
+		BorderElement border = new()
+		{
+			Position = Position.Origin,
+			Dimensions = new Dimensions(20, 6),
+			Child = child,
+		};
+		border.ArrangeChildren();
+		Assert.AreEqual(new Position(1, 1), child.Position);
+
+		border.Padding = Padding.Uniform(2);
+
+		Assert.AreEqual(new Position(2, 2), child.Position);
+		Assert.AreEqual(new Dimensions(16, 2), child.Dimensions);
 	}
 }

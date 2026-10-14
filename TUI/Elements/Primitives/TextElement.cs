@@ -60,17 +60,50 @@ public class TextElement : UIElementBase
 	/// <summary>
 	/// Gets or sets the horizontal alignment
 	/// </summary>
-	public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Left;
+	public HorizontalAlignment HorizontalAlignment
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				Invalidate();
+			}
+		}
+	} = HorizontalAlignment.Left;
 
 	/// <summary>
 	/// Gets or sets the vertical alignment
 	/// </summary>
-	public VerticalAlignment VerticalAlignment { get; set; } = VerticalAlignment.Top;
+	public VerticalAlignment VerticalAlignment
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				Invalidate();
+			}
+		}
+	} = VerticalAlignment.Top;
 
 	/// <summary>
 	/// Gets or sets whether text wrapping is enabled
 	/// </summary>
-	public bool WordWrap { get; set; }
+	public bool WordWrap
+	{
+		get;
+		set
+		{
+			if (field != value)
+			{
+				field = value;
+				Invalidate();
+			}
+		}
+	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="TextElement"/> class
@@ -164,9 +197,17 @@ public class TextElement : UIElementBase
 				: Dimensions.Empty;
 		}
 
-		string[] lines = SplitIntoLines(
-			Text,
-			WordWrap && availableWidth > 0 ? Math.Max(1, availableWidth - Padding.Horizontal) : 0);
+		int wrapWidth = WordWrap && availableWidth > 0 ? availableWidth - Padding.Horizontal : 0;
+
+		if (WordWrap && availableWidth > 0 && wrapWidth <= 0)
+		{
+			// The padding takes every column, so no text can be drawn. Wrapping to one column
+			// instead claimed a row per character for text that never appears, and took those rows
+			// from the siblings below (ktsu-dev/TUI#198).
+			return new Dimensions(Padding.Horizontal, Padding.Vertical);
+		}
+
+		string[] lines = SplitIntoLines(Text, wrapWidth);
 
 		int maxWidth = lines.Max(MeasureCells);
 		int height = lines.Length;
