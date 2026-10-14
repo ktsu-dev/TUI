@@ -103,6 +103,60 @@ public sealed class UIApplicationResizeTests
 	}
 
 	/// <summary>
+	/// A screen swapped out while the terminal was resized must pick the new size up when it is
+	/// swapped back. The size used to be remembered once for the application, so the screen shown
+	/// during the resize absorbed it and the returning one kept its old size (ktsu-dev/TUI#162).
+	/// </summary>
+	[TestMethod]
+	public void SwappingBackARootDetachedDuringAResizeGivesItTheNewTerminalSize()
+	{
+		// Arrange
+		RecordingConsoleProvider provider = new() { Dimensions = LaunchSize };
+		BorderElement first = CreateNestedLayout(out StackPanel firstPanel, out TextElement firstLeaf);
+		StackPanel second = [];
+		UIApplication app = new(provider) { RootElement = first };
+		app.Render();
+		app.RootElement = second;
+		provider.Dimensions = ResizedSize;
+		app.Render();
+
+		// Act
+		app.RootElement = first;
+		app.Render();
+
+		// Assert
+		Dimensions resizedContentArea = ResizedSize.WithoutPadding(first.Padding);
+		Assert.AreEqual(ResizedSize, first.Dimensions, "The returning root should adopt the size the terminal was resized to while it was away");
+		Assert.AreEqual(resizedContentArea, firstPanel.Dimensions, "The returning root's children should be re-arranged at the new size");
+		Assert.AreEqual(resizedContentArea.Width, firstLeaf.Dimensions.Width, "The returning root's grandchildren should be clamped to the narrower terminal");
+	}
+
+	/// <summary>
+	/// Swapping a root back with no resize in between is not a reason to override a size the host
+	/// gave it.
+	/// </summary>
+	[TestMethod]
+	public void SwappingBackARootWithoutAResizeLeavesAHostAssignedSizeAlone()
+	{
+		// Arrange
+		Dimensions chosenByHost = new(20, 5);
+		RecordingConsoleProvider provider = new() { Dimensions = LaunchSize };
+		StackPanel first = new() { Dimensions = chosenByHost };
+		StackPanel second = [];
+		UIApplication app = new(provider) { RootElement = first };
+		app.Render();
+		app.RootElement = second;
+		app.Render();
+
+		// Act
+		app.RootElement = first;
+		app.Render();
+
+		// Assert
+		Assert.AreEqual(chosenByHost, first.Dimensions, "Without a resize the host's size should survive the swap");
+	}
+
+	/// <summary>
 	/// Between resizes, a size the host assigned to the root is its own business. Only an actual
 	/// change of terminal size overrides it — at which point keeping the old one would draw
 	/// outside the window.
