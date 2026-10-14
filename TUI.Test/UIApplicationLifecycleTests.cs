@@ -248,6 +248,47 @@ public sealed class UIApplicationLifecycleTests
 	}
 
 	/// <summary>
+	/// Tests that each run disposes the token source it links to the caller's token. The source
+	/// used to be left behind, so a host running the UI repeatedly with one long-lived token
+	/// collected a registration on that token per run (ktsu-dev/TUI#199).
+	/// </summary>
+	[TestMethod]
+	public async Task EachRunDisposesTheTokenSourceLinkedToTheCallersToken()
+	{
+		// Arrange
+		BlockingConsoleProvider provider = new();
+		FakeInterruptSource interrupts = new();
+		using CancellationTokenSource hostLifetime = new();
+		UIApplication app = new(provider) { InterruptSource = interrupts };
+		List<CancellationTokenSource> linkedSources = [];
+
+		// Act: run twice with the same long-lived token, as a host showing one screen after another would
+		for (int i = 0; i < 2; i++)
+		{
+			// The run links its source before its first await, so it is in place once RunAsync returns
+			Task run = app.RunAsync(hostLifetime.Token);
+			CancellationTokenSource? linked = app.RunCancellationSource;
+			Assert.IsNotNull(linked, "A running application should hold a token source linked to the caller's token");
+			linkedSources.Add(linked);
+
+			interrupts.RaiseInterrupt();
+			await AssertCompletesAsync(run, "An interrupt should end the run").ConfigureAwait(false);
+			Assert.IsNull(app.RunCancellationSource, "A finished run should not keep its linked token source");
+		}
+
+		// Assert
+		Assert.AreNotSame(linkedSources[0], linkedSources[1], "Each run should link a token source of its own");
+		foreach (CancellationTokenSource linked in linkedSources)
+		{
+			// Token throws only once the source is disposed, which is what removes its registration
+			Assert.ThrowsExactly<ObjectDisposedException>(() => _ = linked.Token, "A finished run's linked token source should be disposed");
+		}
+
+		app.Shutdown();
+		Assert.IsFalse(hostLifetime.IsCancellationRequested, "Shutting down after the run ended should not reach the caller's token");
+	}
+
+	/// <summary>
 	/// Awaits <paramref name="task"/> and fails with <paramref name="because"/> if it does not
 	/// finish within <see cref="StepTimeout"/>.
 	/// </summary>

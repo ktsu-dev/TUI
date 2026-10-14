@@ -18,6 +18,23 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private readonly ILogger<UIApplication>? _logger = logger;
 	private CancellationTokenSource? _cancellationTokenSource;
 
+	/// <summary>
+	/// Held while <see cref="Shutdown"/> cancels the run's token source and while the run's teardown
+	/// takes it, so a source is never disposed under a cancel still using it
+	/// </summary>
+	private readonly Lock _runCancellationGate = new();
+
+	/// <summary>
+	/// Gets the token source linked to the caller's token for the run in progress, or null
+	/// between runs
+	/// </summary>
+	/// <remarks>
+	/// A linked source registers a callback on the caller's token, so it is disposed and cleared
+	/// when its run ends. Left behind, every run would leave another registration rooted on a
+	/// long-lived host token (ktsu-dev/TUI#199). Tests read it to check that.
+	/// </remarks>
+	internal CancellationTokenSource? RunCancellationSource => Volatile.Read(ref _cancellationTokenSource);
+
 	// Logger message delegates for improved performance
 	private static readonly Action<ILogger, Exception?> LogApplicationAlreadyRunning =
 		LoggerMessage.Define(LogLevel.Warning, new EventId(1, nameof(LogApplicationAlreadyRunning)), "Application is already running");
@@ -223,6 +240,18 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			// Stop taking signals before restoring the terminal, so a second Ctrl+C arriving
 			// during teardown gets the runtime's default behaviour rather than a second shutdown.
 			interruptRegistration?.Dispose();
+
+			// The linked source holds a registration on the caller's token until it is disposed,
+			// so a host that runs the UI more than once with a long-lived token would otherwise
+			// collect one per run (ktsu-dev/TUI#199).
+			CancellationTokenSource? finishedRunCancellation;
+			lock (_runCancellationGate)
+			{
+				finishedRunCancellation = _cancellationTokenSource;
+				_cancellationTokenSource = null;
+			}
+
+			finishedRunCancellation?.Dispose();
 			IsRunning = false;
 			ConsoleProvider.SetCursorVisibility(true);
 			if (_logger != null)
@@ -281,7 +310,13 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		{
 			LogStoppingApplication(_logger, null);
 		}
-		_cancellationTokenSource?.Cancel();
+
+		// The run's teardown clears and disposes the source; the gate keeps it from doing so
+		// between reading the field and cancelling it.
+		lock (_runCancellationGate)
+		{
+			_cancellationTokenSource?.Cancel();
+		}
 	}
 
 	/// <inheritdoc />
