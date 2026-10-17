@@ -340,6 +340,10 @@ public class TextElement : UIElementBase
 			}
 
 			string testLine = currentLine + pendingSpaces + word;
+
+			// Pending spaces with nothing buffered are the paragraph's indentation, not a break
+			// point, so they stay with the word when it has to be broken (ktsu-dev/TUI#217)
+			string indentation = currentLine.Length == 0 ? pendingSpaces : string.Empty;
 			pendingSpaces = string.Empty;
 
 			if (MeasureCells(testLine) <= maxWidth)
@@ -354,7 +358,7 @@ public class TextElement : UIElementBase
 				lines.Add(currentLine);
 			}
 
-			currentLine = BreakOverlongWord(word, maxWidth, lines);
+			currentLine = BreakOverlongWord(indentation + word, maxWidth, lines);
 		}
 
 		if (!string.IsNullOrEmpty(currentLine))
