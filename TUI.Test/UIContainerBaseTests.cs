@@ -156,6 +156,44 @@ public sealed class UIContainerBaseTests
 	}
 
 	/// <summary>
+	/// Setting a border's Child to one of its ancestors, or to the border itself, is refused before
+	/// the old child is detached, so the border keeps its content (ktsu-dev/TUI#215)
+	/// </summary>
+	[TestMethod]
+	public void SettingBorderChildToAnAncestorKeepsTheOldChild()
+	{
+		TextElement text = new("keep");
+		BorderElement border = new() { Child = text };
+		StackPanel root = [border];
+
+		Assert.ThrowsExactly<ArgumentException>(() => border.Child = root);
+		Assert.ThrowsExactly<ArgumentException>(() => border.Child = border);
+
+		Assert.AreSame(text, border.Child);
+		Assert.AreSame(border, text.Parent);
+
+		bool invalidated = false;
+		border.Invalidated += (_, _) => invalidated = true;
+		text.Text = "changed";
+		Assert.IsTrue(invalidated);
+	}
+
+	/// <summary>
+	/// Setting a border's Child to the child it already holds keeps it in place
+	/// </summary>
+	[TestMethod]
+	public void SettingBorderChildToTheCurrentChildKeepsIt()
+	{
+		TextElement text = new("keep");
+		BorderElement border = new() { Child = text };
+
+		border.Child = text;
+
+		Assert.AreSame(text, border.Child);
+		Assert.AreSame(border, text.Parent);
+	}
+
+	/// <summary>
 	/// Changing a container's padding after its children were arranged moves them into the new
 	/// content rectangle instead of leaving them over the padding (ktsu-dev/TUI#170)
 	/// </summary>
