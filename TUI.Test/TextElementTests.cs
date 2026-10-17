@@ -332,6 +332,36 @@ public sealed class TextElementTests
 	}
 
 	/// <summary>
+	/// A paragraph's leading indentation is kept when the first word does not fit beside it: the
+	/// indentation and the word are broken as one, so the first slice keeps the indentation, and
+	/// the measured size matches what is drawn (ktsu-dev/TUI#217).
+	/// </summary>
+	/// <param name="text">The paragraph to wrap</param>
+	/// <param name="width">The width to wrap it to</param>
+	/// <param name="expected">The lines expected, separated by <c>|</c></param>
+	[TestMethod]
+	[DataRow("  hello world", 6, "  hell|o|world")]
+	[DataRow("    abcdefgh ij", 6, "    ab|cdefgh|ij")]
+	public void WordWrapKeepsIndentationWhenTheFirstWordDoesNotFitBesideIt(string text, int width, string expected)
+	{
+		// Arrange
+		ArgumentNullException.ThrowIfNull(expected);
+		string[] expectedLines = expected.Split('|');
+		TextElement element = CreateElement(text, width: width, height: 10);
+		element.WordWrap = true;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+		Dimensions required = element.CalculateRequiredDimensions(width);
+
+		// Assert
+		Assert.AreSequenceEqual(expectedLines, provider.Writes.Select(w => w.Text));
+		Assert.AreEqual(expectedLines.Length, required.Height);
+		Assert.AreEqual(expectedLines.Max(l => l.Length), required.Width);
+	}
+
+	/// <summary>
 	/// An element that is not visible must draw nothing.
 	/// </summary>
 	[TestMethod]
