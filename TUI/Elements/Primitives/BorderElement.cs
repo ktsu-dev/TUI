@@ -82,6 +82,17 @@ public class BorderElement : UIContainerBase
 		get => Children.FirstOrDefault();
 		set
 		{
+			if (ReferenceEquals(value, Child))
+			{
+				return;
+			}
+
+			// Refuse a cycle before detaching the old child, so a refused set leaves the border as it was (ktsu-dev/TUI#215)
+			if (value != null)
+			{
+				ThrowIfCycle(value);
+			}
+
 			ClearChildren();
 			if (value != null)
 			{
