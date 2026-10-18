@@ -340,6 +340,7 @@ public class TextElement : UIElementBase
 			}
 
 			string testLine = currentLine + pendingSpaces + word;
+			string spacesBefore = pendingSpaces;
 			pendingSpaces = string.Empty;
 
 			if (MeasureCells(testLine) <= maxWidth)
@@ -348,13 +349,7 @@ public class TextElement : UIElementBase
 				continue;
 			}
 
-			// The word does not fit alongside what is already buffered, so flush that first.
-			if (!string.IsNullOrEmpty(currentLine))
-			{
-				lines.Add(currentLine);
-			}
-
-			currentLine = BreakOverlongWord(word, maxWidth, lines);
+			currentLine = BreakBefore(currentLine, spacesBefore, word, maxWidth, lines);
 		}
 
 		if (!string.IsNullOrEmpty(currentLine))
@@ -363,6 +358,30 @@ public class TextElement : UIElementBase
 		}
 
 		return [.. lines];
+	}
+
+	/// <summary>
+	/// Starts a new line with a word that does not fit on the current one, and returns what is
+	/// left of it once any overlong part has been broken into <paramref name="lines"/>
+	/// </summary>
+	/// <param name="currentLine">The line buffered so far</param>
+	/// <param name="spacesBefore">The spaces written between the buffered line and the word</param>
+	/// <param name="word">The word that does not fit</param>
+	/// <param name="maxWidth">The width to wrap to, in cells</param>
+	/// <param name="lines">The finished lines</param>
+	/// <returns>The start of the new line</returns>
+	private static string BreakBefore(string currentLine, string spacesBefore, string word, int maxWidth, List<string> lines)
+	{
+		if (currentLine.Length > 0)
+		{
+			// Flush what is already buffered; the spaces between are a break point and go
+			lines.Add(currentLine);
+			return BreakOverlongWord(word, maxWidth, lines);
+		}
+
+		// Spaces with nothing buffered before them are the paragraph's indentation, not a break
+		// point, so they stay with the word when it has to be broken (ktsu-dev/TUI#217)
+		return BreakOverlongWord(spacesBefore + word, maxWidth, lines);
 	}
 
 	/// <summary>
