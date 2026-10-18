@@ -3,6 +3,7 @@
 namespace ktsu.TUI.Test;
 
 using ktsu.TUI.Core.Contracts;
+using ktsu.TUI.Core.Elements;
 using ktsu.TUI.Core.Models;
 using ktsu.TUI.Core.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -84,6 +85,116 @@ public sealed class UIApplicationReadFailureTests
 		Assert.AreSame(run, finished, "The run should end on the exit key that follows the failed reads");
 		await run.ConfigureAwait(false);
 		Assert.AreEqual(3, provider.ReadCount);
+	}
+
+	/// <summary>
+	/// A read that fails with an OperationCanceledException of its own, such as a provider's
+	/// internal timeout, is a failed read like any other rather than the run being cancelled
+	/// (ktsu-dev/TUI#216).
+	/// </summary>
+	[TestMethod]
+	public async Task AFewReadsFailingWithAForeignCancellationDoNotEndTheRun()
+	{
+		FailingReadConsoleProvider provider = new(failures: 2, () => new TaskCanceledException("Read timed out."));
+		UIApplication app = new(provider) { InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "The run should end on the exit key that follows the failed reads");
+		await run.ConfigureAwait(false);
+		Assert.AreEqual(3, provider.ReadCount);
+	}
+
+	/// <summary>
+	/// A read that always fails with a foreign OperationCanceledException faults the run once the
+	/// retries run out, instead of ending it as though it had been cancelled.
+	/// </summary>
+	[TestMethod]
+	public async Task AReadThatAlwaysFailsWithAForeignCancellationFaultsTheRun()
+	{
+		FailingReadConsoleProvider provider = new(failures: int.MaxValue, () => new TaskCanceledException("Read timed out."));
+		UIApplication app = new(provider) { InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "A read that always fails should end the run");
+		Assert.IsTrue(run.IsFaulted, $"The run should fault, not end as {run.Status}");
+		InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => run).ConfigureAwait(false);
+		Assert.IsInstanceOfType<TaskCanceledException>(ex.InnerException);
+		Assert.AreEqual(UIApplication.MaxConsecutiveReadFailures, provider.ReadCount);
+	}
+
+	/// <summary>
+	/// An input handler that throws an OperationCanceledException of its own, such as an
+	/// HttpClient timeout, does not end the run as if the user had quit (ktsu-dev/TUI#216).
+	/// </summary>
+	[TestMethod]
+	public async Task AHandlerThrowingAForeignCancellationDoesNotEndTheRun()
+	{
+		ScriptedConsoleProvider provider = new(InputResult.FromKey(ConsoleKey.A), InputResult.Exit());
+		CancellingHandlerElement root = new();
+		UIApplication app = new(provider) { InterruptSource = new FakeInterruptSource() };
+		app.Setup(root);
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "The run should end on the exit key that follows the failing handler");
+		await run.ConfigureAwait(false);
+		Assert.AreEqual(1, root.HandledCount);
+		Assert.AreEqual(2, provider.ReadCount, "The run should read on past the handler's failure to the exit key");
+	}
+
+	/// <summary>
+	/// An element whose input handler fails the way a timed-out HttpClient call does.
+	/// </summary>
+	private sealed class CancellingHandlerElement : UIElementBase
+	{
+		public int HandledCount { get; private set; }
+
+		protected override void OnRender(IConsoleProvider provider) { }
+
+		protected override bool OnHandleInput(InputResult input)
+		{
+			HandledCount++;
+			throw new TaskCanceledException("HttpClient timeout");
+		}
+	}
+
+	/// <summary>
+	/// A provider that returns the given inputs in order, then exit keys.
+	/// </summary>
+	private sealed class ScriptedConsoleProvider(params InputResult[] inputs) : IConsoleProvider
+	{
+		private int readCount;
+
+		public int ReadCount => Volatile.Read(ref readCount);
+
+		public Dimensions Dimensions => new(80, 24);
+
+		public void Clear() { }
+
+		public void Render(IUIElement element, Position position) => element?.Render(this);
+
+		public void WriteAt(string text, Position position, TextStyle? style = null) { }
+
+		public Task<InputResult> ReadInputAsync()
+		{
+			int count = Interlocked.Increment(ref readCount);
+			return Task.FromResult(count <= inputs.Length ? inputs[count - 1] : InputResult.Exit());
+		}
+
+		public void SetCursorVisibility(bool visible) { }
+
+		public void SetCursorPosition(Position position) { }
 	}
 
 	/// <summary>

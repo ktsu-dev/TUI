@@ -209,6 +209,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 		IsRunning = true;
 		_cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		CancellationToken runToken = _cancellationTokenSource.Token;
 		IDisposable? interruptRegistration = null;
 
 		try
@@ -232,7 +233,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			// Start input processing
 			await ProcessInputAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
 		}
-		catch (OperationCanceledException)
+		catch (OperationCanceledException) when (runToken.IsCancellationRequested)
 		{
 			if (_logger != null)
 			{
@@ -577,18 +578,24 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 					// Re-render if needed (elements invalidate themselves when they change)
 					Render();
 				}
-				catch (OperationCanceledException)
+				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 				{
 					break;
 				}
+				catch (OperationCanceledException ex)
+				{
+					// Thrown by a handler or the provider for a reason of its own (an HttpClient
+					// timeout, say) rather than because this run was cancelled, so it is a failure
+					// like the others here and not a shutdown (ktsu-dev/TUI#216)
+					if (RecordInputFailure(ex, readSucceeded, ref consecutiveReadFailures))
+					{
+						// Rethrowing it as is would end RunAsync as a cancelled task
+						throw new InvalidOperationException("Reading input kept failing with an OperationCanceledException that did not come from cancelling the run.", ex);
+					}
+				}
 				catch (InvalidOperationException ex)
 				{
-					if (_logger != null)
-					{
-						LogInputProcessingError(_logger, ex);
-					}
-
-					if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+					if (RecordInputFailure(ex, readSucceeded, ref consecutiveReadFailures))
 					{
 						throw;
 					}
@@ -597,12 +604,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				}
 				catch (ArgumentException ex)
 				{
-					if (_logger != null)
-					{
-						LogInputProcessingError(_logger, ex);
-					}
-
-					if (!readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures)
+					if (RecordInputFailure(ex, readSucceeded, ref consecutiveReadFailures))
 					{
 						throw;
 					}
@@ -631,6 +633,23 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		{
 			LogInputProcessingStopped(_logger, null);
 		}
+	}
+
+	/// <summary>
+	/// Logs a recoverable failure from reading or handling input and counts consecutive failed reads
+	/// </summary>
+	/// <param name="ex">The failure</param>
+	/// <param name="readSucceeded">Whether the read succeeded, so the failure came from handling it</param>
+	/// <param name="consecutiveReadFailures">The count of reads that have failed in a row</param>
+	/// <returns>True when reads have failed too many times in a row and the run should give up</returns>
+	private bool RecordInputFailure(Exception ex, bool readSucceeded, ref int consecutiveReadFailures)
+	{
+		if (_logger != null)
+		{
+			LogInputProcessingError(_logger, ex);
+		}
+
+		return !readSucceeded && ++consecutiveReadFailures >= MaxConsecutiveReadFailures;
 	}
 
 	/// <summary>
