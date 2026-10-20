@@ -438,4 +438,32 @@ public sealed class SpectreConsoleProviderTests
 
 		Assert.AreEqual("\u001b[1;1Ha\uFFFDb\uFFFDc\uFFFDd", output.ToString());
 	}
+
+	/// <summary>
+	/// Tests that styled text containing an emoji shortcode is drawn as written, not as the emoji,
+	/// so the drawn width matches the measured width (ktsu-dev/TUI#166).
+	/// </summary>
+	[TestMethod]
+	public void StyledTextKeepsEmojiShortcodes()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("a :rocket:", new Position(0, 0), new TextStyle { IsBold = true });
+
+		Assert.AreEqual("\u001b[1;1H\u001b[1ma :rocket:\u001b[0m", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that styled text containing square brackets is drawn as written rather than read as
+	/// markup.
+	/// </summary>
+	[TestMethod]
+	public void StyledTextKeepsSquareBrackets()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("[b]x[/]", new Position(0, 0), new TextStyle { IsBold = true });
+
+		Assert.Contains("[b]x[/]", output.ToString());
+	}
 }

@@ -105,8 +105,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 		if (style.HasValue)
 		{
-			Markup markup = CreateStyledMarkup(visibleText, style.Value);
-			_console.Write(markup);
+			_console.Write(CreateStyledText(visibleText, style.Value));
 		}
 		else
 		{
@@ -203,14 +202,22 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		return text.Substring((int)(visibleStart - start), (int)(visibleEnd - visibleStart));
 	}
 
-	private static Markup CreateStyledMarkup(string text, TextStyle style)
+	/// <summary>
+	/// Builds the renderable for styled text.
+	/// </summary>
+	/// <remarks>
+	/// A <see cref="Text"/> rather than a <see cref="Markup"/>: Markup parses its content, so beyond
+	/// the brackets it would also turn an emoji shortcode such as <c>:rocket:</c> into the emoji,
+	/// changing what is drawn and leaving it narrower than the element measured (ktsu-dev/TUI#166).
+	/// Text draws its content as it is.
+	/// </remarks>
+	private static Text CreateStyledText(string text, TextStyle style)
 	{
 		string styleString = BuildStyleString(style);
-		string escapedText = text.Replace("[", "[[").Replace("]", "]]");
 
 		return string.IsNullOrEmpty(styleString)
-			? new Markup(escapedText)
-			: new Markup($"[{styleString}]{escapedText}[/]");
+			? new Text(text)
+			: new Text(text, Style.Parse(styleString));
 	}
 
 	private static string BuildStyleString(TextStyle style)
