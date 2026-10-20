@@ -2,6 +2,7 @@
 
 Changes since v2.0.0:
 
+- Draw styled text as written instead of parsing it as markup [patch] (Claude)
 - Add UIApplication.Post to change the tree from another thread [minor] (Claude)
 - Use BorderStyle.DoubleLine in the README Quick Start, and compile it in the tests [patch] (Claude)
 - Move WrapText's line break into a helper to keep it under the complexity limit (Claude)
