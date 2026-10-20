@@ -52,7 +52,11 @@ Provider Abstraction (SpectreConsoleProvider)
    root's event and flags a redraw, which the input loop's poll tick draws, so a change made off
    the loop thread (a timer, a background task) appears without a keypress. The handler only sets
    a flag, never draws, and ignores invalidations a pass raises on its own thread while arranging.
-   `UIApplication.RequestRender()` sets the same flag for a host (ktsu-dev/TUI#154)
+   `UIApplication.RequestRender()` sets the same flag for a host (ktsu-dev/TUI#154).
+   The tree itself is not synchronised. Setting a property an element only reads while drawing
+   (`TextElement.Text`) is safe from any thread, but adding or removing children races the pass
+   that walks them, so a host does that through `UIApplication.Post(Action)`, which runs the
+   change on the loop thread at the start of the next pass (ktsu-dev/TUI#225)
 4. Each pass also re-reads `ConsoleProvider.Dimensions`. When the terminal has changed size the
    root takes the new size and the whole tree is re-arranged, so a resized window is laid out on
    the next frame instead of staying pinned to the size at launch (ktsu-dev/TUI#111). The input

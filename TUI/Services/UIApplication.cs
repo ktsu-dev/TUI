@@ -4,6 +4,7 @@ namespace ktsu.TUI.Core.Services;
 
 using ktsu.TUI.Core.Contracts;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -161,11 +162,18 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// </summary>
 	private int _renderingThreadId;
 
+	/// <summary>
+	/// Changes posted from other threads through <see cref="Post"/>, run at the start of the next pass
+	/// </summary>
+	private readonly ConcurrentQueue<Action> _posted = new();
+
 	/// <inheritdoc />
 	/// <remarks>
 	/// The application listens to the root's <see cref="IUIElement.Invalidated"/>, which every
 	/// element bubbles up to it, so a change made outside a keypress (a timer, a background task)
-	/// is drawn on the next poll of the input loop (ktsu-dev/TUI#154).
+	/// is drawn on the next poll of the input loop (ktsu-dev/TUI#154). Adding or removing elements
+	/// from such a thread must go through <see cref="Post"/>, because the loop walks the tree on
+	/// every pass (ktsu-dev/TUI#225).
 	/// </remarks>
 	public IUIElement? RootElement
 	{
@@ -294,9 +302,44 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// Safe to call from any thread. The pass runs on the input loop's thread within one
 	/// <see cref="ResizePollInterval"/>, so it never races with a pass already drawing. Elements
 	/// that change through <see cref="IUIElement.Invalidate"/> request one for themselves; this is
-	/// for a host that changes what is shown some other way (ktsu-dev/TUI#154).
+	/// for a host that changes what is shown some other way (ktsu-dev/TUI#154). It does not make a
+	/// change to the tree's structure safe: use <see cref="Post"/> for that (ktsu-dev/TUI#225).
 	/// </remarks>
 	public void RequestRender() => Interlocked.Exchange(ref _redrawRequested, 1);
+
+	/// <summary>
+	/// Runs <paramref name="action"/> on the input loop's thread, before the next render pass
+	/// </summary>
+	/// <remarks>
+	/// Safe to call from any thread. The element tree is not synchronised: the loop thread walks
+	/// every container's children on each pass, so adding or removing a child from a timer or a
+	/// background task races that walk, drops frames and can fault <see cref="RunAsync"/>
+	/// (ktsu-dev/TUI#225). Make such changes through this method instead. Setting a property an
+	/// element only reads while drawing, such as <c>TextElement.Text</c>, is safe to do directly.
+	/// <para>
+	/// Posted actions run in the order they were posted, followed by a render pass, within one
+	/// <see cref="ResizePollInterval"/> while the application runs. When it is not running they run
+	/// at the start of the next <see cref="Render"/>. An exception an action throws propagates as
+	/// one thrown while handling input would.
+	/// </para>
+	/// </remarks>
+	/// <param name="action">The change to make</param>
+	public void Post(Action action)
+	{
+		_posted.Enqueue(Ensure.NotNull(action));
+		RequestRender();
+	}
+
+	/// <summary>
+	/// Runs every action posted through <see cref="Post"/> so far, on the calling thread
+	/// </summary>
+	private void RunPostedActions()
+	{
+		while (_posted.TryDequeue(out Action? action))
+		{
+			action();
+		}
+	}
 
 	/// <summary>
 	/// Requests a render pass when anything in the tree changes
@@ -345,6 +388,10 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// </remarks>
 	public void Render()
 	{
+		// Before anything reads the tree, so the pass draws the changes and nothing changes it
+		// while it is walked. An action may also be what sets the root.
+		RunPostedActions();
+
 		if (RootElement == null)
 		{
 			if (_logger != null)
