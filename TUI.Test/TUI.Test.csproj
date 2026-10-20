@@ -14,6 +14,8 @@
          makes the demos it exposes actually reachable from a test. -->
     <ProjectReference Include="..\TUI.App\TUI.App.csproj" />
     <PackageReference Include="Moq" />
+    <!-- Compiles the README's code sample against the library (ReadmeSampleTests). -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
 </Project>

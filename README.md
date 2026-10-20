@@ -69,7 +69,7 @@ var consoleProvider = new SpectreConsoleProvider();
 var ui = new BorderElement
 {
     Title = "My TUI App",
-    BorderStyle = BorderStyle.Double,
+    BorderStyle = BorderStyle.DoubleLine,
     Child = new TextElement
     {
         Text = "Hello, TUI World!",
