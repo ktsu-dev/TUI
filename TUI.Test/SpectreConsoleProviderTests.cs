@@ -319,6 +319,39 @@ public sealed class SpectreConsoleProviderTests
 	}
 
 	/// <summary>
+	/// Tests that a character typed with AltGr+C, which Windows reports as Ctrl+Alt+C, is typed input
+	/// rather than an exit request (ktsu-dev/TUI#237).
+	/// </summary>
+	/// <param name="keyChar">The character the keyboard layout types for AltGr+C.</param>
+	[TestMethod]
+	[DataRow('\u0107')]
+	[DataRow('&')]
+	public void ToInputResultTreatsAltGrCAsACharacter(char keyChar)
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo(keyChar, ConsoleKey.C, shift: false, alt: true, control: true));
+
+		Assert.IsFalse(result.IsExit);
+		Assert.AreEqual(InputType.Keyboard, result.Type);
+		Assert.AreEqual(keyChar, result.Character);
+	}
+
+	/// <summary>
+	/// Tests that a key carrying the ETX character a real Ctrl+C produces exits even when Alt is
+	/// reported too, and that Ctrl+C without a character still exits (ktsu-dev/TUI#237).
+	/// </summary>
+	/// <param name="keyChar">The character reported with the key.</param>
+	/// <param name="alt">Whether Alt is reported.</param>
+	[TestMethod]
+	[DataRow('\u0003', true)]
+	[DataRow('\0', false)]
+	public void ToInputResultTreatsControlCAsExitByCharacterOrModifiers(char keyChar, bool alt)
+	{
+		InputResult result = SpectreConsoleProvider.ToInputResult(new ConsoleKeyInfo(keyChar, ConsoleKey.C, shift: false, alt, control: true));
+
+		Assert.IsTrue(result.IsExit);
+	}
+
+	/// <summary>
 	/// Tests that C without Ctrl is ordinary typed input, not an exit request.
 	/// </summary>
 	[TestMethod]

@@ -146,8 +146,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		// Handle special cases. Ctrl+C normally arrives as an interrupt signal rather than as
 		// a key, and UIApplication handles it there; this branch only fires for a host that
 		// has set Console.TreatControlCAsInput.
-		if (keyInfo.Key == ConsoleKey.Escape ||
-			(keyInfo.Key == ConsoleKey.C && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control)))
+		if (keyInfo.Key == ConsoleKey.Escape || IsControlC(keyInfo))
 		{
 			return InputResult.Exit();
 		}
@@ -160,6 +159,22 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 			? result with { Character = keyInfo.KeyChar }
 			: result;
 	}
+
+	/// <summary>
+	/// Whether a key is Ctrl+C rather than a character typed with AltGr+C.
+	/// </summary>
+	/// <remarks>
+	/// Windows reports AltGr as Ctrl+Alt, so on layouts where AltGr+C types a character ("ć" on
+	/// Polish, "&amp;" on Hungarian) the key arrives as C with Control set. The ETX character is
+	/// what identifies a real Ctrl+C; without it, Control has to come without Alt
+	/// (ktsu-dev/TUI#237).
+	/// </remarks>
+	/// <param name="keyInfo">The key that was read.</param>
+	/// <returns><see langword="true"/> if the key is Ctrl+C.</returns>
+	private static bool IsControlC(ConsoleKeyInfo keyInfo) =>
+		keyInfo.Key == ConsoleKey.C &&
+		(keyInfo.KeyChar == '\u0003' ||
+			(keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control) && !keyInfo.Modifiers.HasFlag(ConsoleModifiers.Alt)));
 
 	/// <inheritdoc />
 	/// <remarks>
