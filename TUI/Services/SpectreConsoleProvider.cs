@@ -262,7 +262,7 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 
 	private static string ReplaceControlCharacters(string text)
 	{
-		if (!text.Any(char.IsControl))
+		if (!text.Any(IsUnsafeToWrite))
 		{
 			return text;
 		}
@@ -271,8 +271,12 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		{
 			for (int i = 0; i < source.Length; i++)
 			{
-				chars[i] = char.IsControl(source[i]) ? TextElement.ControlCharacterPlaceholder : source[i];
+				chars[i] = IsUnsafeToWrite(source[i]) ? TextElement.ControlCharacterPlaceholder : source[i];
 			}
 		});
 	}
+
+	// The Unicode line and paragraph separators are not control characters, but Spectre writes
+	// them as a line feed, which moves the cursor off the row being drawn (ktsu-dev/TUI#236)
+	private static bool IsUnsafeToWrite(char c) => char.IsControl(c) || c is '\u2028' or '\u2029';
 }

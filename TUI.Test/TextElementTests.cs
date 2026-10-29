@@ -406,6 +406,8 @@ public sealed class TextElementTests
 	[DataRow("ab\ncd")]
 	[DataRow("ab\r\ncd")]
 	[DataRow("ab\rcd")]
+	[DataRow("ab\u2028cd")]
+	[DataRow("ab\u2029cd")]
 	public void EmbeddedLineBreakIsMeasuredAsTwoLines(string text)
 	{
 		// Arrange
@@ -422,11 +424,15 @@ public sealed class TextElementTests
 	/// An embedded line break must be drawn as two writes on consecutive rows, and the break
 	/// itself must never reach the console (ktsu-dev/TUI#135).
 	/// </summary>
+	/// <param name="text">The text under test, with a line break in each supported style.</param>
 	[TestMethod]
-	public void EmbeddedLineBreakRendersOnConsecutiveRows()
+	[DataRow("ab\r\ncd")]
+	[DataRow("ab\u2028cd")]
+	[DataRow("ab\u2029cd")]
+	public void EmbeddedLineBreakRendersOnConsecutiveRows(string text)
 	{
 		// Arrange
-		TextElement element = CreateElement("ab\r\ncd", width: 10, height: 3);
+		TextElement element = CreateElement(text, width: 10, height: 3);
 		RecordingConsoleProvider provider = new();
 
 		// Act

@@ -242,14 +242,16 @@ public class TextElement : UIElementBase
 	/// Breaks text into the lines that are measured and drawn: one per embedded line break, each
 	/// then wrapped to <paramref name="wrapWidth"/> when it is positive (ktsu-dev/TUI#135).
 	/// Tabs and other control characters are normalised first, so that what is measured is what
-	/// is drawn (ktsu-dev/TUI#159).
+	/// is drawn (ktsu-dev/TUI#159). The Unicode line and paragraph separators count as line breaks,
+	/// as they do for .NET and Spectre, which would otherwise write them as a raw line feed
+	/// (ktsu-dev/TUI#236).
 	/// </summary>
 	/// <param name="text">The text to break</param>
 	/// <param name="wrapWidth">The width to wrap each line to, or 0 to leave lines unwrapped</param>
 	/// <returns>The lines, in order; a blank line in the text stays as an empty line</returns>
 	private static string[] SplitIntoLines(string text, int wrapWidth)
 	{
-		string[] paragraphs = [.. text.Split(["\r\n", "\n", "\r"], StringSplitOptions.None).Select(NormalizeControlCharacters)];
+		string[] paragraphs = [.. text.Split(["\r\n", "\n", "\r", "\u2028", "\u2029"], StringSplitOptions.None).Select(NormalizeControlCharacters)];
 		if (wrapWidth <= 0)
 		{
 			return paragraphs;

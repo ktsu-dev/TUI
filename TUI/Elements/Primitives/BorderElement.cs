@@ -239,8 +239,11 @@ public class BorderElement : UIContainerBase
 
 	// A line break written to the terminal would move the rest of the title off the top
 	// border row and over the left edge, so each break becomes a space (ktsu-dev/TUI#151).
+	// That includes the Unicode line and paragraph separators, which Spectre writes as a line
+	// feed (ktsu-dev/TUI#236).
 	private string GetSingleLineTitle() =>
-		Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ');
+		Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ')
+			.Replace('\u2028', ' ').Replace('\u2029', ' ');
 
 	private static BorderCharacters GetBorderCharacters(BorderStyle style)
 	{

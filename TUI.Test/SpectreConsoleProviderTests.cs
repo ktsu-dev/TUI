@@ -440,6 +440,20 @@ public sealed class SpectreConsoleProviderTests
 	}
 
 	/// <summary>
+	/// Tests that the provider replaces the Unicode line and paragraph separators, which Spectre
+	/// would otherwise write as a line feed (ktsu-dev/TUI#236).
+	/// </summary>
+	[TestMethod]
+	public void WriteAtReplacesUnicodeLineSeparators()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("a\u2028b\u2029c", new Position(0, 0));
+
+		Assert.AreEqual("\u001b[1;1Ha\uFFFDb\uFFFDc", output.ToString());
+	}
+
+	/// <summary>
 	/// Tests that styled text containing an emoji shortcode is drawn as written, not as the emoji,
 	/// so the drawn width matches the measured width (ktsu-dev/TUI#166).
 	/// </summary>
