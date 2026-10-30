@@ -2,6 +2,8 @@
 
 Changes since v2.0.0:
 
+- Treat U+2028 and U+2029 as line breaks instead of writing a raw line feed [patch] (Claude)
+- Type AltGr+C as a character instead of exiting [patch] (Claude)
 - Draw styled text as written instead of parsing it as markup [patch] (Claude)
 - Add UIApplication.Post to change the tree from another thread [minor] (Claude)
 - Use BorderStyle.DoubleLine in the README Quick Start, and compile it in the tests [patch] (Claude)
