@@ -629,6 +629,43 @@ public sealed class StackPanelTests
 	}
 
 	/// <summary>
+	/// Tests that a horizontal panel does not ask for the height of a child it collapses for lack of
+	/// width, so a tall child that no longer fits leaves no blank rows and later siblings move up
+	/// (ktsu-dev/TUI#224).
+	/// </summary>
+	[TestMethod]
+	public void StackPanelHorizontalRequiredHeightIgnoresChildrenThatDoNotFit()
+	{
+		TextElement wide = new(new string('A', 20));
+		TextElement tall = new("l1\nl2\nl3\nl4\nl5");
+		StackPanel row = new(Orientation.Horizontal) { wide, tall };
+		TextElement footer = new("footer");
+		StackPanel root = [row, footer];
+		root.Dimensions = new Dimensions(20, 10);
+
+		root.ArrangeChildren();
+		row.ArrangeChildren();
+
+		Assert.AreEqual(new Dimensions(20, 1), row.CalculateRequiredDimensions(20));
+		Assert.AreEqual(Dimensions.Empty, tall.Dimensions);
+		Assert.AreEqual(new Dimensions(20, 1), row.Dimensions);
+		Assert.AreEqual(1, footer.Position.Y);
+	}
+
+	/// <summary>
+	/// Tests that a horizontal panel still measures every child when no width constrains it.
+	/// </summary>
+	[TestMethod]
+	public void StackPanelHorizontalUnconstrainedMeasureCountsEveryChild()
+	{
+		StackPanel row = new(Orientation.Horizontal) { Spacing = 1 };
+		row.Add(new TextElement(new string('A', 20)));
+		row.Add(new TextElement("l1\nl2\nl3\nl4\nl5"));
+
+		Assert.AreEqual(new Dimensions(23, 5), row.CalculateRequiredDimensions());
+	}
+
+	/// <summary>
 	/// Tests that a horizontal panel measures word-wrapped text against the width it has, so it
 	/// reports the wrapped height to a parent rather than one row (ktsu-dev/TUI#161).
 	/// </summary>

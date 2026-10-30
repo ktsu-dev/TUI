@@ -165,11 +165,20 @@ public class StackPanel : UIContainerBase
 		int maxHeight = 0;
 
 		IUIElement[] visibleChildren = [.. GetVisibleChildren()];
-		int totalSpacing = Math.Max(0, (visibleChildren.Length - 1) * Spacing);
+		int measuredChildren = 0;
 		int consumedWidth = 0;
 
 		foreach (IUIElement? child in visibleChildren)
 		{
+			// A horizontal child that starts where the width has run out is collapsed when arranged,
+			// so it adds neither width nor height, matching the arrange pass's break (ktsu-dev/TUI#224).
+			if (Orientation == Orientation.Horizontal && availableWidth is int limit && consumedWidth >= limit)
+			{
+				break;
+			}
+
+			measuredChildren++;
+
 			// A horizontal child gets the width its earlier siblings and the spacing between them
 			// leave, as it does when arranged (ktsu-dev/TUI#161).
 			Dimensions childDimensions = availableWidth switch
@@ -191,6 +200,8 @@ public class StackPanel : UIContainerBase
 				maxHeight = Math.Max(maxHeight, childDimensions.Height);
 			}
 		}
+
+		int totalSpacing = Math.Max(0, (measuredChildren - 1) * Spacing);
 
 		return Orientation == Orientation.Vertical
 			? new Dimensions(maxWidth, totalHeight + totalSpacing)
