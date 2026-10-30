@@ -188,12 +188,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			field?.Invalidated -= OnRootInvalidated;
 
 			field = value;
+			field?.Invalidated += OnRootInvalidated;
 
-			if (field != null)
-			{
-				field.Invalidated += OnRootInvalidated;
-				RequestRender();
-			}
+			// Clearing the root needs a pass too, to take the old root's frame off the screen
+			// (ktsu-dev/TUI#223)
+			RequestRender();
 		}
 	}
 
@@ -398,6 +397,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			{
 				LogNoRootElement(_logger, null);
 			}
+
+			// Nothing to draw, but whatever an earlier root drew must not stay on screen looking
+			// live while it no longer receives input (ktsu-dev/TUI#223)
+			Interlocked.Exchange(ref _redrawRequested, 0);
+			ConsoleProvider.Clear();
 			return;
 		}
 
