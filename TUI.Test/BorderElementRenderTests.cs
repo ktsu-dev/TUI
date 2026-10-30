@@ -217,6 +217,8 @@ public sealed class BorderElementRenderTests
 	[DataRow("ab\ncd")]
 	[DataRow("ab\rcd")]
 	[DataRow("ab\r\ncd")]
+	[DataRow("ab\u2028cd")]
+	[DataRow("ab\u2029cd")]
 	public void TitleWithALineBreakIsDrawnOnOneRow(string title)
 	{
 		// Arrange
@@ -228,7 +230,7 @@ public sealed class BorderElementRenderTests
 		element.Render(provider);
 
 		// Assert
-		Assert.IsFalse(provider.Writes.Any(w => w.Text.Contains('\r') || w.Text.Contains('\n')), "A write carried a line break");
+		Assert.IsFalse(provider.Writes.Any(w => w.Text.IndexOfAny(['\r', '\n', '\u2028', '\u2029']) >= 0), "A write carried a line break");
 		Assert.AreEqual(0, provider.WritesOf(" ab cd ").Single().Position.Y);
 	}
 
