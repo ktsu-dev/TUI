@@ -115,6 +115,50 @@ public sealed class UIApplicationInvalidationTests
 	}
 
 	/// <summary>
+	/// A pass with no root still clears the screen, so the last root's frame does not stay up
+	/// looking live once that root no longer receives input (ktsu-dev/TUI#223).
+	/// </summary>
+	[TestMethod]
+	public void RenderingWithTheRootClearedClearsTheScreen()
+	{
+		RecordingConsoleProvider provider = new();
+		UIApplication app = new(provider) { RootElement = new TextElement("hello") };
+		app.Render();
+		Assert.AreEqual(1, provider.ClearCount);
+
+		app.RootElement = null;
+		app.Render();
+
+		Assert.AreEqual(2, provider.ClearCount, "A pass with no root should still clear what the last root drew");
+	}
+
+	/// <summary>
+	/// Clearing the root while the application waits for input produces a pass without a keypress
+	/// (ktsu-dev/TUI#223).
+	/// </summary>
+	[TestMethod]
+	public async Task ClearingTheRootIsDrawnWithoutAKeypress()
+	{
+		// Arrange
+		BlockingConsoleProvider provider = new();
+		UIApplication app = new(provider) { RootElement = new TextElement("hello"), ResizePollInterval = PollInterval };
+
+		Task run = app.RunAsync(TestContext.CancellationToken);
+		await AssertCompletesAsync(provider.ReadStarted, "The application should start waiting for input").ConfigureAwait(false);
+		await Task.Delay(PollInterval * 5, TestContext.CancellationToken).ConfigureAwait(false);
+		int passesBefore = provider.ClearCount;
+
+		// Act
+		app.RootElement = null;
+
+		// Assert
+		await AssertRenderPassAfterAsync(provider, passesBefore, "Clearing the root should produce a render pass with no key pressed").ConfigureAwait(false);
+
+		app.Shutdown();
+		await AssertCompletesAsync(run, "The run should still end when asked to shut down").ConfigureAwait(false);
+	}
+
+	/// <summary>
 	/// Asserts that a render pass begins after <paramref name="passesBefore"/> were counted.
 	/// </summary>
 	/// <param name="provider">The provider that counts passes.</param>
