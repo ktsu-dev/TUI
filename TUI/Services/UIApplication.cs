@@ -62,9 +62,6 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	private static readonly Action<ILogger, Exception?> LogRenderingUI =
 		LoggerMessage.Define(LogLevel.Debug, new EventId(8, nameof(LogRenderingUI)), "Rendering UI");
 
-	private static readonly Action<ILogger, Exception?> LogRenderError =
-		LoggerMessage.Define(LogLevel.Error, new EventId(9, nameof(LogRenderError)), "An error occurred while rendering the UI");
-
 	private static readonly Action<ILogger, Exception?> LogStartingInputProcessing =
 		LoggerMessage.Define(LogLevel.Debug, new EventId(10, nameof(LogStartingInputProcessing)), "Starting input processing");
 
@@ -384,6 +381,13 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 	/// out at its new size on the next frame rather than staying pinned to the size at launch
 	/// (ktsu-dev/TUI#111).
 	/// </para>
+	/// <para>
+	/// An exception thrown while arranging or drawing an element is not caught here. The console
+	/// has already been cleared by then, so a pass that swallowed it would leave every element
+	/// after the one that threw erased on every frame, with nothing to say why. It propagates out
+	/// of this method and ends <see cref="RunAsync"/>, which restores the cursor on the way out
+	/// (ktsu-dev/TUI#246).
+	/// </para>
 	/// </remarks>
 	public void Render()
 	{
@@ -427,27 +431,6 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 			// Render the root element
 			RootElement.Render(ConsoleProvider);
-		}
-		catch (InvalidOperationException ex)
-		{
-			if (_logger != null)
-			{
-				LogRenderError(_logger, ex);
-			}
-		}
-		catch (ArgumentException ex)
-		{
-			if (_logger != null)
-			{
-				LogRenderError(_logger, ex);
-			}
-		}
-		catch (NotSupportedException ex)
-		{
-			if (_logger != null)
-			{
-				LogRenderError(_logger, ex);
-			}
 		}
 		finally
 		{
@@ -559,6 +542,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 				// Tells the catch blocks below whether the failure came from reading or from handling
 				bool readSucceeded = false;
 
+				// Set while a render pass runs. A pass that throws is a bug in an element, not a
+				// recoverable input failure, so the catch blocks below let it end the run
+				// (ktsu-dev/TUI#246).
+				bool rendering = false;
+
 				try
 				{
 					pendingRead ??= ConsoleProvider.ReadInputAsync(readCancellation.Token);
@@ -584,7 +572,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 							// same pending read.
 							if (Volatile.Read(ref _redrawRequested) == 1 || HasConsoleResized())
 							{
+								rendering = true;
 								Render();
+								rendering = false;
 							}
 
 							continue;
@@ -633,13 +623,15 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 					}
 
 					// Re-render if needed (elements invalidate themselves when they change)
+					rendering = true;
 					Render();
+					rendering = false;
 				}
 				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
 				{
 					break;
 				}
-				catch (OperationCanceledException ex)
+				catch (OperationCanceledException ex) when (!rendering)
 				{
 					// Thrown by a handler or the provider for a reason of its own (an HttpClient
 					// timeout, say) rather than because this run was cancelled, so it is a failure
@@ -650,7 +642,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 						throw new InvalidOperationException("Reading input kept failing with an OperationCanceledException that did not come from cancelling the run.", ex);
 					}
 				}
-				catch (InvalidOperationException ex)
+				catch (InvalidOperationException ex) when (!rendering)
 				{
 					if (RecordInputFailure(ex, readSucceeded, ref consecutiveReadFailures))
 					{
@@ -659,7 +651,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 					// Continue processing for recoverable errors
 				}
-				catch (ArgumentException ex)
+				catch (ArgumentException ex) when (!rendering)
 				{
 					if (RecordInputFailure(ex, readSucceeded, ref consecutiveReadFailures))
 					{
