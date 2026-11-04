@@ -537,6 +537,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		// is still waiting on it, and a second read would race it for every key (ktsu-dev/TUI#149).
 		Task<Models.InputResult>? pendingRead = _pendingRead;
 		_pendingRead = null;
+
+		// Kept to tell that read apart from this run's own. Any read finishes Canceled when an async
+		// provider throws an OperationCanceledException of its own, and only the carried-over one
+		// may be skipped without counting as a failure (ktsu-dev/TUI#242).
+		Task<Models.InputResult>? carriedOverRead = pendingRead;
 		int consecutiveReadFailures = 0;
 
 		// Cancelled when the loop ends, however it ends, so a provider can give its read up instead
@@ -587,10 +592,11 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 					Task<Models.InputResult> completedRead = pendingRead;
 					pendingRead = null;
 
-					if (completedRead.IsCanceled && !cancellationToken.IsCancellationRequested)
+					if (completedRead.IsCanceled && ReferenceEquals(completedRead, carriedOverRead) && !cancellationToken.IsCancellationRequested)
 					{
 						// A read carried over from an earlier run, which its provider gave up when
-						// that run ended. It holds no key, so start a fresh one.
+						// that run ended. It holds no key, so start a fresh one. Any other cancelled
+						// read falls through to the await, which counts it as a failed read.
 						continue;
 					}
 

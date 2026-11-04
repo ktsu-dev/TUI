@@ -131,6 +131,49 @@ public sealed class UIApplicationReadFailureTests
 	}
 
 	/// <summary>
+	/// An async provider that throws an OperationCanceledException of its own finishes its read
+	/// Canceled rather than Faulted. That read is not the one carried over from an earlier run, so
+	/// it counts as a failed read and the run still faults once the retries run out, instead of
+	/// spinning forever re-reading (ktsu-dev/TUI#242).
+	/// </summary>
+	[TestMethod]
+	public async Task AnAsyncReadThatAlwaysFailsWithAForeignCancellationFaultsTheRun()
+	{
+		FailingReadConsoleProvider provider = new(failures: int.MaxValue, () => new TaskCanceledException("Read timed out."), failAsynchronously: true);
+		UIApplication app = new(provider) { InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "A read that always fails should end the run");
+		Assert.IsTrue(run.IsFaulted, $"The run should fault, not end as {run.Status}");
+		InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => run).ConfigureAwait(false);
+		Assert.IsInstanceOfType<TaskCanceledException>(ex.InnerException);
+		Assert.AreEqual(UIApplication.MaxConsecutiveReadFailures, provider.ReadCount);
+	}
+
+	/// <summary>
+	/// A few async reads failing with a foreign cancellation are tolerated like any other failed read.
+	/// </summary>
+	[TestMethod]
+	public async Task AFewAsyncReadsFailingWithAForeignCancellationDoNotEndTheRun()
+	{
+		FailingReadConsoleProvider provider = new(failures: 2, () => new TaskCanceledException("Read timed out."), failAsynchronously: true);
+		UIApplication app = new(provider) { InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "The run should end on the exit key that follows the failed reads");
+		await run.ConfigureAwait(false);
+		Assert.AreEqual(3, provider.ReadCount);
+	}
+
+	/// <summary>
 	/// An input handler that throws an OperationCanceledException of its own, such as an
 	/// HttpClient timeout, does not end the run as if the user had quit (ktsu-dev/TUI#216).
 	/// </summary>
@@ -201,7 +244,7 @@ public sealed class UIApplicationReadFailureTests
 	/// A provider whose first <c>failures</c> reads fail the way <c>Console.ReadKey</c> does with
 	/// redirected input, and whose next read is an exit key.
 	/// </summary>
-	private sealed class FailingReadConsoleProvider(int failures, Func<Exception>? failure = null) : IConsoleProvider
+	private sealed class FailingReadConsoleProvider(int failures, Func<Exception>? failure = null, bool failAsynchronously = false) : IConsoleProvider
 	{
 		private int readCount;
 
@@ -220,10 +263,28 @@ public sealed class UIApplicationReadFailureTests
 		public Task<InputResult> ReadInputAsync()
 		{
 			int count = Interlocked.Increment(ref readCount);
-			return count <= failures
-				? Task.FromException<InputResult>(failure?.Invoke() ?? new InvalidOperationException("Cannot read keys when console input has been redirected."))
-				: Task.FromResult(InputResult.Exit());
+			if (count > failures)
+			{
+				return Task.FromResult(InputResult.Exit());
+			}
+
+			return failAsynchronously
+				? FailAfterYieldAsync()
+				: Task.FromException<InputResult>(CreateFailure());
 		}
+
+		/// <summary>
+		/// Fails the way an async method does: an OperationCanceledException thrown here leaves the
+		/// task Canceled, where Task.FromException leaves it Faulted.
+		/// </summary>
+		private async Task<InputResult> FailAfterYieldAsync()
+		{
+			await Task.Yield();
+			throw CreateFailure();
+		}
+
+		private Exception CreateFailure() =>
+			failure?.Invoke() ?? new InvalidOperationException("Cannot read keys when console input has been redirected.");
 
 		public void SetCursorVisibility(bool visible) => CursorVisible = visible;
 
