@@ -2,6 +2,10 @@
 
 Changes since v2.0.0:
 
+- Let an element's render failure end the run instead of erasing the frame [patch] (#247) (matt-edmondson)
+- Clear the screen when the root element is removed [patch] (#245) (matt-edmondson)
+- Leave a collapsed child out of a horizontal StackPanel's measured height [patch] (#244) (matt-edmondson)
+- Count a cancelled read from this run as a failed read instead of skipping it [patch] (#243) (matt-edmondson)
 - Treat U+2028 and U+2029 as line breaks instead of writing a raw line feed [patch] (Claude)
 - Type AltGr+C as a character instead of exiting [patch] (Claude)
 - Draw styled text as written instead of parsing it as markup [patch] (Claude)
