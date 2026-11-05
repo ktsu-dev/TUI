@@ -43,6 +43,20 @@ public sealed class UIContainerBaseMeasureTests
 	}
 
 	/// <summary>
+	/// A hidden child's extent is left out of the default measurement (ktsu-dev/TUI#190)
+	/// </summary>
+	[TestMethod]
+	public void DefaultMeasurementIgnoresHiddenChildren()
+	{
+		OriginContainer container = CreateContainer(Position.Origin);
+		container.AddChild(new TextElement { Text = "a much longer hidden line", IsVisible = false });
+		container.ArrangeChildren();
+
+		Assert.AreEqual(new Dimensions(5, 3), container.CalculateRequiredDimensions());
+		Assert.AreEqual(new Dimensions(5, 3), container.CalculateRequiredDimensions(80));
+	}
+
+	/// <summary>
 	/// The required size is the content plus one padding, not the screen position plus two paddings
 	/// </summary>
 	[TestMethod]
