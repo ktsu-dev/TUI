@@ -262,13 +262,17 @@ public sealed class BorderElementTests
 	public void BorderElementRenderWhenNotVisibleDoesNotCallOnRender()
 	{
 		// Arrange
+		// The border is sized and arranged before it is hidden, so its child has a real area and
+		// would draw if the container went on to render it (ktsu-dev/TUI#180)
 		Mock<IConsoleProvider> mockProvider = new();
 		BorderElement borderElement = new()
 		{
 			Title = "Test Border",
 			Child = new TextElement("Test content"),
-			IsVisible = false
+			Dimensions = new Dimensions(30, 3),
 		};
+		borderElement.ArrangeChildren();
+		borderElement.IsVisible = false;
 
 		// Act
 		borderElement.Render(mockProvider.Object);
