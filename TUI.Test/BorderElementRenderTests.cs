@@ -235,6 +235,34 @@ public sealed class BorderElementRenderTests
 	}
 
 	/// <summary>
+	/// A tab in the title expands to spaces as it does in a <see cref="TextElement"/>, no other
+	/// control character reaches the provider, and the measured width matches the drawn title
+	/// (ktsu-dev/TUI#222).
+	/// </summary>
+	/// <param name="title">The title under test.</param>
+	/// <param name="expected">The title as it should be drawn, without its padding spaces.</param>
+	[TestMethod]
+	[DataRow("Name\tValue", "Name    Value")]
+	[DataRow("a\u001b[31mb", "a\uFFFD[31mb")]
+	[DataRow("a\u0007b\u009bc", "a\uFFFDb\uFFFDc")]
+	public void TitleControlCharactersAreNormalisedLikeTextElement(string title, string expected)
+	{
+		// Arrange
+		ArgumentNullException.ThrowIfNull(expected);
+		BorderElement element = CreateElement(width: 30, height: 4);
+		element.Title = title;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		element.Render(provider);
+
+		// Assert
+		Assert.IsFalse(provider.Writes.Any(w => w.Text.Any(char.IsControl)), "A write carried a control character");
+		Assert.ContainsSingle(provider.WritesOf($" {expected} "));
+		Assert.AreEqual(expected.Length + 4, new BorderElement { Title = title }.CalculateRequiredDimensions().Width);
+	}
+
+	/// <summary>
 	/// A border sized by a layout is measured wide enough for its title, so a title longer than
 	/// the content is drawn in full rather than cut short or dropped (ktsu-dev/TUI#157).
 	/// </summary>
