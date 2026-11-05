@@ -241,9 +241,13 @@ public class BorderElement : UIContainerBase
 	// border row and over the left edge, so each break becomes a space (ktsu-dev/TUI#151).
 	// That includes the Unicode line and paragraph separators, which Spectre writes as a line
 	// feed (ktsu-dev/TUI#236).
+	// Tabs and the remaining C0/C1 control characters are then normalised the way TextElement
+	// normalises its text, so none reaches the console provider raw and the measured width is the
+	// drawn width (ktsu-dev/TUI#222).
 	private string GetSingleLineTitle() =>
-		Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ')
-			.Replace('\u2028', ' ').Replace('\u2029', ' ');
+		TextElement.NormalizeControlCharacters(
+			Title.Replace("\r\n", " ", StringComparison.Ordinal).Replace('\r', ' ').Replace('\n', ' ')
+				.Replace('\u2028', ' ').Replace('\u2029', ' '));
 
 	private static BorderCharacters GetBorderCharacters(BorderStyle style)
 	{
