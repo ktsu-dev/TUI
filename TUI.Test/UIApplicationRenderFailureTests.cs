@@ -157,6 +157,123 @@ public sealed class UIApplicationRenderFailureTests
 	}
 
 	/// <summary>
+	/// An <see cref="OperationCanceledException"/> an element throws on the initial pass, which
+	/// does not come from cancelling the run, faults the run rather than ending it as cancelled
+	/// (ktsu-dev/TUI#248).
+	/// </summary>
+	/// <returns>A task that completes when the test does.</returns>
+	[TestMethod]
+	public async Task AForeignCancellationOnTheFirstPassFaultsTheRun()
+	{
+		TaskCanceledException failure = new("HttpClient timed out.");
+		BlockingConsoleProvider provider = new();
+		StackPanel root = [];
+		root.AddChild(new ThrowingElement { Throwing = true, Failure = failure });
+		UIApplication app = new(provider) { RootElement = root, ResizePollInterval = PollInterval, InterruptSource = new FakeInterruptSource() };
+
+		Task run = await RunUntilEndAsync(app).ConfigureAwait(false);
+
+		AssertFaultedWith(run, failure);
+		Assert.IsTrue(provider.CursorVisible, "The cursor must be restored when a render failure ends the run");
+	}
+
+	/// <summary>
+	/// The issue's repro: a posted action that hits an HttpClient timeout faults the run.
+	/// </summary>
+	/// <returns>A task that completes when the test does.</returns>
+	[TestMethod]
+	public async Task AForeignCancellationFromAPostedActionFaultsTheRun()
+	{
+		TaskCanceledException failure = new("HttpClient timed out.");
+		BlockingConsoleProvider provider = new();
+		StackPanel root = [];
+		root.AddChild(new TextElement("label"));
+		UIApplication app = new(provider) { RootElement = root, ResizePollInterval = PollInterval, InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		await provider.ReadStarted.WaitAsync(StepTimeout, TestContext.CancellationToken).ConfigureAwait(false);
+
+		app.Post(() => throw failure);
+
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "A posted action that throws should end the run");
+		AssertFaultedWith(run, failure);
+	}
+
+	/// <summary>
+	/// An element that starts throwing a foreign <see cref="OperationCanceledException"/> on the
+	/// pass drawn after a key faults the run.
+	/// </summary>
+	/// <returns>A task that completes when the test does.</returns>
+	[TestMethod]
+	public async Task AForeignCancellationOnThePassAfterAKeyFaultsTheRun()
+	{
+		TaskCanceledException failure = new("HttpClient timed out.");
+		BlockingConsoleProvider provider = new();
+		ThrowingElement element = new() { Failure = failure };
+		StackPanel root = [];
+		root.AddChild(element);
+		UIApplication app = new(provider) { RootElement = root, ResizePollInterval = TimeSpan.FromHours(1), InterruptSource = new FakeInterruptSource() };
+
+		using CancellationTokenSource timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		Task run = Task.Run(() => app.RunAsync(timeout.Token), TestContext.CancellationToken);
+		await provider.ReadStarted.WaitAsync(StepTimeout, TestContext.CancellationToken).ConfigureAwait(false);
+
+		element.Throwing = true;
+		provider.Release(InputResult.FromKey(ConsoleKey.A));
+
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+		await timeout.CancelAsync().ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "A pass whose element throws after a key should end the run");
+		AssertFaultedWith(run, failure);
+	}
+
+	/// <summary>
+	/// Cancelling the run while a pass is drawn still ends the run as cancelled, not faulted.
+	/// </summary>
+	/// <returns>A task that completes when the test does.</returns>
+	[TestMethod]
+	public async Task CancellingTheRunDuringAPassStillEndsItQuietly()
+	{
+		BlockingConsoleProvider provider = new();
+		using CancellationTokenSource runCancellation = CancellationTokenSource.CreateLinkedTokenSource(TestContext.CancellationToken);
+		StackPanel root = [];
+		root.AddChild(new TextElement("label"));
+		UIApplication app = new(provider) { RootElement = root, ResizePollInterval = PollInterval, InterruptSource = new FakeInterruptSource() };
+
+		Task run = Task.Run(() => app.RunAsync(runCancellation.Token), TestContext.CancellationToken);
+		await provider.ReadStarted.WaitAsync(StepTimeout, TestContext.CancellationToken).ConfigureAwait(false);
+
+		app.Post(() =>
+		{
+			runCancellation.Cancel();
+			runCancellation.Token.ThrowIfCancellationRequested();
+		});
+
+		Task finished = await Task.WhenAny(run, Task.Delay(StepTimeout, TestContext.CancellationToken)).ConfigureAwait(false);
+
+		Assert.AreSame(run, finished, "Cancelling the run should end it");
+		Assert.IsFalse(run.IsFaulted, $"A cancelled run should not fault: {run.Exception}");
+	}
+
+	/// <summary>
+	/// Asserts that a run ended faulted, not cancelled, with the given exception as the inner one.
+	/// </summary>
+	/// <param name="run">The run, which has ended.</param>
+	/// <param name="failure">The exception the pass threw.</param>
+	private static void AssertFaultedWith(Task run, Exception failure)
+	{
+		Assert.IsTrue(run.IsFaulted, $"The run should fault, not end as {run.Status}");
+		Exception thrown = run.Exception!.InnerException!;
+		Assert.IsInstanceOfType<InvalidOperationException>(thrown);
+		Assert.AreSame(failure, thrown.InnerException);
+	}
+
+	/// <summary>
 	/// Starts a run and waits for it to end, cancelling it if it outlives <see cref="StepTimeout"/>
 	/// so a regression fails the test instead of hanging it.
 	/// </summary>
