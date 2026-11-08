@@ -16,8 +16,4 @@
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="ShowcaseDemo.cs" />
-  </ItemGroup>
-
 </Project>
