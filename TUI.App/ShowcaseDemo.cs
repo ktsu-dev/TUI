@@ -11,15 +11,15 @@ using ktsu.TUI.Core.Services;
 /// <summary>
 /// Comprehensive showcase of all TUI library visual features
 /// </summary>
-public static class ShowcaseDemo
+internal static class ShowcaseDemo
 {
 	/// <summary>
 	/// Runs the showcase demo
 	/// </summary>
-	public static async Task RunAsync()
+	internal static async Task RunAsync()
 	{
-		var consoleProvider = new SpectreConsoleProvider();
-		var app = UIApplication.CreateBuilder(consoleProvider)
+		SpectreConsoleProvider consoleProvider = new();
+		UIApplication app = UIApplication.CreateBuilder(consoleProvider)
 			.UseRootElement(CreateShowcaseUI())
 			.Build();
 
@@ -28,9 +28,9 @@ public static class ShowcaseDemo
 		Console.WriteLine("Showcase Demo finished.");
 	}
 
-	private static IUIElement CreateShowcaseUI()
+	internal static StackPanel CreateShowcaseUI()
 	{
-		var mainLayout = new StackPanel
+		StackPanel mainLayout = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1,
@@ -38,13 +38,13 @@ public static class ShowcaseDemo
 		};
 
 		// Header
-		var header = CreateHeader();
+		BorderElement header = CreateHeader();
 
 		// Content area with three columns
-		var contentArea = CreateContentArea();
+		StackPanel contentArea = CreateContentArea();
 
 		// Footer
-		var footer = CreateFooter();
+		BorderElement footer = CreateFooter();
 
 		mainLayout.AddChild(header);
 		mainLayout.AddChild(contentArea);
@@ -53,9 +53,9 @@ public static class ShowcaseDemo
 		return mainLayout;
 	}
 
-	private static IUIElement CreateHeader()
+	private static BorderElement CreateHeader()
 	{
-		var header = new BorderElement
+		BorderElement header = new()
 		{
 			Title = "TUI Library Showcase",
 			TitleAlignment = HorizontalAlignment.Center,
@@ -67,7 +67,7 @@ public static class ShowcaseDemo
 		};
 
 		// Add children to header panel
-		var headerPanel = (StackPanel)header.Child;
+		StackPanel headerPanel = (StackPanel)header.Child;
 		headerPanel.AddChild(new TextElement
 		{
 			Text = "Complete Visual Features Demonstration",
@@ -84,22 +84,22 @@ public static class ShowcaseDemo
 		return header;
 	}
 
-	private static IUIElement CreateContentArea()
+	private static StackPanel CreateContentArea()
 	{
-		var contentLayout = new StackPanel
+		StackPanel contentLayout = new()
 		{
 			Orientation = Orientation.Horizontal,
 			Spacing = 2
 		};
 
 		// Left column - Text styles
-		var leftColumn = CreateTextStylesColumn();
+		StackPanel leftColumn = CreateTextStylesColumn();
 
 		// Middle column - Border styles
-		var middleColumn = CreateBorderStylesColumn();
+		StackPanel middleColumn = CreateBorderStylesColumn();
 
 		// Right column - Alignment and layouts
-		var rightColumn = CreateAlignmentColumn();
+		StackPanel rightColumn = CreateAlignmentColumn();
 
 		contentLayout.AddChild(leftColumn);
 		contentLayout.AddChild(middleColumn);
@@ -108,24 +108,20 @@ public static class ShowcaseDemo
 		return contentLayout;
 	}
 
-	private static IUIElement CreateTextStylesColumn()
+	private static StackPanel CreateTextStylesColumn()
 	{
-		var column = new StackPanel
+		StackPanel column = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Text styles panel
-		var textStylesPanel = new BorderElement
+		BorderElement textStylesPanel = new()
 		{
 			Title = "Text Styles",
 			BorderStyle = BorderStyle.SingleLine,
-			Child = new StackPanel
-			{
-				Orientation = Orientation.Vertical,
-				Children =
-				[
+			Child = Panel(Orientation.Vertical, 0,
 					new TextElement
 					{
 						Text = "Normal Text",
@@ -150,21 +146,15 @@ public static class ShowcaseDemo
 					{
 						Text = "Bold Italic",
 						Style = new TextStyle { IsBold = true, IsItalic = true, Foreground = "cyan" }
-					}
-				]
-			}
+					})
 		};
 
 		// Color showcase panel
-		var colorPanel = new BorderElement
+		BorderElement colorPanel = new()
 		{
 			Title = "Colors",
 			BorderStyle = BorderStyle.Rounded,
-			Child = new StackPanel
-			{
-				Orientation = Orientation.Vertical,
-				Children =
-				[
+			Child = Panel(Orientation.Vertical, 0,
 					new TextElement
 					{
 						Text = "Red Text",
@@ -189,9 +179,7 @@ public static class ShowcaseDemo
 					{
 						Text = "White on Red",
 						Style = new TextStyle { Foreground = "white", Background = "red" }
-					}
-				]
-			}
+					})
 		};
 
 		column.AddChild(textStylesPanel);
@@ -200,28 +188,28 @@ public static class ShowcaseDemo
 		return column;
 	}
 
-	private static IUIElement CreateBorderStylesColumn()
+	private static StackPanel CreateBorderStylesColumn()
 	{
-		var column = new StackPanel
+		StackPanel column = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Create examples of each border style
-		var borderStyles = new[]
-		{
+		(BorderStyle Style, string Name)[] borderStyles =
+		[
 			(BorderStyle.None, "None"),
 			(BorderStyle.SingleLine, "Single"),
 			(BorderStyle.DoubleLine, "Double"),
 			(BorderStyle.Rounded, "Rounded"),
 			(BorderStyle.Thick, "Thick"),
 			(BorderStyle.Ascii, "ASCII")
-		};
+		];
 
-		foreach (var (style, name) in borderStyles)
+		foreach ((BorderStyle style, string name) in borderStyles)
 		{
-			var borderExample = new BorderElement
+			BorderElement borderExample = new()
 			{
 				Title = $"{name} Border",
 				BorderStyle = style,
@@ -239,24 +227,20 @@ public static class ShowcaseDemo
 		return column;
 	}
 
-	private static IUIElement CreateAlignmentColumn()
+	private static StackPanel CreateAlignmentColumn()
 	{
-		var column = new StackPanel
+		StackPanel column = new()
 		{
 			Orientation = Orientation.Vertical,
 			Spacing = 1
 		};
 
 		// Horizontal alignment demo
-		var horizontalAlignmentPanel = new BorderElement
+		BorderElement horizontalAlignmentPanel = new()
 		{
 			Title = "Horizontal Alignment",
 			BorderStyle = BorderStyle.SingleLine,
-			Child = new StackPanel
-			{
-				Orientation = Orientation.Vertical,
-				Children =
-				[
+			Child = Panel(Orientation.Vertical, 0,
 					new TextElement
 					{
 						Text = "Left Aligned",
@@ -274,33 +258,21 @@ public static class ShowcaseDemo
 						Text = "Right Aligned",
 						HorizontalAlignment = HorizontalAlignment.Right,
 						Style = new TextStyle { Foreground = "red" }
-					}
-				]
-			}
+					})
 		};
 
 		// Layout demo
-		var layoutPanel = new BorderElement
+		BorderElement layoutPanel = new()
 		{
 			Title = "Layout Demo",
 			BorderStyle = BorderStyle.Thick,
-			Child = new StackPanel
-			{
-				Orientation = Orientation.Vertical,
-				Spacing = 1,
-				Children =
-				[
+			Child = Panel(Orientation.Vertical, 1,
 					new TextElement
 					{
 						Text = "Vertical Layout:",
 						Style = new TextStyle { IsBold = true, Foreground = "white" }
 					},
-					new StackPanel
-					{
-						Orientation = Orientation.Horizontal,
-						Spacing = 1,
-						Children =
-						[
+					Panel(Orientation.Horizontal, 1,
 							new TextElement
 							{
 								Text = "[A]",
@@ -315,20 +287,16 @@ public static class ShowcaseDemo
 							{
 								Text = "[C]",
 								Style = new TextStyle { Background = "green", Foreground = "white" }
-							}
-						]
-					},
+							}),
 					new TextElement
 					{
 						Text = "Horizontal Layout ↑",
 						Style = new TextStyle { Foreground = "gray" }
-					}
-				]
-			}
+					})
 		};
 
 		// Padding demo
-		var paddingPanel = new BorderElement
+		BorderElement paddingPanel = new()
 		{
 			Title = "Padding Demo",
 			BorderStyle = BorderStyle.DoubleLine,
@@ -352,18 +320,13 @@ public static class ShowcaseDemo
 		return column;
 	}
 
-	private static IUIElement CreateFooter()
+	private static BorderElement CreateFooter()
 	{
 		return new BorderElement
 		{
 			Title = "System Information",
 			BorderStyle = BorderStyle.Ascii,
-			Child = new StackPanel
-			{
-				Orientation = Orientation.Horizontal,
-				Spacing = 3,
-				Children =
-				[
+			Child = Panel(Orientation.Horizontal, 3,
 					new TextElement
 					{
 						Text = $"Platform: {Environment.OSVersion.Platform}",
@@ -383,9 +346,18 @@ public static class ShowcaseDemo
 					{
 						Text = "Press ESC to exit",
 						Style = new TextStyle { Foreground = "red", IsBold = true }
-					}
-				]
-			}
+					})
 		};
+	}
+
+	private static StackPanel Panel(Orientation orientation, int spacing, params IUIElement[] children)
+	{
+		StackPanel panel = new(orientation) { Spacing = spacing };
+		foreach (IUIElement child in children)
+		{
+			panel.AddChild(child);
+		}
+
+		return panel;
 	}
 }

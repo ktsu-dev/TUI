@@ -23,8 +23,7 @@ internal static class Program
 			}
 			else if (args.Length > 0 && args[0] == "--showcase")
 			{
-				Console.WriteLine("ShowcaseDemo is currently being fixed - using SampleApp instead");
-				await SampleApp.RunAsync().ConfigureAwait(false);
+				await ShowcaseDemo.RunAsync().ConfigureAwait(false);
 			}
 			else
 			{
