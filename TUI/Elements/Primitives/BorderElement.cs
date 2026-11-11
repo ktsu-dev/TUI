@@ -182,13 +182,17 @@ public class BorderElement : UIContainerBase
 			int maxTitleWidth = dimensions.Width - 4; // Leave space for border and padding
 
 			string singleLineTitle = GetSingleLineTitle();
-			string displayTitle = singleLineTitle.Length > maxTitleWidth ? singleLineTitle[..maxTitleWidth] : singleLineTitle;
+			// Measure and cut in terminal cells, not chars: a CJK title is twice as wide as its length,
+			// and a char-index cut can split a surrogate pair (ktsu-dev/TUI#171).
+			string displayTitle = TextElement.TakeCells(singleLineTitle, maxTitleWidth);
 			string titleWithPadding = $" {displayTitle} ";
+
+			int titleCells = TextElement.MeasureCells(titleWithPadding);
 
 			int titleX = TitleAlignment switch
 			{
-				HorizontalAlignment.Center => position.X + Math.Max(1, (dimensions.Width - titleWithPadding.Length) / 2),
-				HorizontalAlignment.Right => position.X + Math.Max(1, dimensions.Width - titleWithPadding.Length - 1),
+				HorizontalAlignment.Center => position.X + Math.Max(1, (dimensions.Width - titleCells) / 2),
+				HorizontalAlignment.Right => position.X + Math.Max(1, dimensions.Width - titleCells - 1),
 				HorizontalAlignment.Left => position.X + 1,
 				_ => position.X + 1
 			};

@@ -371,4 +371,98 @@ public sealed class BorderElementRenderTests
 		Assert.IsEmpty(provider.WritesOf("first"));
 		Assert.ContainsSingle(provider.WritesOf("second"));
 	}
+
+	/// <summary>
+	/// A wide (CJK) or emoji title stays inside the border in every alignment: it is measured in
+	/// terminal cells, so it never overdraws the right corner (ktsu-dev/TUI#171).
+	/// </summary>
+	/// <param name="title">The title under test.</param>
+	/// <param name="width">The border width.</param>
+	/// <param name="alignment">The title alignment under test.</param>
+	[TestMethod]
+	[DynamicData(nameof(WideTitleCases))]
+	public void WideTitleNeverExtendsPastTheRightBorder(string title, int width, HorizontalAlignment alignment)
+	{
+		BorderElement element = CreateElement(width, 3);
+		element.Title = title;
+		element.TitleAlignment = alignment;
+		RecordingConsoleProvider provider = new();
+
+		element.Render(provider);
+
+		RecordingConsoleProvider.Write titleWrite = TitleWrite(provider);
+		int lastCell = titleWrite.Position.X + CellWidth.Of(titleWrite.Text) - 1;
+		Assert.IsGreaterThanOrEqualTo(1, titleWrite.Position.X, $"'{titleWrite.Text}' starts on the left corner");
+		Assert.IsLessThanOrEqualTo(width - 2, lastCell, $"'{titleWrite.Text}' at x={titleWrite.Position.X} overdraws the right border");
+		Assert.IsFalse(HasUnpairedSurrogate(titleWrite.Text), $"'{titleWrite.Text}' contains an unpaired surrogate");
+	}
+
+	/// <summary>
+	/// Gets wide and emoji titles, both ones that fit and ones that need truncating, in every alignment.
+	/// </summary>
+	public static IEnumerable<object[]> WideTitleCases =>
+		from c in new (string Title, int Width)[]
+		{
+			("日本語タイトル", 12),
+			("日本語タイトル", 20),
+			("ab😀cd", 7),
+			("ab😀cd", 8),
+			("😀😀😀😀", 9),
+			("x日", 6),
+		}
+		from alignment in Enum.GetValues<HorizontalAlignment>()
+		select new object[] { c.Title, c.Width, alignment };
+
+	/// <summary>
+	/// A wide title that fits is drawn whole, and centred by its cell width.
+	/// </summary>
+	[TestMethod]
+	public void WideTitleThatFitsIsCentredByCellWidth()
+	{
+		BorderElement element = CreateElement(20, 3);
+		element.Title = "日本語";
+		element.TitleAlignment = HorizontalAlignment.Center;
+		RecordingConsoleProvider provider = new();
+
+		element.Render(provider);
+
+		RecordingConsoleProvider.Write titleWrite = TitleWrite(provider);
+		Assert.AreEqual(" 日本語 ", titleWrite.Text);
+		Assert.AreEqual((20 - 8) / 2, titleWrite.Position.X);
+	}
+
+	/// <summary>
+	/// Truncating a title cuts between characters, never inside a surrogate pair.
+	/// </summary>
+	[TestMethod]
+	public void TruncatedEmojiTitleIsNotSplitMidSurrogatePair()
+	{
+		BorderElement element = CreateElement(7, 3);
+		element.Title = "ab😀cd";
+		RecordingConsoleProvider provider = new();
+
+		element.Render(provider);
+
+		Assert.AreEqual(" ab ", TitleWrite(provider).Text);
+	}
+
+	private static RecordingConsoleProvider.Write TitleWrite(RecordingConsoleProvider provider) =>
+		provider.Writes.Single(w => w.Position.Y == 0 && w.Text.StartsWith(' '));
+
+	private static bool HasUnpairedSurrogate(string text)
+	{
+		for (int i = 0; i < text.Length; i++)
+		{
+			if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+			{
+				i++;
+			}
+			else if (char.IsSurrogate(text[i]))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
