@@ -2,6 +2,7 @@
 
 namespace ktsu.TUI.Core.Services;
 
+using System.Globalization;
 using ktsu.TUI.Core.Contracts;
 using ktsu.TUI.Core.Elements.Primitives;
 using ktsu.TUI.Core.Models;
@@ -195,26 +196,56 @@ public class SpectreConsoleProvider(IAnsiConsole? console = null) : IConsoleProv
 		}
 	}
 
+	/// <summary>
+	/// Clips <paramref name="text"/> to the columns of the screen, measuring in terminal cells and
+	/// cutting only between text elements.
+	/// </summary>
+	/// <remarks>
+	/// A char count is wrong for a CJK ideograph, one char in two cells, and a char-index cut can
+	/// split a surrogate pair, so wide text would wrap past the right edge or leave half an emoji
+	/// (ktsu-dev/TUI#172). A wide glyph that straddles either edge is dropped rather than split.
+	/// </remarks>
 	private string ClipToScreen(string text, Position position, out Position visiblePosition)
 	{
 		visiblePosition = position;
 		Dimensions dimensions = Dimensions;
-		if (position.Y < 0 || position.Y >= dimensions.Height)
+		if (position.Y < 0 || position.Y >= dimensions.Height || position.X >= dimensions.Width)
 		{
 			return string.Empty;
 		}
 
-		long start = position.X;
-		long end = start + text.Length;
-		long visibleStart = Math.Max(start, 0);
-		long visibleEnd = Math.Min(end, dimensions.Width);
-		if (visibleStart >= visibleEnd)
+		long x = position.X;
+		int startIndex = text.Length;
+		int endIndex = text.Length;
+		bool started = false;
+		TextElementEnumerator elements = StringInfo.GetTextElementEnumerator(text);
+		while (elements.MoveNext())
 		{
-			return string.Empty;
+			int width = elements.GetTextElement().GetCellWidth();
+			if (!started)
+			{
+				if (x < 0)
+				{
+					// Left of the screen, or straddling column 0: drop it.
+					x += width;
+					continue;
+				}
+
+				started = true;
+				startIndex = elements.ElementIndex;
+				visiblePosition = new Position((int)x, position.Y);
+			}
+
+			if (x + width > dimensions.Width)
+			{
+				endIndex = elements.ElementIndex;
+				break;
+			}
+
+			x += width;
 		}
 
-		visiblePosition = new Position((int)visibleStart, position.Y);
-		return text.Substring((int)(visibleStart - start), (int)(visibleEnd - visibleStart));
+		return started ? text[startIndex..endIndex] : string.Empty;
 	}
 
 	/// <summary>
