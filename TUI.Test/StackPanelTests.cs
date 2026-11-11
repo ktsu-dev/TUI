@@ -253,6 +253,55 @@ public sealed class StackPanelTests
 	}
 
 	/// <summary>
+	/// A hidden root StackPanel draws none of its descendants, though they are visible and
+	/// arranged into a real area (ktsu-dev/TUI#180).
+	/// </summary>
+	[TestMethod]
+	public void HiddenStackPanelRootDrawsNoDescendants()
+	{
+		// Arrange
+		StackPanel root =
+		[
+			new TextElement("first"),
+			new BorderElement { Child = new TextElement("nested") },
+		];
+		root.Position = Position.Origin;
+		root.Dimensions = new Dimensions(40, 10);
+		root.ArrangeChildren();
+		root.IsVisible = false;
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		root.Render(provider);
+
+		// Assert
+		Assert.IsEmpty(provider.Writes);
+	}
+
+	/// <summary>
+	/// A hidden root StackPanel passes no input to its visible children (ktsu-dev/TUI#180).
+	/// </summary>
+	[TestMethod]
+	public void HiddenStackPanelRootPassesNoInputToChildren()
+	{
+		// Arrange
+		StackPanel root = [];
+		Mock<IUIElement> child = new();
+		child.Setup(c => c.IsVisible).Returns(true);
+		child.Setup(c => c.HandleInput(It.IsAny<InputResult>())).Returns(true);
+		root.AddChild(child.Object);
+		root.IsVisible = false;
+		InputResult input = new() { Key = ConsoleKey.Enter, Modifiers = InputModifiers.None };
+
+		// Act
+		bool handled = root.HandleInput(input);
+
+		// Assert
+		Assert.IsFalse(handled);
+		child.Verify(c => c.HandleInput(It.IsAny<InputResult>()), Times.Never);
+	}
+
+	/// <summary>
 	/// Tests that StackPanel handles input by checking children in reverse order
 	/// </summary>
 	[TestMethod]

@@ -105,6 +105,14 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public override void Render(IConsoleProvider provider)
 	{
+		// The base call only skips drawing the container itself, so a hidden container whose
+		// Render is called directly (the application's root) must not go on to draw its children
+		// (ktsu-dev/TUI#180)
+		if (!IsVisible)
+		{
+			return;
+		}
+
 		// Render the container itself
 		base.Render(provider);
 
@@ -118,6 +126,12 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public override bool HandleInput(InputResult input)
 	{
+		// A hidden container takes no input, and neither do the children it hides (ktsu-dev/TUI#180)
+		if (!IsVisible)
+		{
+			return false;
+		}
+
 		// Let children handle input first (reverse order for top-most first)
 		foreach (IUIElement child in _children.Reverse<IUIElement>())
 		{
