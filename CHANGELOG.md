@@ -2,6 +2,7 @@
 
 Changes since v2.0.0:
 
+- Normalise control characters in a border title like TextElement text [patch] (#250) (matt-edmondson)
 - Keep a hidden container from drawing its children or passing them input [patch] (#251) (matt-edmondson)
 - Leave a hidden child out of BorderElement's and the default container measure [patch] (#252) (matt-edmondson)
 - [patch] Fault the run when a render pass throws a foreign OperationCanceledException (#253) (matt-edmondson)
