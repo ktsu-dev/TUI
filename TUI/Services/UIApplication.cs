@@ -232,7 +232,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 			ConsoleProvider.SetCursorVisibility(false);
 
 			// Initial render
-			Render();
+			RenderDuringRun(runToken);
 
 			// Start input processing
 			await ProcessInputAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
@@ -368,6 +368,36 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 		lock (_runCancellationGate)
 		{
 			_cancellationTokenSource?.Cancel();
+		}
+	}
+
+	/// <summary>
+	/// Draws a pass for the run loop, so that an <see cref="OperationCanceledException"/> a pass
+	/// throws for a reason of its own faults the run instead of ending it as cancelled.
+	/// </summary>
+	/// <remarks>
+	/// A pass runs posted actions and element code, either of which may throw an
+	/// <see cref="OperationCanceledException"/> that has nothing to do with the run, such as an
+	/// HttpClient timeout. Left as it is, it would leave <see cref="RunAsync"/> as an
+	/// <see langword="async"/> method and make its task Canceled, which a host reads as a clean
+	/// shutdown. Wrapping it is what the input path already does for the same exception
+	/// (ktsu-dev/TUI#216, ktsu-dev/TUI#248). One that comes from cancelling the run passes through
+	/// unchanged, so a shutdown during a pass still ends the run as cancelled.
+	/// </remarks>
+	/// <param name="runToken">The run's token, which tells the run's own cancellation apart.</param>
+	/// <exception cref="InvalidOperationException">
+	/// The pass threw an <see cref="OperationCanceledException"/> while <paramref name="runToken"/>
+	/// was not cancelled. The original exception is the inner exception.
+	/// </exception>
+	private void RenderDuringRun(CancellationToken runToken)
+	{
+		try
+		{
+			Render();
+		}
+		catch (OperationCanceledException ex) when (!runToken.IsCancellationRequested)
+		{
+			throw new InvalidOperationException("A render pass threw an OperationCanceledException that did not come from cancelling the run.", ex);
 		}
 	}
 
@@ -573,7 +603,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 							if (Volatile.Read(ref _redrawRequested) == 1 || HasConsoleResized())
 							{
 								rendering = true;
-								Render();
+								RenderDuringRun(cancellationToken);
 								rendering = false;
 							}
 
@@ -624,7 +654,7 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 
 					// Re-render if needed (elements invalidate themselves when they change)
 					rendering = true;
-					Render();
+					RenderDuringRun(cancellationToken);
 					rendering = false;
 				}
 				catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
