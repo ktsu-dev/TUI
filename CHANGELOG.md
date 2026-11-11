@@ -2,6 +2,13 @@
 
 Changes since v2.0.0:
 
+- Keep a hidden container from drawing its children or passing them input [patch] (#251) (matt-edmondson)
+- Leave a hidden child out of BorderElement's and the default container measure [patch] (#252) (matt-edmondson)
+- [patch] Fault the run when a render pass throws a foreign OperationCanceledException (#253) (matt-edmondson)
+- [patch] Measure a container with no room past its padding as the padding alone (#254) (matt-edmondson)
+- Treat a negative padding side as 0 [patch] (#256) (matt-edmondson)
+- Delete TUI.Cli, which no PR build compiled, and require every project in TUI.sln [patch] (#257) (matt-edmondson)
+- Compile the showcase demo again and run it for --showcase [patch] (#258) (matt-edmondson)
 - Let an element's render failure end the run instead of erasing the frame [patch] (#247) (matt-edmondson)
 - Clear the screen when the root element is removed [patch] (#245) (matt-edmondson)
 - Leave a collapsed child out of a horizontal StackPanel's measured height [patch] (#244) (matt-edmondson)
