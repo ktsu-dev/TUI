@@ -185,7 +185,8 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 		int maxWidth = 0;
 		int maxHeight = 0;
 
-		foreach (IUIElement child in _children)
+		// A hidden child is not drawn, so it takes no room either (ktsu-dev/TUI#190)
+		foreach (IUIElement child in GetVisibleChildren())
 		{
 			Dimensions childDimensions = child.CalculateRequiredDimensions();
 			int childRight = Math.Max(0, child.Position.X - origin.X + childDimensions.Width);
