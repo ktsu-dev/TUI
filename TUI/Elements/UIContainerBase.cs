@@ -105,6 +105,14 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public override void Render(IConsoleProvider provider)
 	{
+		// The base call only skips drawing the container itself, so a hidden container whose
+		// Render is called directly (the application's root) must not go on to draw its children
+		// (ktsu-dev/TUI#180)
+		if (!IsVisible)
+		{
+			return;
+		}
+
 		// Render the container itself
 		base.Render(provider);
 
@@ -118,6 +126,12 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	public override bool HandleInput(InputResult input)
 	{
+		// A hidden container takes no input, and neither do the children it hides (ktsu-dev/TUI#180)
+		if (!IsVisible)
+		{
+			return false;
+		}
+
 		// Let children handle input first (reverse order for top-most first)
 		foreach (IUIElement child in _children.Reverse<IUIElement>())
 		{
@@ -141,7 +155,16 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 	/// <inheritdoc />
 	protected override Dimensions OnCalculateRequiredDimensions(int availableWidth)
 	{
-		Dimensions requiredDimensions = OnCalculateRequiredDimensionsForChildren(Math.Max(0, availableWidth - Padding.Horizontal));
+		if (availableWidth > 0 && availableWidth <= Padding.Horizontal)
+		{
+			// The padding takes every column, so no child can be drawn. Measuring the children at
+			// width 0 would read as "no constraint", and a word-wrapped child would then claim its
+			// full unwrapped height in rows that never show, taking them from the siblings below
+			// (ktsu-dev/TUI#249, the container route to ktsu-dev/TUI#198).
+			return Dimensions.Empty.WithPadding(Padding);
+		}
+
+		Dimensions requiredDimensions = OnCalculateRequiredDimensionsForChildren(availableWidth - Padding.Horizontal);
 		return requiredDimensions.WithPadding(Padding);
 	}
 
@@ -176,7 +199,8 @@ public abstract class UIContainerBase : UIElementBase, IUIContainer, IEnumerable
 		int maxWidth = 0;
 		int maxHeight = 0;
 
-		foreach (IUIElement child in _children)
+		// A hidden child is not drawn, so it takes no room either (ktsu-dev/TUI#190)
+		foreach (IUIElement child in GetVisibleChildren())
 		{
 			Dimensions childDimensions = child.CalculateRequiredDimensions();
 			int childRight = Math.Max(0, child.Position.X - origin.X + childDimensions.Width);

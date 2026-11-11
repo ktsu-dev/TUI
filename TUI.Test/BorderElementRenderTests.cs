@@ -263,6 +263,32 @@ public sealed class BorderElementRenderTests
 	}
 
 	/// <summary>
+	/// A border whose child is hidden measures as the bare border, so collapsing a section inside a
+	/// vertical StackPanel gives its rows back to the elements below (ktsu-dev/TUI#190).
+	/// </summary>
+	[TestMethod]
+	public void HiddenChildIsMeasuredAsAbsent()
+	{
+		// Arrange
+		BorderElement border = new() { Child = new TextElement("details line one\ndetails line two") { IsVisible = false } };
+		StackPanel panel = new(Orientation.Vertical);
+		panel.AddChild(border);
+		panel.AddChild(new TextElement("below"));
+		panel.Position = Position.Origin;
+		panel.Dimensions = new Dimensions(40, 20);
+		RecordingConsoleProvider provider = new();
+
+		// Act
+		panel.ArrangeChildren();
+		panel.Render(provider);
+
+		// Assert
+		Assert.AreEqual(new Dimensions(2, 2), border.CalculateRequiredDimensions());
+		Assert.AreEqual(new Dimensions(2, 2), border.CalculateRequiredDimensions(40));
+		Assert.AreEqual(2, provider.WritesOf("below").Single().Position.Y);
+	}
+
+	/// <summary>
 	/// A border sized by a layout is measured wide enough for its title, so a title longer than
 	/// the content is drawn in full rather than cut short or dropped (ktsu-dev/TUI#157).
 	/// </summary>
