@@ -2,6 +2,10 @@
 
 Changes since v2.0.0:
 
+- Suppress package-validation errors on Polyfill's embedded types [patch] (#261) (matt-edmondson)
+- Keep a CJK or emoji border title inside the border [patch] (#262) (matt-edmondson)
+- Clip WriteAt text to the screen in cells, never splitting a character [patch] (#263) (matt-edmondson)
+- Give a hidden root element no input [patch] (#267) (matt-edmondson)
 - Normalise control characters in a border title like TextElement text [patch] (#250) (matt-edmondson)
 - Keep a hidden container from drawing its children or passing them input [patch] (#251) (matt-edmondson)
 - Leave a hidden child out of BorderElement's and the default container measure [patch] (#252) (matt-edmondson)
