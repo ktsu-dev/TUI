@@ -106,7 +106,11 @@ public abstract class UIElementBase : IUIElement
 	}
 
 	/// <inheritdoc />
-	public virtual bool HandleInput(InputResult input) => OnHandleInput(input);
+	/// <remarks>
+	/// A hidden element takes no input, matching <see cref="Render"/>, so a hidden root is not
+	/// left reacting to keys it no longer shows (ktsu-dev/TUI#266).
+	/// </remarks>
+	public virtual bool HandleInput(InputResult input) => IsVisible && OnHandleInput(input);
 
 	/// <inheritdoc />
 	public virtual Dimensions CalculateRequiredDimensions() => OnCalculateRequiredDimensions();

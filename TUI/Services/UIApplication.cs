@@ -644,8 +644,9 @@ public class UIApplication(IConsoleProvider consoleProvider, ILogger<UIApplicati
 						break;
 					}
 
-					// Let the root element handle the input
-					bool handled = RootElement?.HandleInput(input) ?? false;
+					// Let the root element handle the input. A hidden root takes none, even one that
+					// implements IUIElement directly rather than through UIElementBase (ktsu-dev/TUI#266)
+					bool handled = RootElement is { IsVisible: true } root && root.HandleInput(input);
 
 					if (!handled && _logger != null)
 					{
