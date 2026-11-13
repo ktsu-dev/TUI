@@ -121,6 +121,91 @@ public sealed class SpectreConsoleProviderTests
 	}
 
 	/// <summary>
+	/// Tests that wide text running past the right edge is clipped by cells, not chars, so the last
+	/// glyph does not wrap onto the next row (ktsu-dev/TUI#172).
+	/// </summary>
+	[TestMethod]
+	public void WriteAtClipsWideTextByCellsAtTheRightEdge()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("日本語", new Position(6, 0));
+
+		Assert.AreEqual("\u001b[1;7H日本", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that a wide glyph that would only half fit at the right edge is dropped whole.
+	/// </summary>
+	[TestMethod]
+	public void WriteAtDropsAWideGlyphStraddlingTheRightEdge()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("a日本", new Position(6, 0));
+
+		Assert.AreEqual("\u001b[1;7Ha日", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that clipping at the right edge never splits a surrogate pair (ktsu-dev/TUI#172).
+	/// </summary>
+	[TestMethod]
+	public void WriteAtDoesNotSplitAnEmojiAtTheRightEdge()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("a😀", new Position(8, 0));
+
+		Assert.AreEqual("\u001b[1;9Ha", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that an emoji that fits at the right edge is written whole.
+	/// </summary>
+	[TestMethod]
+	public void WriteAtKeepsAnEmojiThatFitsAtTheRightEdge()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("😀", new Position(Width - 2, 0));
+
+		Assert.AreEqual("\u001b[1;9H😀", output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that wide text starting left of the screen is clipped by cells, and a wide glyph that
+	/// straddles column 0 is dropped rather than split.
+	/// </summary>
+	/// <param name="x">The start column.</param>
+	/// <param name="expected">The expected output.</param>
+	[TestMethod]
+	[DataRow(-2, "\u001b[1;1H本語")]
+	[DataRow(-1, "\u001b[1;2H本語")]
+	[DataRow(-3, "\u001b[1;2H語")]
+	public void WriteAtClipsWideTextByCellsAtTheLeftEdge(int x, string expected)
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("日本語", new Position(x, 0));
+
+		Assert.AreEqual(expected, output.ToString());
+	}
+
+	/// <summary>
+	/// Tests that clipping at the left edge never leaves half a surrogate pair.
+	/// </summary>
+	[TestMethod]
+	public void WriteAtDoesNotSplitAnEmojiAtTheLeftEdge()
+	{
+		(SpectreConsoleProvider provider, StringWriter output) = CreateProvider();
+
+		provider.WriteAt("😀ab", new Position(-1, 0));
+
+		Assert.AreEqual("\u001b[1;2Hab", output.ToString());
+	}
+
+	/// <summary>
 	/// Tests that Render draws the element at the position it is given, not at the element's own
 	/// position, and takes no cursor move from <see cref="Console"/> (ktsu-dev/TUI#156).
 	/// </summary>
